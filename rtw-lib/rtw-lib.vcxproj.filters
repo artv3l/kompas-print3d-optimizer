@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="include\connection.hpp">
+      <Filter>rtw-lib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stdafx.h">
+      <Filter>rtw-lib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\resource.h">
+      <Filter>rtw-lib\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\concaveAngle.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimizeBridgeHole.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimizeCircleHorizontalHoles.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimizeElephantFoot.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimizeRounding.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimizeRoundingEdgesOnPrintFace.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\selectPlane.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\utils.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\connection.cpp">
+      <Filter>rtw-lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mainDll.cpp">
+      <Filter>rtw-lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mainLibrary.cpp">
+      <Filter>rtw-lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp">
+      <Filter>rtw-lib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\concaveAngle.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimizeBridgeHole.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimizeCircleHorizontalHoles.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimizeElephantFoot.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimizeRounding.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimizeRoundingEdgesOnPrintFace.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\selectPlane.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\utils.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="kompas-print3d-optimizer">
+      <UniqueIdentifier>{155efd5b-de9c-45d4-a693-2f13ab442294}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtw-lib">
+      <UniqueIdentifier>{c7fd1d50-bbcd-4719-9252-9e90b9a0085f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtw-lib\include">
+      <UniqueIdentifier>{ac423c9c-2b9f-4b1f-86bb-63f8dc593eb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtw-lib\resource">
+      <UniqueIdentifier>{edb72a8d-0938-482b-a41f-6bec9c45d426}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtw-lib\src">
+      <UniqueIdentifier>{dc04d42c-727a-48b0-909a-e06458518aec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general">
+      <UniqueIdentifier>{8dbb7632-bec9-42d3-a30a-4911394dfa48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\src">
+      <UniqueIdentifier>{3224d7a1-918e-4696-b14b-c9bbae6925e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\include">
+      <UniqueIdentifier>{4d310d3f-5c88-4c66-82c3-be79cc75f729}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\kompas-print3d-optimizer\kompas-print3d-optimizer.xml">
+      <Filter>kompas-print3d-optimizer</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource\main.rc">
+      <Filter>rtw-lib\resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resource\mainDll.def">
+      <Filter>rtw-lib\resource</Filter>
+    </None>
+  </ItemGroup>
+</Project>
