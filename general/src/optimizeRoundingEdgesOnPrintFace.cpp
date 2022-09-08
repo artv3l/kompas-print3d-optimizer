@@ -6,9 +6,9 @@
 
 #include "utils.hpp"
 
-const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Оптимизация скругленных ребер на плоскости печати";
-const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
-const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK = "Контур - ДОРАБОТКА";
+const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "РћРїС‚РёРјРёР·Р°С†РёСЏ СЃРєСЂСѓРіР»РµРЅРЅС‹С… СЂРµР±РµСЂ РЅР° РїР»РѕСЃРєРѕСЃС‚Рё РїРµС‡Р°С‚Рё";
+const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "РљРѕРЅС‚СѓСЂ";
+const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK = "РљРѕРЅС‚СѓСЂ - Р”РћР РђР‘РћРўРљРђ";
 
 double getCylinderOrTorusRadius(ksFaceDefinitionPtr face) {
     if (face->IsCylinder()) {
@@ -31,7 +31,7 @@ bool faceNeedRework(ksFaceDefinitionPtr roundingFace) {
     ksEdgeCollectionPtr edges(roundingFace->EdgeCollection());
     int edgesCount = edges->GetCount();
     if (roundingFace->IsCylinder()) {
-        // Если грань цилиндрическая, то два ребра прямые, а другие два дуги
+        // Р•СЃР»Рё РіСЂР°РЅСЊ С†РёР»РёРЅРґСЂРёС‡РµСЃРєР°СЏ, С‚Рѕ РґРІР° СЂРµР±СЂР° РїСЂСЏРјС‹Рµ, Р° РґСЂСѓРіРёРµ РґРІР° РґСѓРіРё
         if (edgesCount != 4) {
             return true;
         }
@@ -46,17 +46,17 @@ bool faceNeedRework(ksFaceDefinitionPtr roundingFace) {
         }
         return !((straightCount == 2) && (arcCount == 2));
     } else {
-        // Если грань тороидальная
+        // Р•СЃР»Рё РіСЂР°РЅСЊ С‚РѕСЂРѕРёРґР°Р»СЊРЅР°СЏ
         if ((edgesCount == 2) || (edgesCount == 3)) {
-            // Два или три ребра никогда не потребуют доработки
-            // Про грань с тремя ребрами описано далее
+            // Р”РІР° РёР»Рё С‚СЂРё СЂРµР±СЂР° РЅРёРєРѕРіРґР° РЅРµ РїРѕС‚СЂРµР±СѓСЋС‚ РґРѕСЂР°Р±РѕС‚РєРё
+            // РџСЂРѕ РіСЂР°РЅСЊ СЃ С‚СЂРµРјСЏ СЂРµР±СЂР°РјРё РѕРїРёСЃР°РЅРѕ РґР°Р»РµРµ
             return false;
         } else if (edgesCount == 4) {
-            // Если ребра четыре, то они все должны быть дугами
+            // Р•СЃР»Рё СЂРµР±СЂР° С‡РµС‚С‹СЂРµ, С‚Рѕ РѕРЅРё РІСЃРµ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РґСѓРіР°РјРё
             for (int i = 0; i < edgesCount; i++) {
                 ksEdgeDefinitionPtr edge(edges->GetByIndex(i));
                 double length = edge->GetLength(ksLengthUnitsEnum::ksLUnMM);
-                // Также проверяем на полюсные ребра, их длина == 0
+                // РўР°РєР¶Рµ РїСЂРѕРІРµСЂСЏРµРј РЅР° РїРѕР»СЋСЃРЅС‹Рµ СЂРµР±СЂР°, РёС… РґР»РёРЅР° == 0
                 if (!edge->IsArc() && !doubleEqual(length, 0.0)) {
                     return true;
                 }
@@ -180,7 +180,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     IViewPtr view(views->ActiveView);
     IDrawingContainerPtr drawingContainer(view);
     
-    // Добавляем проекции
+    // Р”РѕР±Р°РІР»СЏРµРј РїСЂРѕРµРєС†РёРё
     sketch.definition->AddProjectionOf(target.trajectory.front()->GetVertex(true));
     IPointsPtr points(drawingContainer->Points);
     IPointPtr startPoint(points->GetPoint(0));
@@ -209,7 +209,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         lineSegment->Update();
     }
 
-    // Строим два отрезка
+    // РЎС‚СЂРѕРёРј РґРІР° РѕС‚СЂРµР·РєР°
     ILineSegmentPtr lineSeg1(lineSegments->Add());
     lineSeg1->X1 = startPoint->X; lineSeg1->Y1 = startPoint->Y;
     if (startPointIs1) {
@@ -280,7 +280,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         constraint->Create();
     }
 
-    // Устанавливаем размеры
+    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЂР°Р·РјРµСЂС‹
     ISymbols2DContainerPtr symbols2dContainer(view);
     IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
 
@@ -305,7 +305,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         constraint->Create();
     }
 
-    // Достраиваем эскиз дугой
+    // Р”РѕСЃС‚СЂР°РёРІР°РµРј СЌСЃРєРёР· РґСѓРіРѕР№
     IArcPtr arc(arcs->Add());
     arc->Xc = roundingArc->Xc; arc->Yc = roundingArc->Yc;
     arc->X1 = startPoint->X; arc->Y1 = startPoint->Y;
@@ -365,7 +365,7 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
         macroElement->StaffVisible = true;
         macroElementEntity->Create();
 
-        // Создаем плоскость для эскиза
+        // РЎРѕР·РґР°РµРј РїР»РѕСЃРєРѕСЃС‚СЊ РґР»СЏ СЌСЃРєРёР·Р°
         ksEntityPtr sketchPlane(part->NewEntity(Obj3dType::o3d_planePerpendicular));
         ksPlanePerpendicularDefinitionPtr sketchPlaneDef(sketchPlane->GetDefinition());
         sketchPlaneDef->SetEdge(target.trajectory.front());
@@ -374,13 +374,13 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
         sketchPlane->Create();
         macroElement->Add(sketchPlane);
         
-        // Создаем эскиз
+        // РЎРѕР·РґР°РµРј СЌСЃРєРёР·
         Sketch sketch = createSketch(kompas, part, sketchPlane);
         drawSketch(sketch, target, overhangThreshold);
         sketch.definition->EndEdit();
         macroElement->Add(sketch.entity);
         
-        // Протягиваем эскиз по траектории
+        // РџСЂРѕС‚СЏРіРёРІР°РµРј СЌСЃРєРёР· РїРѕ С‚СЂР°РµРєС‚РѕСЂРёРё
         ksEntityPtr evolutionEntity(part->NewEntity(Obj3dType::o3d_bossEvolution));
         ksBossEvolutionDefinitionPtr evolutionDef(evolutionEntity->GetDefinition());
         evolutionDef->chooseType = ksChooseType::ksChBodiesAndParts;

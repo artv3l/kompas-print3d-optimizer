@@ -32,13 +32,13 @@ bool checkSelectedFace(KompasObjectPtr kompas) {
 
 PrintSettings inputPrintSettings(KompasObjectPtr kompas) {
     PrintSettings ps;
-    if (kompas->ksReadDouble("ƒË‡ÏÂÚ ÒÓÔÎ‡:", 0.4, 0.05, 2.0, &ps.nozzleDiameter) != 1) {
+    if (kompas->ksReadDouble("–î–∏–∞–º–µ—Ç—Ä —Å–æ–ø–ª–∞:", 0.4, 0.05, 2.0, &ps.nozzleDiameter) != 1) {
         return printSettings;
     }
-    if (kompas->ksReadDouble("¬˚ÒÓÚ‡ ÒÎÓˇ:", 0.2, 0.01, 0.8, &ps.layerHeight) != 1) {
+    if (kompas->ksReadDouble("–í—ã—Å–æ—Ç–∞ —Å–ª–æ—è:", 0.2, 0.01, 0.8, &ps.layerHeight) != 1) {
         return printSettings;
     }
-    if (kompas->ksReadDouble("Ã‡ÍÒËÏ‡Î¸Ì˚È Û„ÓÎ Ì‡‚ËÒ‡ÌËÈ:", 40.0, 0.0, 90.0, &ps.overhangThreshold) != 1) {
+    if (kompas->ksReadDouble("–ú–∞–∫—Å–∏–º–∞–ª—å–Ω—ã–π —É–≥–æ–ª –Ω–∞–≤–∏—Å–∞–Ω–∏–π:", 40.0, 0.0, 90.0, &ps.overhangThreshold) != 1) {
         return printSettings;
     }
     return ps;
@@ -55,7 +55,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     if ((comm > 2) && !checkSelectedFace(kompas)) {
-        kompas->ksError("œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ÌÂ ‚˚·‡Ì‡!");
+        kompas->ksError("–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ –Ω–µ –≤—ã–±—Ä–∞–Ω–∞!");
         return;
     }
     switch (comm) {
@@ -71,10 +71,10 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         case 3:
         {
             std::ostringstream oss;
-            oss << "ƒË‡ÏÂÚ ÒÓÔÎ‡: " << printSettings.nozzleDiameter << "\n"
-                << "¬˚ÒÓÚ‡ ÒÎÓˇ: " << printSettings.layerHeight << "\n"
-                << "Ã‡ÍÒËÏ‡Î¸Ì˚È Û„ÓÎ Ì‡‚ËÒ‡ÌËÈ: " << printSettings.overhangThreshold << "\n"
-                << "œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ‚˚‰ÂÎÂÌ‡";
+            oss << "–î–∏–∞–º–µ—Ç—Ä —Å–æ–ø–ª–∞: " << printSettings.nozzleDiameter << "\n"
+                << "–í—ã—Å–æ—Ç–∞ —Å–ª–æ—è: " << printSettings.layerHeight << "\n"
+                << "–ú–∞–∫—Å–∏–º–∞–ª—å–Ω—ã–π —É–≥–æ–ª –Ω–∞–≤–∏—Å–∞–Ω–∏–π: " << printSettings.overhangThreshold << "\n"
+                << "–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ –≤—ã–¥–µ–ª–µ–Ω–∞";
             ksChooseMngPtr chooseMng(oldDocument->GetChooseMng());
             chooseMng->UnChooseAll();
             chooseMng->Choose(printFace);
@@ -83,7 +83,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         }
         case 4: {
               double radius = 0.0;
-              if (kompas->ksReadDouble("–‡‰ËÛÒ:", 0.0, 0.0, DBL_MAX, &radius) != 1) {
+              if (kompas->ksReadDouble("–†–∞–¥–∏—É—Å:", 0.0, 0.0, DBL_MAX, &radius) != 1) {
                   return;
               }
               optimizeByRounding(kompas, printFace, printPlaneEq, radius, printSettings.overhangThreshold);
@@ -125,5 +125,5 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         }
     }
     oldDocument->RebuildDocument();
-    kompas->ksMessage("ŒÔÚËÏËÁ‡ˆËˇ ÏÓ‰ÂÎË ·˚Î‡ ‚˚ÔÓÎÌÂÌ‡!");
+    kompas->ksMessage("–û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –º–æ–¥–µ–ª–∏ –±—ã–ª–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∞!");
 }

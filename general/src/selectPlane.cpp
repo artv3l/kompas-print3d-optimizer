@@ -100,21 +100,21 @@ bool PlaneEq::isVertical(ksEdgeDefinitionPtr edge, double cos_angle) {
     return false;
 }
 
-/** ¬ÓÁ‚‡˘‡ÂÚ ‚˚·‡ÌÌÛ˛ ÔÓÎ¸ÁÓ‚‡ÚÂÎÂÏ „‡Ì¸, ÂÒÎË ÓÌ‡ Û‰Ó‚ÎÂÚ‚ÓˇÂÚ ‚ÒÂÏ ÚÂ·Ó‚‡ÌËˇÏ. A Ú‡ÍÊÂ ˜ÂÂÁ ‡„ÛÏÂÌÚ *planeEq, ÔÂÂ‰‡∏Ú ÍÓ˝Ù. Û‡‚ÌÂÌËˇ ÔÎÓÒÍÓÒÚË.
+/** –í–æ–∑–≤—Ä–∞—â–∞–µ—Ç –≤—ã–±—Ä–∞–Ω–Ω—É—é –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª–µ–º –≥—Ä–∞–Ω—å, –µ—Å–ª–∏ –æ–Ω–∞ —É–¥–æ–≤–ª–µ—Ç–≤–æ—Ä—è–µ—Ç –≤—Å–µ–º —Ç—Ä–µ–±–æ–≤–∞–Ω–∏—è–º. A —Ç–∞–∫–∂–µ —á–µ—Ä–µ–∑ –∞—Ä–≥—É–º–µ–Ω—Ç *planeEq, –ø–µ—Ä–µ–¥–∞—ë—Ç –∫–æ—ç—Ñ. —É—Ä–∞–≤–Ω–µ–Ω–∏—è –ø–ª–æ—Å–∫–æ—Å—Ç–∏.
 **/
 ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq) {
     if (kompas) {
         ksDocument3DPtr doc3d = kompas->ActiveDocument3D();
         ksSelectionMngPtr selectionMng(doc3d->GetSelectionMng());
-        std::cout << " ÓÎË˜ÂÒÚ‚Ó ‚˚·‡ÌÌ˚ı ˝ÎÂÏÂÌÚÓ‚:" << selectionMng->GetCount() << "\n";
+        std::cout << "–ö–æ–ª–∏—á–µ—Å—Ç–≤–æ –≤—ã–±—Ä–∞–Ω–Ω—ã—Ö —ç–ª–µ–º–µ–Ω—Ç–æ–≤:" << selectionMng->GetCount() << "\n";
         if (selectionMng->GetCount() == 1 && selectionMng->GetObjectType(0) == 105) {
             ksEntityPtr element(selectionMng->GetObjectByIndex(0));
             if (element) {
                 if (element->type == 6) {
-                    std::cout << "¡˚Î‡ ‚˚·‡Ì‡ „‡Ì¸" << "\n";
+                    std::cout << "–ë—ã–ª–∞ –≤—ã–±—Ä–∞–Ω–∞ –≥—Ä–∞–Ω—å" << "\n";
                     ksFaceDefinitionPtr face(element->GetDefinition());
                     if (face->IsPlanar()) {
-                        std::cout << "√‡Ì¸ ˇ‚ÎˇÂÚÒˇ ÔÎÓÒÍÓÈ" << "\n";
+                        std::cout << "–ì—Ä–∞–Ω—å —è–≤–ª—è–µ—Ç—Å—è –ø–ª–æ—Å–∫–æ–π" << "\n";
 
                         ksSurfacePtr surface(face->GetSurface());
                         double x0, y0, z0;
@@ -125,24 +125,24 @@ ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq) {
 
                         d = -((a * x0) + (b * y0) + (c * z0));
 
-                        std::cout << "¬ÂÍÚÓ ÌÓÏ‡ÎË: X=" << a << " Y="
+                        std::cout << "–í–µ–∫—Ç–æ—Ä –Ω–æ—Ä–º–∞–ª–∏: X=" << a << " Y="
                             << b << " Z=" << c << "\n";
 
-                        std::cout << " ÓÓ‰ËÌ‡Ú˚ ÚÓ˜ÍË ÓÚÒ˜∏Ú‡: X=" << x0 << " Y="
+                        std::cout << "–ö–æ–æ—Ä–¥–∏–Ω–∞—Ç—ã —Ç–æ—á–∫–∏ –æ—Ç—Å—á—ë—Ç–∞: X=" << x0 << " Y="
                             << y0 << " Z=" << z0 << "\n";
 
-                        std::cout << "œÓÎÛ˜ÂÌ˚Â ÍÓ˝Ù. Û‡‚ÌÂÌËˇ ÔÎÓÒÍ: A=" << a << " B="
+                        std::cout << "–ü–æ–ª—É—á–µ–Ω—ã–µ –∫–æ—ç—Ñ. —É—Ä–∞–≤–Ω–µ–Ω–∏—è –ø–ª–æ—Å–∫: A=" << a << " B="
                             << b << " C=" << c << " D=" << d << "\n";
 
                         int s1 = 0, s2 = 0;
 
-                        std::cout << "»‰∏Ú ÔÓ‚ÂÍ‡ Ì‡ ÔÂÂ˜ÂÌËˇ..." << "\n";
+                        std::cout << "–ò–¥—ë—Ç –ø—Ä–æ–≤–µ—Ä–∫–∞ –Ω–∞ –ø–µ—Ä–µ—á–µ–Ω–∏—è..." << "\n";
 
                         checkPlane(kompas, a, b, c, d, &s1, &s2);
-                        std::cout << "—ÚÓÓÌ‡ 1:" << s1 << " —ÚÓÓÌ‡ 2:" << s2 << " \n";
+                        std::cout << "–°—Ç–æ—Ä–æ–Ω–∞ 1:" << s1 << " –°—Ç–æ—Ä–æ–Ω–∞ 2:" << s2 << " \n";
 
                         if (s1 == 0 && s2 > 0) {
-                            std::cout << "”‡‚ÌÂÌËÂ ÔÎÓÒÍÓÒÚË ÓÚ‡ÊÂÌÓ" << "\n";
+                            std::cout << "–£—Ä–∞–≤–Ω–µ–Ω–∏–µ –ø–ª–æ—Å–∫–æ—Å—Ç–∏ –æ—Ç—Ä–∞–∂–µ–Ω–æ" << "\n";
                             a = -a;
                             b = -b;
                             c = -c;
@@ -154,9 +154,9 @@ ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq) {
 
 
                         if (!((s1 > 0) && (s2 == 0))) {
-                            kompas->ksMessage("œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ÔÂÂÒÂÍ‡ÂÚ ‰ÂÚ‡Î¸!");
+                            kompas->ksMessage("–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ –ø–µ—Ä–µ—Å–µ–∫–∞–µ—Ç –¥–µ—Ç–∞–ª—å!");
                         } else {
-                            kompas->ksMessage("œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ÛÒÔÂ¯ÌÓ ‚˚·‡Ì‡!");
+                            kompas->ksMessage("–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ —É—Å–ø–µ—à–Ω–æ –≤—ã–±—Ä–∞–Ω–∞!");
                             planeEq->a = a;
                             planeEq->b = b;
                             planeEq->c = c;
@@ -165,19 +165,19 @@ ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq) {
                         }
 
                     } else {
-                        kompas->ksMessage("¬˚·‡ÌÌ‡ˇ „‡Ì¸ ‰ÓÎÊÌ‡ ·˚Ú¸ ÔÎÓÒÍÓÈ!");
+                        kompas->ksMessage("–í—ã–±—Ä–∞–Ω–Ω–∞—è –≥—Ä–∞–Ω—å –¥–æ–ª–∂–Ω–∞ –±—ã—Ç—å –ø–ª–æ—Å–∫–æ–π!");
                     }
                 } else {
-                    kompas->ksMessage("¬˚·‡ÌÌ˚È ˝ÎÂÏÂÌÚ ÌÂ ˇ‚ÎˇÂÚÒˇ „‡Ì¸˛!");
+                    kompas->ksMessage("–í—ã–±—Ä–∞–Ω–Ω—ã–π —ç–ª–µ–º–µ–Ω—Ç –Ω–µ —è–≤–ª—è–µ—Ç—Å—è –≥—Ä–∞–Ω—å—é!");
                 }
             } else {
                 std::cout << "WHAT?" << "\n";
             }
 
         } else if (selectionMng->GetCount() > 0) {
-            kompas->ksMessage("ƒÓÎÊÂÌ ·˚Î ·˚Ú¸ ‚˚·‡Ì ÚÓÎ¸ÍÓ Ó‰ËÌ ˝ÎÂÏÂÌÚ ‚ ‚Ë‰Â ÔÎÓÒÍÓÈ „‡ÌË!");
+            kompas->ksMessage("–î–æ–ª–∂–µ–Ω –±—ã–ª –±—ã—Ç—å –≤—ã–±—Ä–∞–Ω —Ç–æ–ª—å–∫–æ –æ–¥–∏–Ω —ç–ª–µ–º–µ–Ω—Ç –≤ –≤–∏–¥–µ –ø–ª–æ—Å–∫–æ–π –≥—Ä–∞–Ω–∏!");
         } else {
-            kompas->ksMessage("œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ÌÂ ‚˚·‡Ì‡!");
+            kompas->ksMessage("–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ –Ω–µ –≤—ã–±—Ä–∞–Ω–∞!");
         }
 
     }

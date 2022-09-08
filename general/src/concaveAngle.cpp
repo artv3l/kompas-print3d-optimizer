@@ -20,7 +20,7 @@ bool isConcaveAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
     bool isCreated = chamferEntity->Create();
 
     if (!isCreated) {
-        throw std::runtime_error("Îøèáêà ñîçäàíèÿ ôàñêè");
+        throw std::runtime_error("ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ñ„Ð°ÑÐºÐ¸");
     }
 
     massInertiaParam = part->CalcMassInertiaProperties(0x1 | 0x10); // mm kg

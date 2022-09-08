@@ -24,7 +24,7 @@ bool checkEdge(ksMeasurerPtr measurer, ksEdgeDefinitionPtr edge, double radius) 
                 double x1, x2, y1, y2, z1, z2;
                 v1->GetPoint(&x1, &y1, &z1);
                 v2->GetPoint(&x2, &y2, &z2);
-                double x = x2 - x1, y = y2 - y1, z = z2 - z1; //êîîðäèíàòû âåêòîðà ðåáðà
+                double x = x2 - x1, y = y2 - y1, z = z2 - z1; //ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ Ð²ÐµÐºÑ‚Ð¾Ñ€Ð° Ñ€ÐµÐ±Ñ€Ð°
 
                 ksFaceDefinitionPtr face1(edge->GetAdjacentFace(true));
                 ksFaceDefinitionPtr face2(edge->GetAdjacentFace(false));
@@ -70,7 +70,7 @@ bool checkEdge(ksMeasurerPtr measurer, ksEdgeDefinitionPtr edge, double radius) 
 
 
 void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneEq planeEq, double radius, double angle) {
-    double cos_angle = sin(angle * M_PI / 180.0); //äà, òóò ñìåæíûå óãëû
+    double cos_angle = sin(angle * M_PI / 180.0); //Ð´Ð°, Ñ‚ÑƒÑ‚ ÑÐ¼ÐµÐ¶Ð½Ñ‹Ðµ ÑƒÐ³Ð»Ñ‹
     IApplicationPtr api7 = kompas->ksGetApplication7();
     IKompasDocument3DPtr document3d(api7->GetActiveDocument());
     IPart7Ptr topPart(document3d->GetTopPart());
@@ -80,7 +80,7 @@ void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneE
     ksMeasurerPtr measurer(part->GetMeasurer());
     ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
     ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-    macroElementEntity->name = "Îïòèìèçèðóþùèå ñêðóãëåíèÿ äëÿ âûïèðàþùèõ óãëîâ";
+    macroElementEntity->name = "ÐžÐ¿Ñ‚Ð¸Ð¼Ð¸Ð·Ð¸Ñ€ÑƒÑŽÑ‰Ð¸Ðµ ÑÐºÑ€ÑƒÐ³Ð»ÐµÐ½Ð¸Ñ Ð´Ð»Ñ Ð²Ñ‹Ð¿Ð¸Ñ€Ð°ÑŽÑ‰Ð¸Ñ… ÑƒÐ³Ð»Ð¾Ð²";
     macroElement->StaffVisible = true;
     macroElementEntity->Create();
     for (int i = 0; i < entityCollection->GetCount(); i++) {
@@ -89,7 +89,7 @@ void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneE
         if (edge && checkEdge(measurer, edge, radius)) {
             bool isVerical = planeEq.isVertical(edge, cos_angle);
             if (isVerical) {
-                std::cout << "íàéäåíî âåðòèêàëüíîå ðåáðî" << "\n";
+                std::cout << "Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾ Ð²ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑŒÐ½Ð¾Ðµ Ñ€ÐµÐ±Ñ€Ð¾" << "\n";
                 ksEntityPtr filletEntity(part->NewEntity(o3d_fillet));
                 ksFilletDefinitionPtr fillet(filletEntity->GetDefinition());
                 ksEntityCollectionPtr array(fillet->array());
@@ -100,7 +100,7 @@ void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneE
                     macroElement->Add(filletEntity);
                 }
             } else {
-                std::cout << "íàéäåíî íåâåðòèêàëüíîå ðåáðî" << "\n";
+                std::cout << "Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾ Ð½ÐµÐ²ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑŒÐ½Ð¾Ðµ Ñ€ÐµÐ±Ñ€Ð¾" << "\n";
             }
         }
     }

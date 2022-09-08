@@ -40,19 +40,19 @@ ksEntityPtr createCute(ksPartPtr part, Sketch sketch, ksFaceDefinitionPtr depthF
 
     ksEntityPtr cutEntity(part->NewEntity(o3d_cutExtrusion));
     ksCutExtrusionDefinitionPtr cut(cutEntity->GetDefinition());
-    if (checkPlaneEntities(part, sketch.entity, depthFace1->GetEntity())) { //вытягиваем до depthFace2
+    if (checkPlaneEntities(part, sketch.entity, depthFace1->GetEntity())) { //РІС‹С‚СЏРіРёРІР°РµРј РґРѕ depthFace2
         cut->directionType = (short)Direction_Type::dtNormal;
         cut->SetSideParam(true, (short)End_Type::etUpToSurfaceTo, 0, 0, false);
         cut->SetDepthObject(true, depthFace2->GetEntity());
         cut->SetSketch(sketch.entity);
         cutEntity->Create();
-    } else if (checkPlaneEntities(part, sketch.entity, depthFace2->GetEntity())) { //вытягиваем до depthFace1
+    } else if (checkPlaneEntities(part, sketch.entity, depthFace2->GetEntity())) { //РІС‹С‚СЏРіРёРІР°РµРј РґРѕ depthFace1
         cut->directionType = (short)Direction_Type::dtNormal;
         cut->SetSideParam(true, (short)End_Type::etUpToSurfaceTo, 0, 0, false);
         cut->SetDepthObject(true, depthFace1->GetEntity());
         cut->SetSketch(sketch.entity);
         cutEntity->Create();
-    } else { //вытягиваем до depthFace1 и до depthFace2
+    } else { //РІС‹С‚СЏРіРёРІР°РµРј РґРѕ depthFace1 Рё РґРѕ depthFace2
         cut->directionType = (short)Direction_Type::dtBoth;
         cut->SetSideParam(false, (short)End_Type::etUpToSurfaceTo, 0, 0, false);
         cut->SetDepthObject(false, depthFace1->GetEntity());
@@ -121,7 +121,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
 
     ksEntityPtr mainMacroElementEntity(part->NewEntity(o3d_MacroObject));
     ksMacro3DDefinitionPtr mainMacroElement(mainMacroElementEntity->GetDefinition());
-    mainMacroElementEntity->name = "Оптимизация горизонтальных отверстий";
+    mainMacroElementEntity->name = "РћРїС‚РёРјРёР·Р°С†РёСЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅС‹С… РѕС‚РІРµСЂСЃС‚РёР№";
     mainMacroElement->StaffVisible = true;
     mainMacroElementEntity->Create();
 
@@ -137,7 +137,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
         bool removeItPls = false;
         ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
         ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-        macroElementEntity->name = "Объекты построенния";
+        macroElementEntity->name = "РћР±СЉРµРєС‚С‹ РїРѕСЃС‚СЂРѕРµРЅРЅРёСЏ";
         macroElement->StaffVisible = true;
         macroElementEntity->Create();
 
@@ -198,7 +198,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
                 }
                 double x = line->X2 - line->X1, y = line->Y2 - line->Y1;
                 double length = sqrt((x * x) + (y * y));
-                double x_vect = x / length, y_vect = y / length; //единичный вектор
+                double x_vect = x / length, y_vect = y / length; //РµРґРёРЅРёС‡РЅС‹Р№ РІРµРєС‚РѕСЂ
                 double r = circle->Radius;
                 double x0 = circle->Xc, y0 = circle->Yc;
 
@@ -206,10 +206,10 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
                 double cos_alpha = (2.0 * sqrt(2.0)) / 3.0;
 
                 double x_diag_vector_1 = (x_vect * cos_alpha) - (y_vect * sin_alpha),
-                    y_diag_vector_1 = (x_vect * sin_alpha) + (y_vect * cos_alpha); // единичный вектор повернутый на 45 град
+                    y_diag_vector_1 = (x_vect * sin_alpha) + (y_vect * cos_alpha); // РµРґРёРЅРёС‡РЅС‹Р№ РІРµРєС‚РѕСЂ РїРѕРІРµСЂРЅСѓС‚С‹Р№ РЅР° 45 РіСЂР°Рґ
 
                 double x_diag_vector_2 = (x_vect * cos_alpha) + (y_vect * sin_alpha),
-                    y_diag_vector_2 = -(x_vect * sin_alpha) + (y_vect * cos_alpha); // единичный вектор повёрнутый на -45 град
+                    y_diag_vector_2 = -(x_vect * sin_alpha) + (y_vect * cos_alpha); // РµРґРёРЅРёС‡РЅС‹Р№ РІРµРєС‚РѕСЂ РїРѕРІС‘СЂРЅСѓС‚С‹Р№ РЅР° -45 РіСЂР°Рґ
 
                 double ext_dist = r / (3.0 * tg_max_angle);
                 double p1_x = x0 + ((r + ext_dist) * x_vect), p1_y = y0 + ((r + ext_dist) * y_vect);

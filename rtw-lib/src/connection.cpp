@@ -9,7 +9,7 @@ KompasObjectPtr getKompasObjectPtr() {
         CString libname = "kAPI5.dll";
         filename.Replace(filename.Right(filename.GetLength() - (filename.ReverseFind('\\') + 1)), libname);
 
-        HINSTANCE hAppAuto = LoadLibrary(filename); // идентификатор kAPI5.dll
+        HINSTANCE hAppAuto = LoadLibrary(filename); // РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ kAPI5.dll
         if (hAppAuto) {
             typedef LPDISPATCH(WINAPI* FCreateKompasObject)();
             FCreateKompasObject pCreateKompasObject = (FCreateKompasObject)GetProcAddress(hAppAuto, "CreateKompasObject");

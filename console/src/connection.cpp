@@ -30,7 +30,7 @@ bool isKompasRun()
 
 KompasObjectPtr kompasInit() {
     if (!isKompasInstalled()) {
-        std::cerr << "Êîìïàñ íå óñòàíîâëåí" << "\n";
+        std::cerr << "ÐšÐ¾Ð¼Ð¿Ð°Ñ Ð½Ðµ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½" << "\n";
         return nullptr;
     }
     KompasObjectPtr kompas;

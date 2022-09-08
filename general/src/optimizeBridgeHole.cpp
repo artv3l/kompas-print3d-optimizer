@@ -9,9 +9,9 @@
 #include "utils.hpp"
 #include "concaveAngle.hpp"
 
-const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
-const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Достройка нависающих отверстий";
-const char* MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT = "Отверстие";
+const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Р—Р°РєСЂС‹С‚РёРµ РЅР°РІРёСЃР°СЋС‰РёС… РѕС‚РІРµСЂС‚РёР№ РґРёР°С„СЂР°РіРјРѕР№";
+const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Р”РѕСЃС‚СЂРѕР№РєР° РЅР°РІРёСЃР°СЋС‰РёС… РѕС‚РІРµСЂСЃС‚РёР№";
+const char* MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT = "РћС‚РІРµСЂСЃС‚РёРµ";
 
 bool loopIsCircle(ksLoopPtr loop) {
     ksEdgeCollectionPtr edges(loop->EdgeCollection());
@@ -137,7 +137,7 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
     return extrusionEntity;
 }
 
-/* Закрытие нависающих отверстий тонким слоем материала */
+/* Р—Р°РєСЂС‹С‚РёРµ РЅР°РІРёСЃР°СЋС‰РёС… РѕС‚РІРµСЂСЃС‚РёР№ С‚РѕРЅРєРёРј СЃР»РѕРµРј РјР°С‚РµСЂРёР°Р»Р° */
 
 std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, HoleType holeType) {
     ksMeasurerPtr measurer(part->GetMeasurer());
@@ -221,7 +221,7 @@ void optimizeBridgeHoleFill(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDe
     fillBridgeHoles(part, targets, extrusionDepth);
 }
 
-/* Достройка нависающих отверстий для печати мостами */
+/* Р”РѕСЃС‚СЂРѕР№РєР° РЅР°РІРёСЃР°СЋС‰РёС… РѕС‚РІРµСЂСЃС‚РёР№ РґР»СЏ РїРµС‡Р°С‚Рё РјРѕСЃС‚Р°РјРё */
 
 bool isOuterLoopForBuild(ksLoopPtr loop) {
     if (loopIsCircle(loop)) {
@@ -485,7 +485,7 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 void closeContour(ILineSegmentsPtr lineSegments, std::list<double> points, double y) {
     points.sort();
 
-    // Размеры всегда будут четным
+    // Р Р°Р·РјРµСЂС‹ РІСЃРµРіРґР° Р±СѓРґСѓС‚ С‡РµС‚РЅС‹Рј
     for (std::list<double>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
         ILineSegmentPtr lineSegment(lineSegments->Add());
         lineSegment->X1 = *it; lineSegment->Y1 = y;
@@ -506,7 +506,7 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     double yMin = innerCircle->Yc - innerCircle->Radius;
     double yMax = innerCircle->Yc + innerCircle->Radius;
 
-    // Строим вспомогательные линии
+    // РЎС‚СЂРѕРёРј РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ Р»РёРЅРёРё
     ILinesPtr lines(drawingContainer->Lines);
 
     ILinePtr line1(lines->Add());
@@ -521,16 +521,16 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
 
     ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
-    // Точки для замыкания контура
+    // РўРѕС‡РєРё РґР»СЏ Р·Р°РјС‹РєР°РЅРёСЏ РєРѕРЅС‚СѓСЂР°
     std::list<double> pointsMin;
     std::list<double> pointsMax;
 
     ILineSegmentsPtr lineSegments(drawingContainer->LineSegments);
-    int lineSegmentsСount = lineSegments->Count;
-    for (int lineSegmentIndex = 0; lineSegmentIndex < lineSegmentsСount; lineSegmentIndex++) {
+    int lineSegmentsРЎount = lineSegments->Count;
+    for (int lineSegmentIndex = 0; lineSegmentIndex < lineSegmentsРЎount; lineSegmentIndex++) {
         ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(lineSegmentIndex));
 
-        // Отрезок полностью вне промежутка
+        // РћС‚СЂРµР·РѕРє РїРѕР»РЅРѕСЃС‚СЊСЋ РІРЅРµ РїСЂРѕРјРµР¶СѓС‚РєР°
         if (((lineSegment->Y1 <= yMin) && (lineSegment->Y2 <= yMin)) ||
             ((lineSegment->Y1 >= yMax) && (lineSegment->Y2 >= yMax))) {
             lineSegment->Style = ksCurveStyleEnum::ksCSThin;

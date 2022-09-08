@@ -15,7 +15,7 @@ void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, Plan
 
 	ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
 	ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-	macroElementEntity->name = "Îïòèìèçèðóþùèå ôàñêè ñëîíîâüåé íîãè";
+	macroElementEntity->name = "ÐžÐ¿Ñ‚Ð¸Ð¼Ð¸Ð·Ð¸Ñ€ÑƒÑŽÑ‰Ð¸Ðµ Ñ„Ð°ÑÐºÐ¸ ÑÐ»Ð¾Ð½Ð¾Ð²ÑŒÐµÐ¹ Ð½Ð¾Ð³Ð¸";
 	macroElement->StaffVisible = true;
 	macroElementEntity->Create();
 
@@ -27,7 +27,7 @@ void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, Plan
 		if (currFace && currFace->IsPlanar()) {
 			PlaneEq currPlaneEq(currFace);
 			if (currPlaneEq.equals(planeEq)) {
-				std::cout << "Íàéäåíà ïîâåðõíîñòü â ïëîñêîñòè ïå÷àòè \n";
+				std::cout << "ÐÐ°Ð¹Ð´ÐµÐ½Ð° Ð¿Ð¾Ð²ÐµÑ€Ñ…Ð½Ð¾ÑÑ‚ÑŒ Ð² Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚Ð¸ Ð¿ÐµÑ‡Ð°Ñ‚Ð¸ \n";
 				ksEdgeCollectionPtr edges(currFace->EdgeCollection());
 				for (int i = 0; i < edges->GetCount(); i++) {
 					edgesTargets.insert(ksEdgeDefinitionPtr(edges->GetByIndex(i)));

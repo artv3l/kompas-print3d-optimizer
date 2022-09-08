@@ -27,45 +27,45 @@ bool checkSelectedFace(KompasObjectPtr kompas) {
 void performRoundingOptimization(KompasObjectPtr kompas) {
     double radius;
     double angle;
-    if (checkSelectedFace(kompas) && kompas->ksReadDouble("–‡‰ËÛÒ: ", 0.0, -DBL_MIN, DBL_MAX, &radius) == 1 && kompas->ksReadDouble("√‡ÌË˜Ì˚È Û„ÓÎ: ", 60, -DBL_MIN, DBL_MAX, &angle) == 1 ) {
+    if (checkSelectedFace(kompas) && kompas->ksReadDouble("–†–∞–¥–∏—É—Å: ", 0.0, -DBL_MIN, DBL_MAX, &radius) == 1 && kompas->ksReadDouble("–ì—Ä–∞–Ω–∏—á–Ω—ã–π —É–≥–æ–ª: ", 60, -DBL_MIN, DBL_MAX, &angle) == 1 ) {
         if (radius > DBL_MIN) {
             optimizeByRounding(kompas, printFace, printPlaneEq, radius, angle);
-            kompas->ksMessage("ŒÔÚËÏËÁ‡ˆËˇ ÏÓ‰ÂÎË ·˚Î‡ ‚˚ÔÓÎÌÂÌ‡!");
+            kompas->ksMessage("–û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –º–æ–¥–µ–ª–∏ –±—ã–ª–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∞!");
         } else {
-            kompas->ksMessage("ÕÂ‚ÂÌ˚È ‡‰ËÛÒ!");
+            kompas->ksMessage("–ù–µ–≤–µ—Ä–Ω—ã–π —Ä–∞–¥–∏—É—Å!");
         }
     }
 }
 
 void performAntiElephantFootOptimiztion(KompasObjectPtr kompas) {
     double depth;
-    if (checkSelectedFace(kompas) && kompas->ksReadDouble("¬˚ÒÓÚ‡ ÒÎÓˇ ÔÂ˜‡ÚË: ", 0.0, -DBL_MIN, DBL_MAX, &depth) == 1) {
+    if (checkSelectedFace(kompas) && kompas->ksReadDouble("–í—ã—Å–æ—Ç–∞ —Å–ª–æ—è –ø–µ—á–∞—Ç–∏: ", 0.0, -DBL_MIN, DBL_MAX, &depth) == 1) {
         optimizeElephantFoot(kompas, printFace, printPlaneEq, depth*2);
-        kompas->ksMessage("ŒÔÚËÏËÁ‡ˆËˇ ÏÓ‰ÂÎË ·˚Î‡ ‚˚ÔÓÎÌÂÌ‡!");
+        kompas->ksMessage("–û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –º–æ–¥–µ–ª–∏ –±—ã–ª–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∞!");
     }
 }
 
 void performHorizontalHolesOptimization(KompasObjectPtr kompas) {
-    double maxAngle; //Û„ÓÎ Ì‡‚ËÒ‡ÌËˇ
-    if (checkSelectedFace(kompas) && kompas->ksReadDouble("Ã‡ÍÒ. Û„ÓÎ Ì‡‚ËÒ‡ÌËˇ: ", 60, -DBL_MIN, DBL_MAX, &maxAngle) == 1) {
+    double maxAngle; //—É–≥–æ–ª –Ω–∞–≤–∏—Å–∞–Ω–∏—è
+    if (checkSelectedFace(kompas) && kompas->ksReadDouble("–ú–∞–∫—Å. —É–≥–æ–ª –Ω–∞–≤–∏—Å–∞–Ω–∏—è: ", 60, -DBL_MIN, DBL_MAX, &maxAngle) == 1) {
         optimizeCircleHorizontalHoles(kompas, maxAngle, printFace, printPlaneEq);
     }
 }
 
 void performBridgeHolesBuildOptimization(KompasObjectPtr kompas) {
     double depth;
-    if (kompas->ksReadDouble("¬˚ÒÓÚ‡ ÒÎÓˇ ÔÂ˜‡ÚË: ", 0.2, DBL_MIN, DBL_MAX, &depth) == 1) {
+    if (kompas->ksReadDouble("–í—ã—Å–æ—Ç–∞ —Å–ª–æ—è –ø–µ—á–∞—Ç–∏: ", 0.2, DBL_MIN, DBL_MAX, &depth) == 1) {
         optimizeBridgeHoleBuild(kompas, kompas->ActiveDocument3D(), oldDocument->GetPart(pTop_Part), printFace, depth);
         oldDocument->RebuildDocument();
-        kompas->ksMessage("ŒÔÚËÏËÁ‡ˆËˇ ÏÓ‰ÂÎË ·˚Î‡ ‚˚ÔÓÎÌÂÌ‡!");
+        kompas->ksMessage("–û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –º–æ–¥–µ–ª–∏ –±—ã–ª–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∞!");
     }
 }
 
 void performBridgeHolesFillOptimization(KompasObjectPtr kompas) {
     double depth;
-    if (kompas->ksReadDouble("¬˚ÒÓÚ‡ ÒÎÓˇ ÔÂ˜‡ÚË: ", 0.2, DBL_MIN, DBL_MAX, &depth) == 1) {
+    if (kompas->ksReadDouble("–í—ã—Å–æ—Ç–∞ —Å–ª–æ—è –ø–µ—á–∞—Ç–∏: ", 0.2, DBL_MIN, DBL_MAX, &depth) == 1) {
         long choise = 0;
-        kompas->ksReadInt("1-ÍÛ„Î˚Â;2-ÌÂÍÛ„Î˚Â;3-‚ÒÂ", 0, 1, 3, &choise);
+        kompas->ksReadInt("1-–∫—Ä—É–≥–ª—ã–µ;2-–Ω–µ–∫—Ä—É–≥–ª—ã–µ;3-–≤—Å–µ", 0, 1, 3, &choise);
         HoleType choisedType;
         switch (choise)
         {
@@ -86,7 +86,7 @@ void performBridgeHolesFillOptimization(KompasObjectPtr kompas) {
         }
         optimizeBridgeHoleFill(oldDocument, oldDocument->GetPart(pTop_Part), printFace, depth, choisedType);
         oldDocument->RebuildDocument();
-        kompas->ksMessage("ŒÔÚËÏËÁ‡ˆËˇ ÏÓ‰ÂÎË ·˚Î‡ ‚˚ÔÓÎÌÂÌ‡!");
+        kompas->ksMessage("–û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –º–æ–¥–µ–ª–∏ –±—ã–ª–∞ –≤—ã–ø–æ–ª–Ω–µ–Ω–∞!");
     }
 }
 
@@ -98,28 +98,28 @@ int main() {
     }
     while (true) {
         std::setlocale(LC_ALL, "Russian");
-        std::cout << "¬˚·ÂËÚÂ ÔÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË!\n";
+        std::cout << "–í—ã–±–µ—Ä–∏—Ç–µ –ø–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏!\n";
         system("pause");
 
         printFace = getSelectedPlane(kompas, &printPlaneEq);
         oldDocument = kompas->ActiveDocument3D();
         if (!checkSelectedFace(kompas)) {
-            std::cout << "œÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË ÌÂ ‚˚·‡Ì‡!\n";
+            std::cout << "–ü–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏ –Ω–µ –≤—ã–±—Ä–∞–Ω–∞!\n";
             continue;
         }
         while (true) {
             if (kompas->ActiveDocument3D() != oldDocument) {
-                std::cout << "—Ú‡˚È ‰ÓÍÛÏÂÌÚ ·˚Î Á‡Í˚Ú, ÌÛÊÌÓ Á‡ÌÓ‚Ó ‚˚·‡Ú¸ ÔÎÓÒÍÓÒÚ¸ ÔÂ˜‡ÚË.\n";
+                std::cout << "–°—Ç–∞—Ä—ã–π –¥–æ–∫—É–º–µ–Ω—Ç –±—ã–ª –∑–∞–∫—Ä—ã—Ç, –Ω—É–∂–Ω–æ –∑–∞–Ω–æ–≤–æ –≤—ã–±—Ä–∞—Ç—å –ø–ª–æ—Å–∫–æ—Å—Ç—å –ø–µ—á–∞—Ç–∏.\n";
                 break;
             }
             short choise;
-            std::cout << "1 - »ÒÔ‡‚ÎÂÌËÂ ‚˚ÔË‡˛˘Ëı Û„ÎÓ‚" << "\n";
-            std::cout << "2 - »ÒÔ‡‚ÎÂÌËÂ ÒÎÓÌÓ‚¸ÂÈ ÌÓ„Ë" << "\n";
-            std::cout << "3 - ŒÔÚËÏËÁ‡ˆËˇ „ÓËÁÓÌÚ‡Î¸Ì˚ı ÍÛ„Î˚ı ÓÚ‚ÂÒÚËÈ" << "\n";
-            std::cout << "4 - «‡Í˚ÚËÂ Ì‡‚ËÒ‡˛˘Ëı ÓÚ‚ÂÒÚËÈ ‰Ë‡Ù‡„ÏÓÈ" << "\n";
-            std::cout << "5 - ƒÓÒÚÓÈÍ‡ Ì‡‚ËÒ‡˛˘Ëı ÍÛ„Î˚ı ÓÚ‚ÂÒÚËÈ ‰Ó Ì‡·Ó‡ ÏÓÒÚÓ‚" << "\n";
+            std::cout << "1 - –ò—Å–ø—Ä–∞–≤–ª–µ–Ω–∏–µ –≤—ã–ø–∏—Ä–∞—é—â–∏—Ö —É–≥–ª–æ–≤" << "\n";
+            std::cout << "2 - –ò—Å–ø—Ä–∞–≤–ª–µ–Ω–∏–µ —Å–ª–æ–Ω–æ–≤—å–µ–π –Ω–æ–≥–∏" << "\n";
+            std::cout << "3 - –û–ø—Ç–∏–º–∏–∑–∞—Ü–∏—è –≥–æ—Ä–∏–∑–æ–Ω—Ç–∞–ª—å–Ω—ã—Ö –∫—Ä—É–≥–ª—ã—Ö –æ—Ç–≤–µ—Ä—Å—Ç–∏–π" << "\n";
+            std::cout << "4 - –ó–∞–∫—Ä—ã—Ç–∏–µ –Ω–∞–≤–∏—Å–∞—é—â–∏—Ö –æ—Ç–≤–µ—Ä—Å—Ç–∏–π –¥–∏–∞—Ñ—Ä–∞–≥–º–æ–π" << "\n";
+            std::cout << "5 - –î–æ—Å—Ç—Ä–æ–π–∫–∞ –Ω–∞–≤–∏—Å–∞—é—â–∏—Ö –∫—Ä—É–≥–ª—ã—Ö –æ—Ç–≤–µ—Ä—Å—Ç–∏–π –¥–æ –Ω–∞–±–æ—Ä–∞ –º–æ—Å—Ç–æ–≤" << "\n";
 
-            std::cout << "¬‡¯ ‚˚·Ó:";
+            std::cout << "–í–∞—à –≤—ã–±–æ—Ä:";
             std::cin >> choise;
             if (kompas) {
                 switch (choise) {
@@ -144,7 +144,7 @@ int main() {
                     break;
                 }
                 default:
-                    std::cout << "Œ¯Ë·Í‡\n";
+                    std::cout << "–û—à–∏–±–∫–∞\n";
                     return 0;
                     break;
                 }
