@@ -5,6 +5,7 @@
 #include <atlbase.h>
 
 #include "utils.hpp"
+#include "Macro.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Оптимизация скругленных ребер на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -347,23 +348,12 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
 void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ksFaceDefinitionPtr printFace, double overhangThreshold,
         ReworkType reworkType) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(printFace, reworkType);
-
-    ksEntityPtr macroEntity(part->NewEntity(o3d_MacroObject));
-    ksMacro3DDefinitionPtr macro(macroEntity->GetDefinition());
-    macroEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE;
-    macro->StaffVisible = true;
-    macroEntity->Create();
+    Macro macro(part, MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE, true);
 
     for (RoundingEdgeOnPrintFaceTarget target : targets) {
-        ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
-        ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-        if (target.needRework) {
-            macroElementEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK;
-        } else {
-            macroElementEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT;
-        }
-        macroElement->StaffVisible = true;
-        macroElementEntity->Create();
+        Macro macroElement(part,
+            target.needRework ? MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK : MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT,
+            true);
 
         // Создаем плоскость для эскиза
         ksEntityPtr sketchPlane(part->NewEntity(Obj3dType::o3d_planePerpendicular));
@@ -372,13 +362,13 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
         sketchPlaneDef->SetPoint(target.trajectory.front()->GetVertex(true));
         sketchPlane->hidden = true;
         sketchPlane->Create();
-        macroElement->Add(sketchPlane);
+        macroElement.add(sketchPlane);
         
         // Создаем эскиз
         Sketch sketch = createSketch(kompas, part, sketchPlane);
         drawSketch(sketch, target, overhangThreshold);
         sketch.definition->EndEdit();
-        macroElement->Add(sketch.entity);
+        macroElement.add(sketch.entity);
         
         // Протягиваем эскиз по траектории
         ksEntityPtr evolutionEntity(part->NewEntity(Obj3dType::o3d_bossEvolution));
@@ -391,10 +381,7 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
             trajectory->Add(edge);
         }
         evolutionEntity->Create();
-        macroElement->Add(evolutionEntity);
-        macroElementEntity->Update();
-        
-        macro->Add(macroElementEntity);
+        macroElement.add(evolutionEntity);
+        macro.add(macroElement);
     }
-    macroEntity->Update();
 }

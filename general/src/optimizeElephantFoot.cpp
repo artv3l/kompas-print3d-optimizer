@@ -5,6 +5,9 @@
 #include <set>
 
 #include "selectPlane.hpp"
+#include "Macro.hpp"
+
+const char* MACRO_NAME_ELEPHANT_FOOT = "Оптимизирующие фаски слоновьей ноги";
 
 void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneEq planeEq, double width) {
 	IApplicationPtr api7 = kompas->ksGetApplication7();
@@ -12,12 +15,7 @@ void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, Plan
 	IPart7Ptr topPart(document3d->GetTopPart());
 	ksPartPtr part = kompas->TransferInterface(topPart, 1, 0);
 	ksFeaturePtr feature(part->GetFeature());
-
-	ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
-	ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-	macroElementEntity->name = "Оптимизирующие фаски слоновьей ноги";
-	macroElement->StaffVisible = true;
-	macroElementEntity->Create();
+	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
 
 	ksEntityCollectionPtr entityCollection(feature->EntityCollection(o3d_face));
 	std::set<ksEdgeDefinitionPtr> edgesTargets;
@@ -46,12 +44,11 @@ void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, Plan
 			chamferEntity->hidden = true;
 			bool isCreated = chamferEntity->Create();
 			if (isCreated) {
-				macroElement->Add(chamferEntity);
+				macro.add(chamferEntity);
 			} else {
 				array->Clear();
 			}
 		}
 	}
-	macroElementEntity->Update();
 	document3d->RebuildDocument();
 }
