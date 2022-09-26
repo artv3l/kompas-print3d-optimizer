@@ -7,6 +7,9 @@
 #include <math.h>
 
 #include "selectPlane.hpp"
+#include "Macro.hpp"
+
+const char* MACRO_NAME_ROUNDING = "Оптимизирующие скругления для выпирающих углов";
 
 bool checkEdge(ksMeasurerPtr measurer, ksEdgeDefinitionPtr edge, double radius) {
     if (edge) {
@@ -68,7 +71,6 @@ bool checkEdge(ksMeasurerPtr measurer, ksEdgeDefinitionPtr edge, double radius) 
 
 }
 
-
 void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneEq planeEq, double radius, double angle) {
     double cos_angle = sin(angle * M_PI / 180.0); //да, тут смежные углы
     IApplicationPtr api7 = kompas->ksGetApplication7();
@@ -78,11 +80,8 @@ void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneE
     ksFeaturePtr feature(part->GetFeature());
     ksEntityCollectionPtr entityCollection(feature->EntityCollection(o3d_edge));
     ksMeasurerPtr measurer(part->GetMeasurer());
-    ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
-    ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-    macroElementEntity->name = "Оптимизирующие скругления для выпирающих углов";
-    macroElement->StaffVisible = true;
-    macroElementEntity->Create();
+    Macro macro(part, MACRO_NAME_ROUNDING, true);
+    
     for (int i = 0; i < entityCollection->GetCount(); i++) {
         ksEntityPtr entity(entityCollection->GetByIndex(i));
         ksEdgeDefinitionPtr edge(entity->GetDefinition());
@@ -97,12 +96,11 @@ void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneE
                 array->Add(entity);
                 filletEntity->Create();
                 if (filletEntity->IsCreated()) {
-                    macroElement->Add(filletEntity);
+                    macro.add(filletEntity);
                 }
             } else {
                 std::cout << "найдено невертикальное ребро" << "\n";
             }
         }
     }
-    macroElementEntity->Update();
 }

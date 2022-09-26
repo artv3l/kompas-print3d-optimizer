@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
+    <ClCompile Include="..\general\src\Macro.cpp" />
     <ClCompile Include="..\general\src\optimizeBridgeHole.cpp" />
     <ClCompile Include="..\general\src\optimizeCircleHorizontalHoles.cpp" />
     <ClCompile Include="..\general\src\optimizeElephantFoot.cpp" />
@@ -159,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
+    <ClInclude Include="..\general\include\Macro.hpp" />
     <ClInclude Include="..\general\include\optimizeBridgeHole.hpp" />
     <ClInclude Include="..\general\include\optimizeCircleHorizontalHoles.hpp" />
     <ClInclude Include="..\general\include\optimizeElephantFoot.hpp" />
