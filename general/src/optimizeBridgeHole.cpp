@@ -297,7 +297,7 @@ void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop) {
     }
 }
 
-ICirclePtr drawThinCircleProjection(Sketch sketch, ksPartPtr part, BridgeHoleBuildTarget target) {
+ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target) {
 
     IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
     IViewsPtr views(viewsAndLayersManager->Views);
@@ -587,15 +587,47 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     closeContour(lineSegments, pointsMax, yMax);
 }
 
-void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, double centerX, double centerY, double radius, int angleCount) {
-    ksRegularPolygonParamPtr polygonParam(kompas->GetParamStruct(ko_RegularPolygonParam));
-    polygonParam->xc = centerX; polygonParam->yc = centerY;
-    polygonParam->count = angleCount;
-    polygonParam->describe = true;
-    polygonParam->radius = radius;
-    polygonParam->style = 1;
-
-    sketch.document2d->ksRegularPolygon(polygonParam, 0);
+void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
+    ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
+    
+    IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
+    IViewsPtr views(viewsAndLayersManager->Views);
+    IViewPtr view(views->ActiveView);
+    IDrawingContainerPtr drawingContainer(view);
+    
+    IRegularPolygonsPtr regularPolygons = drawingContainer->RegularPolygons;
+    IRegularPolygonPtr regularPolygon = regularPolygons->Add();
+    regularPolygon->Xc = innerCircle->Xc; regularPolygon->Yc = innerCircle->Yc;
+    regularPolygon->Count = angleCount;
+    regularPolygon->Describe = true;
+    regularPolygon->Radius = innerCircle->Radius;
+    regularPolygon->Style = 1;
+    regularPolygon->Angle = 0;
+    regularPolygon->Update();
+    IDrawingObjectPtr regularPolygonDrawingObject(regularPolygon);
+    IDrawingObject1Ptr regularPolygonDrawingObject1(regularPolygonDrawingObject);
+    {
+        IParametriticConstraintPtr constraint(regularPolygonDrawingObject1->NewConstraint());
+        constraint->ConstraintType = ksCTangentTwoCurves;
+        constraint->Partner = static_cast<IDispatch*>(innerCircle);
+        constraint->Create();
+    }
+    {
+        IParametriticConstraintPtr constraint(regularPolygonDrawingObject1->NewConstraint());
+        constraint->ConstraintType = ksCMergePoints;
+        constraint->Index = 0;
+        constraint->Partner = static_cast<IDispatch*>(innerCircle);
+        constraint->PartnerIndex = 0;
+        constraint->Create();
+    }
+    {
+        IParametriticConstraintPtr constraint(regularPolygonDrawingObject1->NewConstraint());
+        constraint->ConstraintType = ksCHAlignPoints;
+        constraint->Index = 1;
+        constraint->Partner = static_cast<IDispatch*>(regularPolygon);
+        constraint->PartnerIndex = 2;
+        constraint->Create();
+    }
 }
 
 void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, double stepDepth) {
@@ -605,7 +637,7 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
         Macro macroElement(part, MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT, true);
 
         Sketch sketch = createSketch(kompas, part, target.face);
-        ICirclePtr innerCircle = drawThinCircleProjection(sketch, part, target);
+        ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
         double centerX = innerCircle->Xc, centerY = innerCircle->Yc, radius = innerCircle->Radius;
 
         if (loopIsCircle(target.outerLoop)) {
@@ -615,23 +647,20 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
         }
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
-        macroElement.add(cutExtrusion(part, sketch.entity, true, stepDepth));
-
-        {
-            Sketch sketch2 = createSketch(kompas, part, target.face);
-            bridgeHoleBuildDrawSketch2(kompas, sketch2, centerX, centerY, radius, 4);
-            sketch2.definition->EndEdit();
-            macroElement.add(sketch2.entity);
-            macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 2));
-        }
-        {
-            Sketch sketch2 = createSketch(kompas, part, target.face);
-            bridgeHoleBuildDrawSketch2(kompas, sketch2, centerX, centerY, radius, 8);
-            sketch2.definition->EndEdit();
-            macroElement.add(sketch2.entity);
-            macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 3));
-        }
         
+        Sketch sketch2 = createSketch(kompas, part, target.face);
+        bridgeHoleBuildDrawSketch2(kompas, sketch2, target, 4);
+        sketch2.definition->EndEdit();
+        macroElement.add(sketch2.entity);
+            
+        Sketch sketch3 = createSketch(kompas, part, target.face);
+        bridgeHoleBuildDrawSketch2(kompas, sketch3, target, 8);
+        sketch3.definition->EndEdit();
+        macroElement.add(sketch3.entity);
+
+        macroElement.add(cutExtrusion(part, sketch.entity, true, stepDepth));
+        macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 2));
+        macroElement.add(cutExtrusion(part, sketch3.entity, true, stepDepth * 3));
         macro.add(macroElement);
     }
 }
