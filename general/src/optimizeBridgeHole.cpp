@@ -9,6 +9,7 @@
 #include "utils.hpp"
 #include "concaveAngle.hpp"
 #include "Macro.hpp"
+#include "ConstraintsCreator.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Достройка нависающих отверстий";
@@ -297,7 +298,7 @@ void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop) {
     }
 }
 
-ICirclePtr drawThinCircleProjection(Sketch sketch, ksPartPtr part, BridgeHoleBuildTarget target) {
+ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target) {
 
     IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
     IViewsPtr views(viewsAndLayersManager->Views);
@@ -341,67 +342,22 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
     lineSegment1->X1 = outerCircle->Xc + innerCircle->Radius; lineSegment1->Y1 = outerCircle->Yc - innerCircle->Radius;
     lineSegment1->X2 = outerCircle->Xc - innerCircle->Radius; lineSegment1->Y2 = outerCircle->Yc - innerCircle->Radius;
     lineSegment1->Update();
-    IDrawingObjectPtr lineSegment1DrawingObject(lineSegment1);
-    IDrawingObject1Ptr lineSegment1DrawingObject1(lineSegment1DrawingObject);
-    {
-        IParametriticConstraintPtr constraint(lineSegment1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCPointOnCurve;
-        constraint->Index = 0;
-        constraint->Partner = static_cast<IDispatch*>(outerCircle);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCPointOnCurve;
-        constraint->Index = 1;
-        constraint->Partner = static_cast<IDispatch*>(outerCircle);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCHorizontal;
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCTangentTwoCurves;
-        constraint->Partner = static_cast<IDispatch*>(innerCircle);
-        constraint->Create();
-    }
+    ConstraintsCreator constrCreator(lineSegment1);
+    constrCreator.pointOnCurve(0, outerCircle);
+    constrCreator.pointOnCurve(1, outerCircle);
+    constrCreator.horizontal();
+    constrCreator.tangentTwoCurves(innerCircle);
 
     ILineSegmentPtr lineSegment2(lineSegments->Add());
     lineSegment2->X1 = outerCircle->Xc + innerCircle->Radius; lineSegment2->Y1 = outerCircle->Yc + innerCircle->Radius;
     lineSegment2->X2 = outerCircle->Xc - innerCircle->Radius; lineSegment2->Y2 = outerCircle->Yc + innerCircle->Radius;
     lineSegment2->Update();
-    IDrawingObjectPtr lineSegment2DrawingObject(lineSegment2);
-    IDrawingObject1Ptr lineSegment2DrawingObject1(lineSegment2DrawingObject);
-    {
-        IParametriticConstraintPtr constraint(lineSegment2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCPointOnCurve;
-        constraint->Index = 0;
-        constraint->Partner = static_cast<IDispatch*>(outerCircle);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCPointOnCurve;
-        constraint->Index = 1;
-        constraint->Partner = static_cast<IDispatch*>(outerCircle);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCParallel;
-        constraint->Partner = static_cast<IDispatch*>(lineSegment1);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSegment2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksCTangentTwoCurves;
-        constraint->Partner = static_cast<IDispatch*>(innerCircle);
-        constraint->Create();
-    }
-
+    constrCreator = ConstraintsCreator(lineSegment2);
+    constrCreator.pointOnCurve(0, outerCircle);
+    constrCreator.pointOnCurve(1, outerCircle);
+    constrCreator.parallel(lineSegment1);
+    constrCreator.tangentTwoCurves(innerCircle);
+    
     IArcsPtr arcs(drawingContainer->Arcs);
     {
         IArcPtr arc(arcs->Add());
@@ -411,33 +367,10 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
         arc->X2 = lineSegment2->X1; arc->Y2 = lineSegment2->Y1;
         arc->Direction = false;
         arc->Update();
-
-        IDrawingObjectPtr arcDrawingObject(arc);
-        IDrawingObject1Ptr arcDrawingObject1(arcDrawingObject);
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 0;
-            constraint->Partner = static_cast<IDispatch*>(outerCircle);
-            constraint->PartnerIndex = 0;
-            constraint->Create();
-        }
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 1;
-            constraint->Partner = static_cast<IDispatch*>(lineSegment1);
-            constraint->PartnerIndex = 0;
-            constraint->Create();
-        }
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 2;
-            constraint->Partner = static_cast<IDispatch*>(lineSegment2);
-            constraint->PartnerIndex = 0;
-            constraint->Create();
-        }
+        constrCreator = ConstraintsCreator(arc);
+        constrCreator.mergePoints(0, outerCircle, 0);
+        constrCreator.mergePoints(1, lineSegment1, 0);
+        constrCreator.mergePoints(2, lineSegment2, 0);
     }
     {
         IArcPtr arc(arcs->Add());
@@ -447,33 +380,10 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
         arc->X2 = lineSegment2->X2; arc->Y2 = lineSegment2->Y2;
         arc->Direction = true;
         arc->Update();
-
-        IDrawingObjectPtr arcDrawingObject(arc);
-        IDrawingObject1Ptr arcDrawingObject1(arcDrawingObject);
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 0;
-            constraint->Partner = static_cast<IDispatch*>(outerCircle);
-            constraint->PartnerIndex = 0;
-            constraint->Create();
-        }
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 1;
-            constraint->Partner = static_cast<IDispatch*>(lineSegment1);
-            constraint->PartnerIndex = 1;
-            constraint->Create();
-        }
-        {
-            IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-            constraint->ConstraintType = ksCMergePoints;
-            constraint->Index = 2;
-            constraint->Partner = static_cast<IDispatch*>(lineSegment2);
-            constraint->PartnerIndex = 1;
-            constraint->Create();
-        }
+        constrCreator = ConstraintsCreator(arc);
+        constrCreator.mergePoints(0, outerCircle, 0);
+        constrCreator.mergePoints(1, lineSegment1, 1);
+        constrCreator.mergePoints(2, lineSegment2, 1);
     }
 }
 
@@ -508,11 +418,17 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     line1->X1 = innerCircle->Xc + 1; line1->Y1 = yMin;
     line1->X2 = innerCircle->Xc - 1; line1->Y2 = yMin;
     line1->Update();
+    ConstraintsCreator constrCreator(line1);
+    constrCreator.horizontal();
+    constrCreator.tangentTwoCurves(innerCircle);
 
     ILinePtr line2(lines->Add());
     line2->X1 = innerCircle->Xc + 1; line2->Y1 = yMax;
     line2->X2 = innerCircle->Xc - 1; line2->Y2 = yMax;
     line2->Update();
+    constrCreator = ConstraintsCreator(line2);
+    constrCreator.horizontal();
+    constrCreator.tangentTwoCurves(innerCircle);
 
     ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
@@ -542,6 +458,7 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
             lineSegment->Style = ksCurveStyleEnum::ksCSThin;
             lineSegment->Update();
         } else {
+            // Отрезок полностью внутри промежутка
             continue;
         }
 
@@ -555,9 +472,11 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
             newLineSegment->X1 = point1->x; newLineSegment->Y1 = point1->y;
             newLineSegment->X2 = point2->x; newLineSegment->Y2 = point2->y;
             newLineSegment->Update();
+            // TODO Накладываем ограничения (привязки к исходной геометрии)
 
             pointsMin.push_back(point1->x);
             pointsMax.push_back(point2->x);
+            // TODO Добавляем не только координаты, но и указатель на отрезок и номер точки, чтобы потом наложить ограничения
 
             continue;
         }
@@ -580,6 +499,7 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
         }
         newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
         newLineSegment->Update();
+        // TODO Накладываем ограничения
 
     }
 
@@ -587,15 +507,27 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     closeContour(lineSegments, pointsMax, yMax);
 }
 
-void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, double centerX, double centerY, double radius, int angleCount) {
-    ksRegularPolygonParamPtr polygonParam(kompas->GetParamStruct(ko_RegularPolygonParam));
-    polygonParam->xc = centerX; polygonParam->yc = centerY;
-    polygonParam->count = angleCount;
-    polygonParam->describe = true;
-    polygonParam->radius = radius;
-    polygonParam->style = 1;
-
-    sketch.document2d->ksRegularPolygon(polygonParam, 0);
+void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
+    ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
+    
+    IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
+    IViewsPtr views(viewsAndLayersManager->Views);
+    IViewPtr view(views->ActiveView);
+    IDrawingContainerPtr drawingContainer(view);
+    
+    IRegularPolygonsPtr regularPolygons = drawingContainer->RegularPolygons;
+    IRegularPolygonPtr regularPolygon = regularPolygons->Add();
+    regularPolygon->Xc = innerCircle->Xc; regularPolygon->Yc = innerCircle->Yc;
+    regularPolygon->Count = angleCount;
+    regularPolygon->Describe = true;
+    regularPolygon->Radius = innerCircle->Radius;
+    regularPolygon->Style = 1;
+    regularPolygon->Angle = 0;
+    regularPolygon->Update();
+    ConstraintsCreator constrCreator(regularPolygon);
+    constrCreator.tangentTwoCurves(innerCircle);
+    constrCreator.mergePoints(0, innerCircle, 0);
+    constrCreator.horizontalAlignPoints(1, regularPolygon, 2);
 }
 
 void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, double stepDepth) {
@@ -605,7 +537,7 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
         Macro macroElement(part, MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT, true);
 
         Sketch sketch = createSketch(kompas, part, target.face);
-        ICirclePtr innerCircle = drawThinCircleProjection(sketch, part, target);
+        ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
         double centerX = innerCircle->Xc, centerY = innerCircle->Yc, radius = innerCircle->Radius;
 
         if (loopIsCircle(target.outerLoop)) {
@@ -615,23 +547,20 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
         }
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
-        macroElement.add(cutExtrusion(part, sketch.entity, true, stepDepth));
-
-        {
-            Sketch sketch2 = createSketch(kompas, part, target.face);
-            bridgeHoleBuildDrawSketch2(kompas, sketch2, centerX, centerY, radius, 4);
-            sketch2.definition->EndEdit();
-            macroElement.add(sketch2.entity);
-            macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 2));
-        }
-        {
-            Sketch sketch2 = createSketch(kompas, part, target.face);
-            bridgeHoleBuildDrawSketch2(kompas, sketch2, centerX, centerY, radius, 8);
-            sketch2.definition->EndEdit();
-            macroElement.add(sketch2.entity);
-            macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 3));
-        }
         
+        Sketch sketch2 = createSketch(kompas, part, target.face);
+        bridgeHoleBuildDrawSketch2(kompas, sketch2, target, 4);
+        sketch2.definition->EndEdit();
+        macroElement.add(sketch2.entity);
+            
+        Sketch sketch3 = createSketch(kompas, part, target.face);
+        bridgeHoleBuildDrawSketch2(kompas, sketch3, target, 8);
+        sketch3.definition->EndEdit();
+        macroElement.add(sketch3.entity);
+
+        macroElement.add(cutExtrusion(part, sketch.entity, true, stepDepth));
+        macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 2));
+        macroElement.add(cutExtrusion(part, sketch3.entity, true, stepDepth * 3));
         macro.add(macroElement);
     }
 }
