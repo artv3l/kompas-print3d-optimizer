@@ -126,8 +126,7 @@
       <AdditionalIncludeDirectories>$(KOMPAS_SDK)\Include;</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)kompas-print3d-optimizer\kompas-print3d-optimizer.rtw
-</Command>
+      <Command>copy "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)kompas-print3d-optimizer\kompas-print3d-optimizer.rtw"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

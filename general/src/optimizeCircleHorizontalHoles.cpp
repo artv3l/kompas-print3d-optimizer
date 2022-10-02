@@ -14,6 +14,14 @@
 #define EPS_ANGLE 0.001
 #define EPS_DISTANCE 0.00001
 
+bool checkAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
+  
+    try {
+        return isConcaveAngle(document3d, edge);
+    } catch (const std::runtime_error&) {
+        return true;
+    }
+}
 ksEntityPtr makeAxis(ksPartPtr part, ksEntityPtr face1, ksEntityPtr face2) {
     ksEntityPtr axisEntity(part->NewEntity(o3d_axis2Planes));
     ksAxis2PlanesDefinitionPtr axis(axisEntity->GetDefinition());
@@ -84,7 +92,7 @@ std::set<ksFaceDefinitionPtr> getHorizontalCircleHoles(ksDocument3DPtr document3
                     ksEdgeCollectionPtr edges(innerLoop->EdgeCollection());
                     if (edges->GetCount() == 1) {
                         ksEdgeDefinitionPtr edge(edges->GetByIndex(0));
-                        if ((edge->IsCircle() || edge->IsEllipse()) && !isConcaveAngle(document3d, edge)) {
+                        if ((edge->IsCircle() || edge->IsEllipse()) && !checkAngle(document3d, edge)) {
                             ksFaceDefinitionPtr otherFace = nullptr;
                             if (edge->GetAdjacentFace(true) != face) {
                                 otherFace = edge->GetAdjacentFace(true);
@@ -98,7 +106,7 @@ std::set<ksFaceDefinitionPtr> getHorizontalCircleHoles(ksDocument3DPtr document3
                                     if (otherEdge == edge) {
                                         otherEdge = otherFaceEdges->GetByIndex(1);
                                     }
-                                    if ((otherEdge->IsCircle() || otherEdge->IsEllipse()) && !isConcaveAngle(document3d, otherEdge)) {
+                                    if ((otherEdge->IsCircle() || otherEdge->IsEllipse()) && !checkAngle(document3d, otherEdge)) {
                                         holes.insert(otherFace);
                                     }
                                 }
@@ -111,6 +119,7 @@ std::set<ksFaceDefinitionPtr> getHorizontalCircleHoles(ksDocument3DPtr document3
     }
     return holes;
 }
+
 
 void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFaceDefinitionPtr printFace, PlaneEq printPlaneEq) {
     double tg_max_angle = tan((maxAngle * M_PI) / 180);
@@ -127,6 +136,13 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
 
     ksDocument3DPtr doc3d = kompas->ActiveDocument3D();
     std::set<ksFaceDefinitionPtr> holes = getHorizontalCircleHoles(doc3d, printFace, printPlaneEq);
+    /* Отладка
+    ksChooseMngPtr chooseMng(doc3d->GetChooseMng());
+    for (std::set<ksFaceDefinitionPtr>::iterator iter = holes.begin(); iter != holes.end(); iter++) {
+        chooseMng->Choose((*iter)->GetEntity());
+    }
+    system("pause");
+    */
     std::cout << "holes number:" << holes.size() << "\n";
     ksMeasurerPtr measurer(part->GetMeasurer());
     IKompasDocument3DPtr doc(api7->ActiveDocument);
@@ -251,9 +267,8 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFa
             mainMacroElement->Add(macroElementEntity);
         } else {
             doc3d->DeleteObject(macroElementEntity);
-            //doc3d->RebuildDocument();
-
         }
     }
+    doc3d->RebuildDocument();
     mainMacroElementEntity->Update();
 }
