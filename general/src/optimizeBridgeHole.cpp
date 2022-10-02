@@ -387,16 +387,20 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
     }
 }
 
-void closeContour(ILineSegmentsPtr lineSegments, std::list<double> points, double y) {
+void closeContour(ILineSegmentsPtr lineSegments, std::list<std::pair<double, ILineSegmentPtr>> points, double y, long partnerIndex) {
     points.sort();
 
-    // Размеры всегда будут четным
-    for (std::list<double>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
+    // Размеры всегда будут четными
+    for (std::list<std::pair<double, ILineSegmentPtr>>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
         ILineSegmentPtr lineSegment(lineSegments->Add());
-        lineSegment->X1 = *it; lineSegment->Y1 = y;
+        lineSegment->X1 = it->first; lineSegment->Y1 = y;
+        ILineSegmentPtr partner1 = it->second;
         it++;
-        lineSegment->X2 = *it; lineSegment->Y2 = y;
+        lineSegment->X2 = it->first; lineSegment->Y2 = y;
         lineSegment->Update();
+        ConstraintsCreator c(lineSegment);
+        c.mergePoints(0, partner1, partnerIndex);
+        c.mergePoints(1, it->second, partnerIndex);
     }
 }
 
@@ -433,8 +437,8 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
     // Точки для замыкания контура
-    std::list<double> pointsMin;
-    std::list<double> pointsMax;
+    std::list<std::pair<double, ILineSegmentPtr>> pointsMin;
+    std::list<std::pair<double, ILineSegmentPtr>> pointsMax;
 
     ILineSegmentsPtr lineSegments(drawingContainer->LineSegments);
     int lineSegmentsСount = lineSegments->Count;
@@ -462,6 +466,12 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
             continue;
         }
 
+        /*
+          Для всех отрезков(newLineSegment), которые построены на основе отрезков(lineSegment), пересекающих line1(yMin) и line2(yMax):
+          - Первая точка (index в ограничениях равен 0, координаты при создании: X1 и Y1) лежит на line1,
+          - Вторая точка лежит на line2.
+        */
+
         if ((res1 == 1) && (res2 == 1)) {
             ksMathPointParamPtr point1 = kompas->GetParamStruct(ko_MathPointParam);
             dynArr1->ksGetArrayItem(0, point1);
@@ -472,39 +482,57 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
             newLineSegment->X1 = point1->x; newLineSegment->Y1 = point1->y;
             newLineSegment->X2 = point2->x; newLineSegment->Y2 = point2->y;
             newLineSegment->Update();
-            // TODO Накладываем ограничения (привязки к исходной геометрии)
+            constrCreator = ConstraintsCreator(newLineSegment);
+            constrCreator.pointOnCurve(0, lineSegment);
+            constrCreator.pointOnCurve(1, lineSegment);
+            constrCreator.pointOnCurve(0, line1);
+            constrCreator.pointOnCurve(1, line2);
 
-            pointsMin.push_back(point1->x);
-            pointsMax.push_back(point2->x);
-            // TODO Добавляем не только координаты, но и указатель на отрезок и номер точки, чтобы потом наложить ограничения
-
+            pointsMin.push_back(std::make_pair(point1->x, newLineSegment));
+            pointsMax.push_back(std::make_pair(point2->x, newLineSegment));
+            
             continue;
         }
+
+        long partnerIndex = 0;
+        double x = 0.0, y = 0.0;
+        if ((lineSegment->Y1 > yMin) && (lineSegment->Y1 < yMax)) {
+            x = lineSegment->X1; y = lineSegment->Y1;
+            partnerIndex = 0;
+        } else {
+            x = lineSegment->X2; y = lineSegment->Y2;
+            partnerIndex = 1;
+        }
         
+        ILineSegmentPtr newLineSegment(lineSegments->Add());
         ksMathPointParamPtr point = kompas->GetParamStruct(ko_MathPointParam);
         if (res1 == 1) {
             dynArr1->ksGetArrayItem(0, point);
-            pointsMin.push_back(point->x);
+            newLineSegment->X1 = point->x; newLineSegment->Y1 = point->y;
+            newLineSegment->X2 = x; newLineSegment->Y2 = y;
         } else {
             dynArr2->ksGetArrayItem(0, point);
-            pointsMax.push_back(point->x);
+            newLineSegment->X1 = x; newLineSegment->Y1 = y;
+            newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
         }
-
-        ILineSegmentPtr newLineSegment(lineSegments->Add());
-
-        if ((lineSegment->Y1 > yMin) && (lineSegment->Y1 < yMax)) {
-            newLineSegment->X1 = lineSegment->X1; newLineSegment->Y1 = lineSegment->Y1;
-        } else {
-            newLineSegment->X1 = lineSegment->X2; newLineSegment->Y1 = lineSegment->Y2;
-        }
-        newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
+  
         newLineSegment->Update();
-        // TODO Накладываем ограничения
-
+        constrCreator = ConstraintsCreator(newLineSegment);
+        if (res1 == 1) {
+            constrCreator.mergePoints(1, lineSegment, partnerIndex);
+            constrCreator.pointOnCurve(0, lineSegment);
+            constrCreator.pointOnCurve(0, line1);
+            pointsMin.push_back(std::make_pair(point->x, newLineSegment));
+        } else {
+            constrCreator.mergePoints(0, lineSegment, partnerIndex);
+            constrCreator.pointOnCurve(1, lineSegment);
+            constrCreator.pointOnCurve(1, line2);
+            pointsMax.push_back(std::make_pair(point->x, newLineSegment));
+        }
     }
 
-    closeContour(lineSegments, pointsMin, yMin);
-    closeContour(lineSegments, pointsMax, yMax);
+    closeContour(lineSegments, pointsMin, yMin, 0);
+    closeContour(lineSegments, pointsMax, yMax, 1);
 }
 
 void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
