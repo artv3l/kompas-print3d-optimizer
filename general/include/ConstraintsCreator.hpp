@@ -13,7 +13,7 @@ public:
     bool horizontalAlignPoints(long index, IDrawingObjectPtr partner, long partnerIndex); // 9
     bool mergePoints(long index, IDrawingObjectPtr partner, long partnerIndex);           // 11
     bool tangentTwoCurves(IDrawingObjectPtr partner);                                     // 15
-
+    bool equalLength(IDrawingObjectPtr partner);
 private:
     IDrawingObjectPtr drawingObject_;
     IDrawingObject1Ptr drawingObject1_;

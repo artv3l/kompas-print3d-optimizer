@@ -51,3 +51,10 @@ bool ConstraintsCreator::tangentTwoCurves(IDrawingObjectPtr partner) {
     constraint->Partner = static_cast<IDispatch*>(partner);
     return constraint->Create();
 }
+
+bool ConstraintsCreator::equalLength(IDrawingObjectPtr partner) {
+    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
+    constraint->ConstraintType = ksConstraintTypeEnum::ksCEqualLength;
+    constraint->Partner = static_cast<IDispatch*>(partner);
+    return constraint->Create();
+}
