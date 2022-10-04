@@ -34,6 +34,12 @@
     <ClInclude Include="..\general\include\utils.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\general\include\Macro.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\ConstraintsCreator.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">
@@ -70,6 +76,12 @@
       <Filter>general\src</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\utils.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\Macro.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\ConstraintsCreator.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,6 +5,8 @@
 #include <atlbase.h>
 
 #include "utils.hpp"
+#include "Macro.hpp"
+#include "ConstraintsCreator.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Оптимизация скругленных ребер на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -218,34 +220,10 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         lineSeg1->X2 = roundingArc->X1; lineSeg1->Y2 = roundingArc->Y1;
     }
     lineSeg1->Update();
-
-    IDrawingObjectPtr lineSeg1DrawingObject(lineSeg1);
-    IDrawingObject1Ptr lineSeg1DrawingObject1(lineSeg1DrawingObject);
-    {
-        IParametriticConstraintPtr constraint(lineSeg1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCMergePoints;
-        constraint->Index = 0;
-        constraint->Partner = static_cast<IDispatch*>(roundingArc);
-        if (startPointIs1) {
-            constraint->PartnerIndex = 1;
-        } else {
-            constraint->PartnerIndex = 2;
-        }
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSeg1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCTangentTwoCurves;
-        constraint->Partner = static_cast<IDispatch*>(roundingArc);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSeg1DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCMergePoints;
-        constraint->Index = 0;
-        constraint->Partner = static_cast<IDispatch*>(startPoint);
-        constraint->Create();
-    }
+    ConstraintsCreator constrCreator(lineSeg1);
+    constrCreator.mergePoints(0, roundingArc, startPointIs1 ? 1 : 2);
+    constrCreator.tangentTwoCurves(roundingArc);
+    constrCreator.mergePoints(0, startPoint, 0);
 
     ILineSegmentPtr lineSeg2(lineSegments->Add());
     lineSeg2->X1 = lineSeg1->X2; lineSeg2->Y1 = lineSeg1->Y2;
@@ -255,35 +233,18 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         lineSeg2->X2 = roundingArc->X1; lineSeg2->Y2 = roundingArc->Y1;
     }
     lineSeg2->Update();
+    constrCreator = ConstraintsCreator(lineSeg2);
+    constrCreator.mergePoints(0, lineSeg1, 1);
+    constrCreator.tangentTwoCurves(roundingArc);
+    constrCreator.pointOnCurve(1, roundingArc);
 
+    IDrawingObjectPtr lineSeg1DrawingObject(lineSeg1);
     IDrawingObjectPtr lineSeg2DrawingObject(lineSeg2);
-    IDrawingObject1Ptr lineSeg2DrawingObject1(lineSeg2DrawingObject);
-    {
-        IParametriticConstraintPtr constraint(lineSeg2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCMergePoints;
-        constraint->Index = 0;
-        constraint->Partner = static_cast<IDispatch*>(lineSeg1);
-        constraint->PartnerIndex = 1;
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSeg2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCTangentTwoCurves;
-        constraint->Partner = static_cast<IDispatch*>(roundingArc);
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(lineSeg2DrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCPointOnCurve;
-        constraint->Index = 1;
-        constraint->Partner = static_cast<IDispatch*>(roundingArc);
-        constraint->Create();
-    }
 
     // Устанавливаем размеры
     ISymbols2DContainerPtr symbols2dContainer(view);
     IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
-
+    
     IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
     angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
     angleDim->BaseObject1 = lineSeg1DrawingObject;
@@ -314,56 +275,24 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     if (startPointIs1) {
         arc->Direction = roundingArc->Direction;
     } else {
-        arc->Direction = !roundingArc->Direction;
+        arc->Direction = ~roundingArc->Direction;
     }
     arc->Update();
-
-    IDrawingObjectPtr arcDrawingObject(arc);
-    IDrawingObject1Ptr arcDrawingObject1(arcDrawingObject);
-    {
-        IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCMergePoints;
-        constraint->Index = 1;
-        constraint->Partner = static_cast<IDispatch*>(lineSeg1);
-        constraint->PartnerIndex = 0;
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCMergePoints;
-        constraint->Index = 2;
-        constraint->Partner = static_cast<IDispatch*>(lineSeg2);
-        constraint->PartnerIndex = 1;
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(arcDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCEqualRadius;
-        constraint->Partner = static_cast<IDispatch*>(roundingArc);
-        constraint->Create();
-    }
+    constrCreator = ConstraintsCreator(arc);
+    constrCreator.mergePoints(1, lineSeg1, 0);
+    constrCreator.mergePoints(2, lineSeg2, 1);
+    constrCreator.equalRadius(roundingArc);
 }
 
 void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ksFaceDefinitionPtr printFace, double overhangThreshold,
         ReworkType reworkType) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(printFace, reworkType);
-
-    ksEntityPtr macroEntity(part->NewEntity(o3d_MacroObject));
-    ksMacro3DDefinitionPtr macro(macroEntity->GetDefinition());
-    macroEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE;
-    macro->StaffVisible = true;
-    macroEntity->Create();
+    Macro macro(part, MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE, true);
 
     for (RoundingEdgeOnPrintFaceTarget target : targets) {
-        ksEntityPtr macroElementEntity(part->NewEntity(o3d_MacroObject));
-        ksMacro3DDefinitionPtr macroElement(macroElementEntity->GetDefinition());
-        if (target.needRework) {
-            macroElementEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK;
-        } else {
-            macroElementEntity->name = MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT;
-        }
-        macroElement->StaffVisible = true;
-        macroElementEntity->Create();
+        Macro macroElement(part,
+            target.needRework ? MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK : MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT,
+            true);
 
         // Создаем плоскость для эскиза
         ksEntityPtr sketchPlane(part->NewEntity(Obj3dType::o3d_planePerpendicular));
@@ -372,13 +301,13 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
         sketchPlaneDef->SetPoint(target.trajectory.front()->GetVertex(true));
         sketchPlane->hidden = true;
         sketchPlane->Create();
-        macroElement->Add(sketchPlane);
+        macroElement.add(sketchPlane);
         
         // Создаем эскиз
         Sketch sketch = createSketch(kompas, part, sketchPlane);
         drawSketch(sketch, target, overhangThreshold);
         sketch.definition->EndEdit();
-        macroElement->Add(sketch.entity);
+        macroElement.add(sketch.entity);
         
         // Протягиваем эскиз по траектории
         ksEntityPtr evolutionEntity(part->NewEntity(Obj3dType::o3d_bossEvolution));
@@ -391,10 +320,7 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
             trajectory->Add(edge);
         }
         evolutionEntity->Create();
-        macroElement->Add(evolutionEntity);
-        macroElementEntity->Update();
-        
-        macro->Add(macroElementEntity);
+        macroElement.add(evolutionEntity);
+        macro.add(macroElement);
     }
-    macroEntity->Update();
 }
