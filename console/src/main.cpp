@@ -24,15 +24,16 @@ bool checkSelectedFace(KompasObjectPtr kompas) {
     return doc3d == oldDocument && printFace;
 }
 
+
 void performRoundingOptimization(KompasObjectPtr kompas) {
     double radius;
     double angle;
-    if (checkSelectedFace(kompas) && kompas->ksReadDouble("Радиус: ", 0.0, -DBL_MIN, DBL_MAX, &radius) == 1 && kompas->ksReadDouble("Граничный угол: ", 60, -DBL_MIN, DBL_MAX, &angle) == 1 ) {
+    if (checkSelectedFace(kompas) && kompas->ksReadDouble("Радиус: ", 0.0, -DBL_MIN, DBL_MAX, &radius) == 1 && kompas->ksReadDouble("Граничный угол: ", 85, 0.0, 90.0, &angle) == 1 ) {
         if (radius > DBL_MIN) {
             optimizeByRounding(kompas, printFace, printPlaneEq, radius, angle);
             kompas->ksMessage("Оптимизация модели была выполнена!");
         } else {
-            kompas->ksMessage("Неверный радиус!");
+            kompas->ksMessage("Неверный радиус или угол!");
         }
     }
 }
@@ -45,10 +46,18 @@ void performAntiElephantFootOptimiztion(KompasObjectPtr kompas) {
     }
 }
 
+double get_vertical_eps_agnle(KompasObjectPtr kompas) {
+    double angle; //Пороговый угол
+    while (true) {
+        if (kompas->ksReadDouble("Угол отклонения от вертикали: ", 60, -DBL_MIN, DBL_MAX, &angle) == 1) {
+            return angle;
+        }
+    }
+}
+
 void performHorizontalHolesOptimization(KompasObjectPtr kompas) {
-    double maxAngle; //угол нависания
-    if (checkSelectedFace(kompas) && kompas->ksReadDouble("Макс. угол нависания: ", 60, -DBL_MIN, DBL_MAX, &maxAngle) == 1) {
-        optimizeCircleHorizontalHoles(kompas, maxAngle, printFace, printPlaneEq);
+    if (checkSelectedFace(kompas)) {
+        optimizeCircleHorizontalHoles(kompas, 90.0, printFace, printPlaneEq);
     }
 }
 

@@ -83,10 +83,14 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         }
         case 4: {
               double radius = 0.0;
-              if (kompas->ksReadDouble("Радиус:", 0.0, 0.0, DBL_MAX, &radius) != 1) {
+              if (kompas->ksReadDouble("Радиус:", 0.5, 0.0, DBL_MAX, &radius) != 1) {
                   return;
               }
-              optimizeByRounding(kompas, printFace, printPlaneEq, radius, printSettings.overhangThreshold);
+              double angle = 85.0;
+              if (kompas->ksReadDouble("Граничный угол: ", 85, 0.0, 90.0, &angle) != 1) {
+                  return;
+              }
+              optimizeByRounding(kompas, printFace, printPlaneEq, radius, angle);
               break;
         }
         case 5: {
@@ -117,7 +121,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             break;
         }
         case 11: {
-            optimizeCircleHorizontalHoles(kompas, printSettings.overhangThreshold, printFace, printPlaneEq);
+            optimizeCircleHorizontalHoles(kompas, 90, printFace, printPlaneEq);
             break;
         }
         case 12: {
