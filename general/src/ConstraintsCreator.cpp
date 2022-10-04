@@ -27,6 +27,20 @@ bool ConstraintsCreator::parallel(IDrawingObjectPtr partner) {
     return constraint->Create();
 }
 
+bool ConstraintsCreator::equalLength(IDrawingObjectPtr partner) {
+    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
+    constraint->ConstraintType = ksConstraintTypeEnum::ksCEqualLength;
+    constraint->Partner = static_cast<IDispatch*>(partner);
+    return constraint->Create();
+}
+
+bool ConstraintsCreator::equalRadius(IDrawingObjectPtr partner) {
+    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
+    constraint->ConstraintType = ksConstraintTypeEnum::ksCEqualRadius;
+    constraint->Partner = static_cast<IDispatch*>(partner);
+    return constraint->Create();
+}
+
 bool ConstraintsCreator::horizontalAlignPoints(long index, IDrawingObjectPtr partner, long partnerIndex) {
     IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
     constraint->ConstraintType = ksConstraintTypeEnum::ksCHAlignPoints;
@@ -48,13 +62,6 @@ bool ConstraintsCreator::mergePoints(long index, IDrawingObjectPtr partner, long
 bool ConstraintsCreator::tangentTwoCurves(IDrawingObjectPtr partner) {
     IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
     constraint->ConstraintType = ksConstraintTypeEnum::ksCTangentTwoCurves;
-    constraint->Partner = static_cast<IDispatch*>(partner);
-    return constraint->Create();
-}
-
-bool ConstraintsCreator::equalLength(IDrawingObjectPtr partner) {
-    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
-    constraint->ConstraintType = ksConstraintTypeEnum::ksCEqualLength;
     constraint->Partner = static_cast<IDispatch*>(partner);
     return constraint->Create();
 }
