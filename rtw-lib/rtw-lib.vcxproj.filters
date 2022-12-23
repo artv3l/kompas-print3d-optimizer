@@ -40,6 +40,18 @@
     <ClInclude Include="..\general\include\ConstraintsCreator.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\general\include\AutomationBaseEvent.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\PropertyManagerEvent.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\PropertyManagerObject.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\SettingsManager.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">
@@ -82,6 +94,18 @@
       <Filter>general\src</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\ConstraintsCreator.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\AutomationBaseEvent.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\PropertyManagerEvent.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\PropertyManagerObject.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\SettingsManager.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
   </ItemGroup>

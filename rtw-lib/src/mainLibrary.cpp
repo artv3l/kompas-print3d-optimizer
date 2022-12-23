@@ -12,11 +12,17 @@
 #include "optimizeRoundingEdgesOnPrintFace.hpp"
 #include "optimizeCircleHorizontalHoles.hpp"
 
+#include "SettingsManager.hpp"
+
 struct PrintSettings {
     double nozzleDiameter;
     double layerHeight;
     double overhangThreshold;
 };
+
+
+KompasObjectPtr kompas = getKompasObjectPtr();
+SettingsManager settingsManager(kompas);
 
 ksFaceDefinitionPtr printFace = nullptr;
 PlaneEq printPlaneEq;
@@ -49,7 +55,6 @@ unsigned int WINAPI LIBRARYID() {
 }
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
-    KompasObjectPtr kompas = getKompasObjectPtr();
     if (!kompas) {
         return;
     }
@@ -61,6 +66,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     switch (comm) {
         case 1: {
               printSettings = inputPrintSettings(kompas);
+              settingsManager.show();
               return;
         }
         case 2: {
