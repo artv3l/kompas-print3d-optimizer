@@ -14,12 +14,6 @@
 
 #include "SettingsManager.hpp"
 
-struct PrintSettings {
-    double nozzleDiameter;
-    double layerHeight;
-    double overhangThreshold;
-};
-
 
 KompasObjectPtr kompas = getKompasObjectPtr();
 SettingsManager settingsManager(kompas);
@@ -28,27 +22,12 @@ ksFaceDefinitionPtr printFace = nullptr;
 PlaneEq printPlaneEq;
 ksDocument3DPtr oldDocument = nullptr;
 
-PrintSettings printSettings{ 0.4, 0.2, 40.0 };
-
 
 bool checkSelectedFace(KompasObjectPtr kompas) {
     ksDocument3DPtr doc3d = kompas->ActiveDocument3D();
     return doc3d == oldDocument && printFace;
 }
 
-PrintSettings inputPrintSettings(KompasObjectPtr kompas) {
-    PrintSettings ps;
-    if (kompas->ksReadDouble("Диаметр сопла:", 0.4, 0.05, 2.0, &ps.nozzleDiameter) != 1) {
-        return printSettings;
-    }
-    if (kompas->ksReadDouble("Высота слоя:", 0.2, 0.01, 0.8, &ps.layerHeight) != 1) {
-        return printSettings;
-    }
-    if (kompas->ksReadDouble("Максимальный угол нависаний:", 40.0, 0.0, 90.0, &ps.overhangThreshold) != 1) {
-        return printSettings;
-    }
-    return ps;
-}
 
 unsigned int WINAPI LIBRARYID() {
     return IDR_LIBID;
@@ -65,7 +44,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
     switch (comm) {
         case 1: {
-              printSettings = inputPrintSettings(kompas);
+              //printSettings = inputPrintSettings(kompas);
               settingsManager.show();
               return;
         }
@@ -74,12 +53,11 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             oldDocument = kompas->ActiveDocument3D();
             return;
         }
-        case 3:
-        {
+        case 3: {
             std::ostringstream oss;
-            oss << "Диаметр сопла: " << printSettings.nozzleDiameter << "\n"
-                << "Высота слоя: " << printSettings.layerHeight << "\n"
-                << "Максимальный угол нависаний: " << printSettings.overhangThreshold << "\n"
+            oss << "Диаметр сопла: " << settingsManager.getNozzleDiameter() << "\n"
+                << "Высота слоя: " << settingsManager.getLayerHeight() << "\n"
+                << "Максимальный угол нависаний: " << settingsManager.getOverhangThreshold() << "\n"
                 << "Плоскость печати выделена";
             ksChooseMngPtr chooseMng(oldDocument->GetChooseMng());
             chooseMng->UnChooseAll();
@@ -100,30 +78,30 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
               break;
         }
         case 5: {
-            optimizeElephantFoot(kompas, printFace, printPlaneEq, 2 * printSettings.layerHeight);
+            optimizeElephantFoot(kompas, printFace, printPlaneEq, 2 * settingsManager.getLayerHeight());
             break;
         }
         case 6: {
             optimizeRoundingEdgesOnPrintFace(kompas, oldDocument->GetPart(pTop_Part), printFace,
-                printSettings.overhangThreshold, ReworkType::ALL);
+                settingsManager.getOverhangThreshold(), ReworkType::ALL);
             break;
         }
         case 7: {
             optimizeRoundingEdgesOnPrintFace(kompas, oldDocument->GetPart(pTop_Part), printFace,
-                printSettings.overhangThreshold, ReworkType::ONLY_WITHOUT_REWORK);
+                settingsManager.getLayerHeight(), ReworkType::ONLY_WITHOUT_REWORK);
             break;
         }
         case 8: {
-            optimizeBridgeHoleFill(oldDocument, oldDocument->GetPart(pTop_Part), printFace, printSettings.layerHeight, HoleType::NOT_CIRCLE);
-            optimizeBridgeHoleBuild(kompas, oldDocument, oldDocument->GetPart(pTop_Part), printFace, printSettings.layerHeight);
+            optimizeBridgeHoleFill(oldDocument, oldDocument->GetPart(pTop_Part), printFace, settingsManager.getLayerHeight(), HoleType::NOT_CIRCLE);
+            optimizeBridgeHoleBuild(kompas, oldDocument, oldDocument->GetPart(pTop_Part), printFace, settingsManager.getLayerHeight());
             break;
         }
         case 9: {
-            optimizeBridgeHoleFill(oldDocument, oldDocument->GetPart(pTop_Part), printFace, printSettings.layerHeight, HoleType::ALL);
+            optimizeBridgeHoleFill(oldDocument, oldDocument->GetPart(pTop_Part), printFace, settingsManager.getLayerHeight(), HoleType::ALL);
             break;
         }
         case 10: {
-            optimizeBridgeHoleBuild(kompas, oldDocument, oldDocument->GetPart(pTop_Part), printFace, printSettings.layerHeight);
+            optimizeBridgeHoleBuild(kompas, oldDocument, oldDocument->GetPart(pTop_Part), printFace, settingsManager.getLayerHeight());
             break;
         }
         case 11: {

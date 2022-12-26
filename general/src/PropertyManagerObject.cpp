@@ -15,7 +15,6 @@ IPropertyManagerPtr PropertyManagerObject::getPropertyManager() {
 
 void PropertyManagerObject::show() {
     propertyManager_->ShowTabs();
-    propertyManager_->UpdateTabs();
 }
 
 void PropertyManagerObject::hide() {
