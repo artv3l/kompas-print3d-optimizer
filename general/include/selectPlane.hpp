@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#define PLANE_BORDER_EPS 0.001
+const double PLANE_BORDER_EPS = 0.001;
 
 class PlaneEq {
 public:
@@ -14,8 +14,13 @@ public:
     PlaneEq();
 };
 
+struct PrintPlane {
+    ksFaceDefinitionPtr face;
+    PlaneEq eq;
+};
+
 void checkPlane(KompasObjectPtr kompas, double a, double b, double c, double d, int* s1, int* s2);
 
-ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq);
+PrintPlane getSelectedPlane(KompasObjectPtr kompas);
 
 #endif /* SELECT_PLANE_HPP */

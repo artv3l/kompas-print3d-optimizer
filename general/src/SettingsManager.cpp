@@ -8,8 +8,7 @@
 SettingsManager::SettingsManager(KompasObjectPtr kompas):
         PropertyManagerObject(kompas),
         mainTab_(propertyManager_->PropertyTabs->Add("MainTab")), controls_(mainTab_->PropertyControls),
-        nozzleDiameter_(std::make_pair(nullptr, 0.4)), layerHeight_(std::make_pair(nullptr, 0.2)),
-        overhangThreshold_(std::make_pair(nullptr, 45))
+        layerHeight_(std::make_pair(nullptr, 0.2)), overhangThreshold_(std::make_pair(nullptr, 45))
 {
     propertyManager_->Layout = PropertyManagerLayout::pmAlignRight;
     propertyManager_->SpecToolbar = SpecPropertyToolBarEnum::pnEnterEscHelp;
@@ -18,12 +17,6 @@ SettingsManager::SettingsManager(KompasObjectPtr kompas):
     IPropertyGroupBeginPtr printSettingsGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
     printSettingsGroupBegin->Name = "Параметры печати";
     printSettingsGroupBegin->Expanding = true;
-
-    nozzleDiameter_.first = controls_->Add(ControlTypeEnum::ksControlEditReal);
-    nozzleDiameter_.first->Name = "Диаметр сопла";
-    nozzleDiameter_.first->SetValueRange(0.15, 1);
-    nozzleDiameter_.first->Step = 0.1;
-    nozzleDiameter_.first->Value = nozzleDiameter_.second;
 
     layerHeight_.first = controls_->Add(ControlTypeEnum::ksControlEditReal);
     layerHeight_.first->Name = "Высота слоя";
@@ -38,10 +31,6 @@ SettingsManager::SettingsManager(KompasObjectPtr kompas):
     overhangThreshold_.first->Value = overhangThreshold_.second;
 
     controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* printSettings */
-}
-
-double SettingsManager::getNozzleDiameter() {
-    return nozzleDiameter_.second;
 }
 
 double SettingsManager::getLayerHeight() {
@@ -59,7 +48,6 @@ bool SettingsManager::buttonClick(long buttonId) {
     */
     switch (buttonId) {
     case SpecPropertyButtonEnum::pbEnter:
-        nozzleDiameter_.second = nozzleDiameter_.first->Value;
         layerHeight_.second = layerHeight_.first->Value;
         overhangThreshold_.second = overhangThreshold_.first->Value;
 

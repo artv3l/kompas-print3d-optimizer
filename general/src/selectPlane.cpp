@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#define EPS_PLANE_EQ 0.001
+const double EPS_PLANE_EQ = 0.001;
 
 void checkPlane(KompasObjectPtr kompas, double a, double b, double c, double d, int* s1, int* s2) {
     *s1 = 0;
@@ -100,86 +100,81 @@ bool PlaneEq::isVertical(ksEdgeDefinitionPtr edge, double cos_angle) {
     return false;
 }
 
-/** Возвращает выбранную пользователем грань, если она удовлетворяет всем требованиям. A также через аргумент *planeEq, передаёт коэф. уравнения плоскости.
-**/
-ksFaceDefinitionPtr getSelectedPlane(KompasObjectPtr kompas, PlaneEq* planeEq) {
-    if (kompas) {
-        ksDocument3DPtr doc3d = kompas->ActiveDocument3D();
-        ksSelectionMngPtr selectionMng(doc3d->GetSelectionMng());
-        std::cout << "Количество выбранных элементов:" << selectionMng->GetCount() << "\n";
-        if (selectionMng->GetCount() == 1 && selectionMng->GetObjectType(0) == 105) {
-            ksEntityPtr element(selectionMng->GetObjectByIndex(0));
-            if (element) {
-                if (element->type == 6) {
-                    std::cout << "Была выбрана грань" << "\n";
-                    ksFaceDefinitionPtr face(element->GetDefinition());
-                    if (face->IsPlanar()) {
-                        std::cout << "Грань является плоской" << "\n";
+/*
+    Возвращает выбранную пользователем грань, если она удовлетворяет всем требованиям.
+    A также через аргумент *planeEq, передаёт коэф. уравнения плоскости.
+*/
+PrintPlane getSelectedPlane(KompasObjectPtr kompas) {
+    PlaneEq planeEq;
+    ksDocument3DPtr doc3d = kompas->ActiveDocument3D();
+    ksSelectionMngPtr selectionMng(doc3d->GetSelectionMng());
+    std::cout << "Количество выбранных элементов:" << selectionMng->GetCount() << "\n";
+    if (selectionMng->GetCount() == 1 && selectionMng->GetObjectType(0) == 105) {
+        ksEntityPtr element(selectionMng->GetObjectByIndex(0));
+        if (element->type == 6) {
+            std::cout << "Была выбрана грань" << "\n";
+            ksFaceDefinitionPtr face(element->GetDefinition());
+            if (face->IsPlanar()) {
+                std::cout << "Грань является плоской" << "\n";
 
-                        ksSurfacePtr surface(face->GetSurface());
-                        double x0, y0, z0;
-                        surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), &x0, &y0, &z0);
-                        double a, b, c, d;
+                ksSurfacePtr surface(face->GetSurface());
+                double x0, y0, z0;
+                surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), &x0, &y0, &z0);
+                double a, b, c, d;
 
-                        surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), &a, &b, &c);
+                surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), &a, &b, &c);
 
-                        d = -((a * x0) + (b * y0) + (c * z0));
+                d = -((a * x0) + (b * y0) + (c * z0));
 
-                        std::cout << "Вектор нормали: X=" << a << " Y="
-                            << b << " Z=" << c << "\n";
+                std::cout << "Вектор нормали: X=" << a << " Y="
+                    << b << " Z=" << c << "\n";
 
-                        std::cout << "Координаты точки отсчёта: X=" << x0 << " Y="
-                            << y0 << " Z=" << z0 << "\n";
+                std::cout << "Координаты точки отсчёта: X=" << x0 << " Y="
+                    << y0 << " Z=" << z0 << "\n";
 
-                        std::cout << "Полученые коэф. уравнения плоск: A=" << a << " B="
-                            << b << " C=" << c << " D=" << d << "\n";
+                std::cout << "Полученые коэф. уравнения плоск: A=" << a << " B="
+                    << b << " C=" << c << " D=" << d << "\n";
 
-                        int s1 = 0, s2 = 0;
+                int s1 = 0, s2 = 0;
 
-                        std::cout << "Идёт проверка на перечения..." << "\n";
+                std::cout << "Идёт проверка на перечения..." << "\n";
 
-                        checkPlane(kompas, a, b, c, d, &s1, &s2);
-                        std::cout << "Сторона 1:" << s1 << " Сторона 2:" << s2 << " \n";
+                checkPlane(kompas, a, b, c, d, &s1, &s2);
+                std::cout << "Сторона 1:" << s1 << " Сторона 2:" << s2 << " \n";
 
-                        if (s1 == 0 && s2 > 0) {
-                            std::cout << "Уравнение плоскости отражено" << "\n";
-                            a = -a;
-                            b = -b;
-                            c = -c;
-                            d = -d;
-                            int buff = s2;
-                            s2 = s1;
-                            s1 = buff;
-                        }
-
-
-                        if (!((s1 > 0) && (s2 == 0))) {
-                            kompas->ksMessage("Плоскость печати пересекает деталь!");
-                        } else {
-                            kompas->ksMessage("Плоскость печати успешно выбрана!");
-                            planeEq->a = a;
-                            planeEq->b = b;
-                            planeEq->c = c;
-                            planeEq->d = d;
-                            return face;
-                        }
-
-                    } else {
-                        kompas->ksMessage("Выбранная грань должна быть плоской!");
-                    }
-                } else {
-                    kompas->ksMessage("Выбранный элемент не является гранью!");
+                if (s1 == 0 && s2 > 0) {
+                    std::cout << "Уравнение плоскости отражено" << "\n";
+                    a = -a;
+                    b = -b;
+                    c = -c;
+                    d = -d;
+                    int buff = s2;
+                    s2 = s1;
+                    s1 = buff;
                 }
+
+
+                if (!((s1 > 0) && (s2 == 0))) {
+                    kompas->ksMessage("Плоскость печати пересекает деталь!");
+                } else {
+                    kompas->ksMessage("Плоскость печати успешно выбрана!");
+                    planeEq.a = a;
+                    planeEq.b = b;
+                    planeEq.c = c;
+                    planeEq.d = d;
+                    return PrintPlane{face, planeEq};
+                }
+
             } else {
-                std::cout << "WHAT?" << "\n";
+                kompas->ksMessage("Выбранная грань должна быть плоской!");
             }
-
-        } else if (selectionMng->GetCount() > 0) {
-            kompas->ksMessage("Должен был быть выбран только один элемент в виде плоской грани!");
         } else {
-            kompas->ksMessage("Плоскость печати не выбрана!");
+            kompas->ksMessage("Выбранный элемент не является гранью!");
         }
-
+    } else if (selectionMng->GetCount() > 0) {
+        kompas->ksMessage("Должен был быть выбран только один элемент в виде плоской грани!");
+    } else {
+        kompas->ksMessage("Плоскость печати не выбрана!");
     }
-    return nullptr;
+    return PrintPlane{nullptr, planeEq};
 }
