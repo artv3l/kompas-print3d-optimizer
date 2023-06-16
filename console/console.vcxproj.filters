@@ -13,32 +13,32 @@
     <ClCompile Include="..\general\src\concaveAngle.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\optimizeBridgeHole.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeCircleHorizontalHoles.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeElephantFoot.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeRounding.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeRoundingEdgesOnPrintFace.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
     <ClCompile Include="..\general\src\selectPlane.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\utils.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\Macro.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\bridgeHole.cpp">
+      <Filter>general\src\optimization</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\ConstraintsCreator.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimization\elephantFoot.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimization\rounding.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp">
+      <Filter>general\src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\Macro.cpp">
+      <Filter>general\src\apiutil</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -51,32 +51,32 @@
     <ClInclude Include="..\general\include\concaveAngle.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\optimizeBridgeHole.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeCircleHorizontalHoles.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeElephantFoot.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeRounding.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeRoundingEdgesOnPrintFace.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\general\include\selectPlane.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
     <ClInclude Include="..\general\include\utils.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\Macro.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\bridgeHole.hpp">
+      <Filter>general\include\optimization</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\ConstraintsCreator.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimization\elephantFoot.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimization\rounding.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp">
+      <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\Macro.hpp">
+      <Filter>general\include\apiutil</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +97,18 @@
     </Filter>
     <Filter Include="general\include">
       <UniqueIdentifier>{98df2fb1-aabb-479c-82a8-0dd8feaf7a5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\src\optimization">
+      <UniqueIdentifier>{6ef3f863-0bb1-4083-937f-1095219361ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\include\optimization">
+      <UniqueIdentifier>{102032e7-b8cc-4a94-9dd0-a44c59a9c16f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\include\apiutil">
+      <UniqueIdentifier>{b6f88fb9-239d-4627-91d3-201630bfbc96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\src\apiutil">
+      <UniqueIdentifier>{8d7a152e-8fb0-4f95-8196-70fb884f614c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

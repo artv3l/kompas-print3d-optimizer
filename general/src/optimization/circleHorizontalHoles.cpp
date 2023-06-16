@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "optimizeCircleHorizontalHoles.hpp"
-#include "ConstraintsCreator.hpp"
+#include "optimization/circleHorizontalHoles.hpp"
+#include "apiutil/ConstraintsCreator.hpp"
 
 #include <iostream>
 #include <set>

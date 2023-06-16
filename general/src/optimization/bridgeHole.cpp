@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "optimizeBridgeHole.hpp"
+#include "optimization/bridgeHole.hpp"
 
 #include <list>
 
@@ -8,8 +8,8 @@
 
 #include "utils.hpp"
 #include "concaveAngle.hpp"
-#include "Macro.hpp"
-#include "ConstraintsCreator.hpp"
+#include "apiutil/Macro.hpp"
+#include "apiutil/ConstraintsCreator.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Достройка нависающих отверстий";

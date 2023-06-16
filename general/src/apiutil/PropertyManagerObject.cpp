@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "PropertyManagerObject.hpp"
+#include "apiutil/PropertyManagerObject.hpp"
 
-#include "PropertyManagerEvent.hpp"
+#include "apiutil/PropertyManagerEvent.hpp"
 
 PropertyManagerObject::PropertyManagerObject(KompasObjectPtr kompas) :
         kompas_(kompas), application_(kompas->ksGetApplication7()),

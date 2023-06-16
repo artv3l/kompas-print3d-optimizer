@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include "SettingsManager.hpp"
+#include "apiutil/SettingsManager.hpp"
 
 #include <utility>
 
-#include "PropertyManagerObject.hpp"
+#include "apiutil/PropertyManagerObject.hpp"
 
 SettingsManager::SettingsManager(KompasObjectPtr kompas):
         PropertyManagerObject(kompas),

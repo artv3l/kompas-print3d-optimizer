@@ -1,11 +1,11 @@
 #include "stdafx.h"
-#include "optimizeElephantFoot.hpp"
+#include "optimization/elephantFoot.hpp"
 
 #include <iostream>
 #include <set>
 
 #include "selectPlane.hpp"
-#include "Macro.hpp"
+#include "apiutil/Macro.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Оптимизирующие фаски слоновьей ноги";
 

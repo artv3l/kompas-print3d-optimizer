@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "optimizeRounding.hpp"
+#include "optimization/rounding.hpp"
 
 #include <iostream>
 
@@ -7,7 +7,7 @@
 #include <math.h>
 
 #include "selectPlane.hpp"
-#include "Macro.hpp"
+#include "apiutil/Macro.hpp"
 
 const char* MACRO_NAME_ROUNDING = "Оптимизирующие скругления для выпирающих углов";
 

@@ -9,11 +9,11 @@
 
 #include "connection.hpp"
 #include "selectPlane.hpp"
-#include "optimizeRounding.hpp"
-#include "optimizeElephantFoot.hpp"
-#include "optimizeCircleHorizontalHoles.hpp"
-#include "optimizeBridgeHole.hpp"
-#include "optimizeRoundingEdgesOnPrintFace.hpp"
+#include "optimization/rounding.hpp"
+#include "optimization/elephantFoot.hpp"
+#include "optimization/circleHorizontalHoles.hpp"
+#include "optimization/bridgeHole.hpp"
+#include "optimization/roundingEdgesOnPrintFace.hpp"
 
 ksFaceDefinitionPtr printFace = nullptr;
 PlaneEq printPlaneEq;

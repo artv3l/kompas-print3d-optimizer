@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by main.rc
+// Used by resource.rc
 //
 
 #define IDR_LIBID                        100 // Идентификатор ресурсов библиотеки

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "Macro.hpp"
+#include "apiutil/Macro.hpp"
 
 Macro::Macro(ksPartPtr part, _bstr_t name, bool staffVisible):
         entity_(part->NewEntity(o3d_MacroObject)),

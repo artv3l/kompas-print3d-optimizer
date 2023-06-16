@@ -1,12 +1,12 @@
 #include "stdafx.h"
-#include "optimizeRoundingEdgesOnPrintFace.hpp"
+#include "optimization/roundingEdgesOnPrintFace.hpp"
 
 #include <sstream>
 #include <atlbase.h>
 
 #include "utils.hpp"
-#include "Macro.hpp"
-#include "ConstraintsCreator.hpp"
+#include "apiutil/Macro.hpp"
+#include "apiutil/ConstraintsCreator.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Оптимизация скругленных ребер на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "AutomationBaseEvent.hpp"
+#include "apiutil/AutomationBaseEvent.hpp"
 
 #include <Unknwn.h>
 #include <guiddef.h>

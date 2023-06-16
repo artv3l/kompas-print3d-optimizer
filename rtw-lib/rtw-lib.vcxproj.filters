@@ -13,44 +13,44 @@
     <ClInclude Include="..\general\include\concaveAngle.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\optimizeBridgeHole.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeCircleHorizontalHoles.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeElephantFoot.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeRounding.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimizeRoundingEdgesOnPrintFace.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\general\include\selectPlane.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
     <ClInclude Include="..\general\include\utils.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\Macro.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp">
+      <Filter>general\include\apiutil</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\ConstraintsCreator.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\apiutil\Macro.hpp">
+      <Filter>general\include\apiutil</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\AutomationBaseEvent.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\bridgeHole.hpp">
+      <Filter>general\include\optimization</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\PropertyManagerEvent.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp">
+      <Filter>general\include\optimization</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\PropertyManagerObject.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\elephantFoot.hpp">
+      <Filter>general\include\optimization</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\SettingsManager.hpp">
-      <Filter>general\include</Filter>
+    <ClInclude Include="..\general\include\optimization\rounding.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp">
+      <Filter>general\include\optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\AutomationBaseEvent.hpp">
+      <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp">
+      <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp">
+      <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\SettingsManager.hpp">
+      <Filter>general\include\apiutil</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -69,44 +69,44 @@
     <ClCompile Include="..\general\src\concaveAngle.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\optimizeBridgeHole.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeCircleHorizontalHoles.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeElephantFoot.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeRounding.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimizeRoundingEdgesOnPrintFace.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
     <ClCompile Include="..\general\src\selectPlane.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\utils.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\Macro.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp">
+      <Filter>general\src\apiutil</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\ConstraintsCreator.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\apiutil\Macro.cpp">
+      <Filter>general\src\apiutil</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\AutomationBaseEvent.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\bridgeHole.cpp">
+      <Filter>general\src\optimization</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\PropertyManagerEvent.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp">
+      <Filter>general\src\optimization</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\PropertyManagerObject.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\elephantFoot.cpp">
+      <Filter>general\src\optimization</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\SettingsManager.cpp">
-      <Filter>general\src</Filter>
+    <ClCompile Include="..\general\src\optimization\rounding.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp">
+      <Filter>general\src\optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\AutomationBaseEvent.cpp">
+      <Filter>general\src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp">
+      <Filter>general\src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp">
+      <Filter>general\src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\SettingsManager.cpp">
+      <Filter>general\src\apiutil</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -134,6 +134,18 @@
     <Filter Include="general\include">
       <UniqueIdentifier>{4d310d3f-5c88-4c66-82c3-be79cc75f729}</UniqueIdentifier>
     </Filter>
+    <Filter Include="general\include\apiutil">
+      <UniqueIdentifier>{222f8d9c-bd52-48ed-b6ae-fda85f254215}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\include\optimization">
+      <UniqueIdentifier>{8bf52e98-bdcc-46fb-9c37-3ac097bbea15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\src\apiutil">
+      <UniqueIdentifier>{52c18769-ddfe-428b-83f8-f9578491cc48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="general\src\optimization">
+      <UniqueIdentifier>{d588f3cb-8743-4046-8035-09a70f98a578}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\kompas-print3d-optimizer\kompas-print3d-optimizer.xml">
@@ -141,13 +153,13 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource\main.rc">
-      <Filter>rtw-lib\resource</Filter>
-    </ResourceCompile>
+    <None Include="rtw-lib.def">
+      <Filter>rtw-lib</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resource\mainDll.def">
+    <ResourceCompile Include="resource\resource.rc">
       <Filter>rtw-lib\resource</Filter>
-    </None>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

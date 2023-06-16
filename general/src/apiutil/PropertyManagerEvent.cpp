@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "PropertyManagerEvent.hpp"
+#include "apiutil/PropertyManagerEvent.hpp"
 
 #include <afxdisp.h>
 
-#include "AutomationBaseEvent.hpp"
-#include "PropertyManagerObject.hpp"
+#include "apiutil/AutomationBaseEvent.hpp"
+#include "apiutil/PropertyManagerObject.hpp"
 
 PropertyManagerEvent::PropertyManagerEvent(PropertyManagerObject *propertyManager) :
         AutomationBaseEvent(static_cast<IUnknown *>(propertyManager->getPropertyManager()), DIID_ksPropertyManagerNotify),

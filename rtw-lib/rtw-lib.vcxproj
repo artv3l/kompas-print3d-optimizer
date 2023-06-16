@@ -117,7 +117,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(KOMPAS_SDK)\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kApi2D5.lib;kAPI3D5.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>resource\mainDll.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>rtw-lib.def</ModuleDefinitionFile>
     </Link>
     <ResourceCompile>
       <Culture>0x0419</Culture>
@@ -146,44 +146,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource\main.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="resource\mainDll.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\general\include\AutomationBaseEvent.hpp" />
+    <ClInclude Include="..\general\include\apiutil\AutomationBaseEvent.hpp" />
+    <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp" />
+    <ClInclude Include="..\general\include\apiutil\Macro.hpp" />
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp" />
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp" />
+    <ClInclude Include="..\general\include\apiutil\SettingsManager.hpp" />
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
-    <ClInclude Include="..\general\include\ConstraintsCreator.hpp" />
-    <ClInclude Include="..\general\include\Macro.hpp" />
-    <ClInclude Include="..\general\include\optimizeBridgeHole.hpp" />
-    <ClInclude Include="..\general\include\optimizeCircleHorizontalHoles.hpp" />
-    <ClInclude Include="..\general\include\optimizeElephantFoot.hpp" />
-    <ClInclude Include="..\general\include\optimizeRounding.hpp" />
-    <ClInclude Include="..\general\include\optimizeRoundingEdgesOnPrintFace.hpp" />
-    <ClInclude Include="..\general\include\PropertyManagerEvent.hpp" />
-    <ClInclude Include="..\general\include\PropertyManagerObject.hpp" />
+    <ClInclude Include="..\general\include\optimization\bridgeHole.hpp" />
+    <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp" />
+    <ClInclude Include="..\general\include\optimization\elephantFoot.hpp" />
+    <ClInclude Include="..\general\include\optimization\rounding.hpp" />
+    <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp" />
     <ClInclude Include="..\general\include\selectPlane.hpp" />
-    <ClInclude Include="..\general\include\SettingsManager.hpp" />
     <ClInclude Include="..\general\include\utils.hpp" />
     <ClInclude Include="include\connection.hpp" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="resource\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\general\src\AutomationBaseEvent.cpp" />
+    <ClCompile Include="..\general\src\apiutil\AutomationBaseEvent.cpp" />
+    <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp" />
+    <ClCompile Include="..\general\src\apiutil\Macro.cpp" />
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp" />
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp" />
+    <ClCompile Include="..\general\src\apiutil\SettingsManager.cpp" />
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
-    <ClCompile Include="..\general\src\ConstraintsCreator.cpp" />
-    <ClCompile Include="..\general\src\Macro.cpp" />
-    <ClCompile Include="..\general\src\optimizeBridgeHole.cpp" />
-    <ClCompile Include="..\general\src\optimizeCircleHorizontalHoles.cpp" />
-    <ClCompile Include="..\general\src\optimizeElephantFoot.cpp" />
-    <ClCompile Include="..\general\src\optimizeRounding.cpp" />
-    <ClCompile Include="..\general\src\optimizeRoundingEdgesOnPrintFace.cpp" />
-    <ClCompile Include="..\general\src\PropertyManagerEvent.cpp" />
-    <ClCompile Include="..\general\src\PropertyManagerObject.cpp" />
+    <ClCompile Include="..\general\src\optimization\bridgeHole.cpp" />
+    <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp" />
+    <ClCompile Include="..\general\src\optimization\elephantFoot.cpp" />
+    <ClCompile Include="..\general\src\optimization\rounding.cpp" />
+    <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp" />
     <ClCompile Include="..\general\src\selectPlane.cpp" />
-    <ClCompile Include="..\general\src\SettingsManager.cpp" />
     <ClCompile Include="..\general\src\utils.cpp" />
     <ClCompile Include="src\connection.cpp" />
     <ClCompile Include="src\mainDll.cpp" />
@@ -194,6 +188,12 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\kompas-print3d-optimizer\kompas-print3d-optimizer.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="rtw-lib.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource\resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
