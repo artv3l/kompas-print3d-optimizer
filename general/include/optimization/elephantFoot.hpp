@@ -1,5 +1,5 @@
-#ifndef OPTIMIZE_ELEPHANT_FOOT_HPP
-#define OPTIMIZE_ELEPHANT_FOOT_HPP
+#ifndef ELEPHANT_FOOT_HPP
+#define ELEPHANT_FOOT_HPP
 
 #include <list>
 
@@ -10,4 +10,4 @@ void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFoo
 
 void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, double width);
 
-#endif /* OPTIMIZE_ELEPHANT_FOOT_HPP */
+#endif /* ELEPHANT_FOOT_HPP */

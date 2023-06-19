@@ -1,8 +1,6 @@
 #ifndef CONSTRAINTS_CREATOR_HPP
 #define CONSTRAINTS_CREATOR_HPP
 
-#include "stdafx.h"
-
 class ConstraintsCreator {
 public:
     ConstraintsCreator(IDrawingObjectPtr drawingObject);

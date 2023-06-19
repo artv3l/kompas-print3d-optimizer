@@ -1,8 +1,6 @@
 #ifndef MACRO_HPP
 #define MACRO_HPP
 
-#include "stdafx.h"
-
 #include <comutil.h>
 
 class Macro {

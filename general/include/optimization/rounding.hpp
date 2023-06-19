@@ -1,5 +1,5 @@
-#ifndef OPTIMIZE_ROUNDING_HPP
-#define OPTIMIZE_ROUNDING_HPP
+#ifndef ROUNDING_HPP
+#define ROUNDING_HPP
 
 #include <list>
 
@@ -10,4 +10,4 @@ void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, 
 
 void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, double radius, double deflectionAngle);
 
-#endif /* OPTIMIZE_ROUNDING_HPP */
+#endif /* ROUNDING_HPP */

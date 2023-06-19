@@ -13,6 +13,7 @@
 #include "utils.hpp"
 #include "concaveAngle.hpp"
 #include "PrintSurface.hpp"
+#include "apiutil/Sketch.hpp"
 
 #define EPS_ANGLE 0.001
 #define EPS_DISTANCE 0.00001
@@ -337,7 +338,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksF
             macroElement->Add(secondPlane);
 
             ksEntityPtr axis2 = makeAxis(part, mainPlaneEntity, secondPlaneEntity);
-            Sketch sketch = createSketch(kompas, part, mainPlaneEntity);
+            Sketch sketch(kompas, part, mainPlaneEntity);
             sketch.definition->AddProjectionOf(face);
             sketch.definition->AddProjectionOf(axis2);
             macroElement->Add(axis2);

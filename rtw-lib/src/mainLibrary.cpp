@@ -79,8 +79,8 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         if (kompas->ksReadDouble("Радиус:", 0.5, 0.0, DBL_MAX, &radius) != 1) {
             return;
         }
-        double angle = 85.0;
-        if (kompas->ksReadDouble("Граничный угол: ", 85, 0.0, 90.0, &angle) != 1) {
+        double angle = 5.0;
+        if (kompas->ksReadDouble("Граничный угол: ", 5, 0.0, 90.0, &angle) != 1) {
             return;
         }
         optimizeRounding(part, printSurface.face, radius, angle);
@@ -98,13 +98,13 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             settingsManager.getOverhangThreshold(), ReworkType::ONLY_WITHOUT_REWORK);
         break;
     case 8:
-        optimizeBridgeHoleFill(document3d, part, printSurface.face,
+        optimizeBridgeHoleFill(kompas, document3d, part, printSurface.face,
             settingsManager.getLayerHeight(), HoleType::NOT_CIRCLE);
         optimizeBridgeHoleBuild(kompas, document3d, part, printSurface.face,
             settingsManager.getLayerHeight());
         break;
     case 9:
-        optimizeBridgeHoleFill(document3d, part, printSurface.face,
+        optimizeBridgeHoleFill(kompas, document3d, part, printSurface.face,
             settingsManager.getLayerHeight(), HoleType::ALL);
         break;
     case 10:

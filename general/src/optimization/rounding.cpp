@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "optimization/rounding.hpp"
 
-#include <iostream>
 #include <list>
 #define _USE_MATH_DEFINES \ #include <cmath>
 

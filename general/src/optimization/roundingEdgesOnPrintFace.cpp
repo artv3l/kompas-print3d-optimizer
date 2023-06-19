@@ -7,8 +7,9 @@
 #include "utils.hpp"
 #include "apiutil/Macro.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
+#include "apiutil/Sketch.hpp"
 
-const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Оптимизация скругленных ребер на плоскости печати";
+const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT_WITH_REWORK = "Контур - ДОРАБОТКА";
 
@@ -100,8 +101,8 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksFa
         std::list<RoundingEdgeOnPrintFaceTarget>::iterator targetWithFirstEdge;
 
         ksEdgeCollectionPtr edges(loop->EdgeCollection());
-        for (int edgeIndex = 0; edgeIndex < edges->GetCount(); edgeIndex++) {
-            ksEdgeDefinitionPtr edge(edges->GetByIndex(edgeIndex));
+        for (int iEdge = 0; iEdge < edges->GetCount(); iEdge++) {
+            ksEdgeDefinitionPtr edge(edges->GetByIndex(iEdge));
 
             ksFaceDefinitionPtr roundingFace(edge->GetAdjacentFace(false));
             if (roundingFace == printFace) {
@@ -124,7 +125,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksFa
                 }
                 target.trajectory.push_back(edge);
                 
-                if (edgeIndex == 0) {
+                if (iEdge == 0) {
                     firstEdgeInTarget = true;
                     firstEdgeRadius = radius;
                 }
@@ -176,19 +177,14 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     oss << (180.0 - overhangThreshold);
     CComBSTR temp(oss.str().c_str());
     _bstr_t expression = temp.Detach();
-
-    IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
-    IViewsPtr views(viewsAndLayersManager->Views);
-    IViewPtr view(views->ActiveView);
-    IDrawingContainerPtr drawingContainer(view);
     
     // Добавляем проекции
     sketch.definition->AddProjectionOf(target.trajectory.front()->GetVertex(true));
-    IPointsPtr points(drawingContainer->Points);
+    IPointsPtr points(sketch.drawingContainer->Points);
     IPointPtr startPoint(points->GetPoint(0));
 
     sketch.definition->AddProjectionOf(target.roundingFace);
-    IArcsPtr arcs(drawingContainer->Arcs);
+    IArcsPtr arcs(sketch.drawingContainer->Arcs);
     IArcPtr roundingArc = nullptr;
     bool startPointIs1 = false;
     for (int i = 0; i < arcs->GetCount(); i++) {
@@ -204,7 +200,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
         arc->Update();
     }
     
-    ILineSegmentsPtr lineSegments(drawingContainer->LineSegments);
+    ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
     for (int i = 0; i < lineSegments->GetCount(); i++) {
         ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(i));
         lineSegment->Style = ksCurveStyleEnum::ksCSThin;
@@ -242,7 +238,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     IDrawingObjectPtr lineSeg2DrawingObject(lineSeg2);
 
     // Устанавливаем размеры
-    ISymbols2DContainerPtr symbols2dContainer(view);
+    ISymbols2DContainerPtr symbols2dContainer(sketch.view);
     IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
     
     IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
@@ -304,7 +300,7 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ks
         macroElement.add(sketchPlane);
         
         // Создаем эскиз
-        Sketch sketch = createSketch(kompas, part, sketchPlane);
+        Sketch sketch(kompas, part, sketchPlane);
         drawSketch(sketch, target, overhangThreshold);
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);

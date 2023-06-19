@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp" />
     <ClCompile Include="..\general\src\apiutil\Macro.cpp" />
+    <ClCompile Include="..\general\src\apiutil\Sketch.cpp" />
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
     <ClCompile Include="..\general\src\optimization\bridgeHole.cpp" />
     <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp" />
@@ -162,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp" />
     <ClInclude Include="..\general\include\apiutil\Macro.hpp" />
+    <ClInclude Include="..\general\include\apiutil\Sketch.hpp" />
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
     <ClInclude Include="..\general\include\optimization\bridgeHole.hpp" />
     <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp" />

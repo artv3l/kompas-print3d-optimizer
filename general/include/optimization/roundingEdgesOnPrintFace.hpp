@@ -1,7 +1,5 @@
-#ifndef OPTIMIZE_ROUNDING_EDGES_ON_PRINT_FACE_HPP
-#define OPTIMIZE_ROUNDING_EDGES_ON_PRINT_FACE_HPP
-
-#include "stdafx.h"
+#ifndef ROUNDING_EDGES_ON_PRINT_FACE_HPP
+#define ROUNDING_EDGES_ON_PRINT_FACE_HPP
 
 #include <list>
 
@@ -28,4 +26,4 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
 void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ksFaceDefinitionPtr printFace, double overhangThreshold,
         ReworkType reworkType);
 
-#endif /* OPTIMIZE_ROUNDING_EDGES_ON_PRINT_FACE_HPP */
+#endif /* ROUNDING_EDGES_ON_PRINT_FACE_HPP */

@@ -1,10 +1,8 @@
-#ifndef OPTIMIZE_CIRCLE_HORIZONTAL_HOLES_HPP
-#define OPTIMIZE_CIRCLE_HORIZONTAL_HOLES_HPP
-
-#include "stdafx.h"
+#ifndef CIRCLE_HORIZONTAL_HOLES_HPP
+#define CIRCLE_HORIZONTAL_HOLES_HPP
 
 #include "PrintSurface.hpp"
 
 void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFaceDefinitionPtr printFace, PlaneEq printPlaneEq);
 
-#endif /* OPTIMIZE_CIRCLE_HORIZONTAL_HOLES_HPP */
+#endif /* CIRCLE_HORIZONTAL_HOLES_HPP */
