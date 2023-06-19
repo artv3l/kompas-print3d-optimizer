@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "selectPlane.hpp"
+#include "PrintSurface.hpp"
 
 void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double maxAngle, ksFaceDefinitionPtr printFace, PlaneEq printPlaneEq);
 

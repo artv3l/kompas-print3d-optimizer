@@ -13,9 +13,6 @@
     <ClCompile Include="..\general\src\concaveAngle.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\selectPlane.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
     <ClCompile Include="..\general\src\utils.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
@@ -40,6 +37,9 @@
     <ClCompile Include="..\general\src\apiutil\Macro.cpp">
       <Filter>general\src\apiutil</Filter>
     </ClCompile>
+    <ClCompile Include="..\general\src\PrintSurface.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\connection.hpp">
@@ -49,9 +49,6 @@
       <Filter>console\include</Filter>
     </ClInclude>
     <ClInclude Include="..\general\include\concaveAngle.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\selectPlane.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
     <ClInclude Include="..\general\include\utils.hpp">
@@ -77,6 +74,9 @@
     </ClInclude>
     <ClInclude Include="..\general\include\apiutil\Macro.hpp">
       <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\PrintSurface.hpp">
+      <Filter>general\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

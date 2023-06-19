@@ -13,7 +13,7 @@
     <ClInclude Include="..\general\include\concaveAngle.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\selectPlane.hpp">
+    <ClInclude Include="..\general\include\PrintSurface.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
     <ClInclude Include="..\general\include\utils.hpp">
@@ -69,7 +69,7 @@
     <ClCompile Include="..\general\src\concaveAngle.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\selectPlane.cpp">
+    <ClCompile Include="..\general\src\PrintSurface.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\utils.cpp">

@@ -1,10 +1,13 @@
 #ifndef OPTIMIZE_ROUNDING_HPP
 #define OPTIMIZE_ROUNDING_HPP
 
-#include "stdafx.h"
+#include <list>
 
-#include "selectPlane.hpp"
+bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 
-void optimizeByRounding(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneEq planeEq, double radius, double angle);
+std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
+void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
+
+void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, double radius, double deflectionAngle);
 
 #endif /* OPTIMIZE_ROUNDING_HPP */

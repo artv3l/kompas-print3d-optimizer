@@ -2,11 +2,12 @@
 
 #include <sstream>
 #include <unordered_map>
+#include <stdexcept>
 
 #include "resource.h"
 #include "connection.hpp"
 
-#include "selectPlane.hpp"
+#include "PrintSurface.hpp"
 #include "optimization/rounding.hpp"
 #include "optimization/elephantFoot.hpp"
 #include "optimization/bridgeHole.hpp"
@@ -18,13 +19,13 @@
 
 KompasObjectPtr kompas = getKompasObjectPtr();
 SettingsManager settingsManager(kompas);
-std::unordered_map<ksDocument3D*, PrintPlane> mapPrintPlane;
+std::unordered_map<ksDocument3D*, PrintSurface> mapPrintSurface;
 
 
 bool printPlaneSelectedInCurrentDocument() {
     ksDocument3DPtr currentDocument3d = kompas->ActiveDocument3D();
-    std::unordered_map<ksDocument3D*, PrintPlane>::const_iterator it = mapPrintPlane.find(currentDocument3d);
-    return (it != mapPrintPlane.end());
+    std::unordered_map<ksDocument3D*, PrintSurface>::const_iterator it = mapPrintSurface.find(currentDocument3d);
+    return (it != mapPrintSurface.end());
 }
 
 
@@ -33,18 +34,23 @@ unsigned int WINAPI LIBRARYID() {
 }
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
-    ksDocument3DPtr currentDocument3d = kompas->ActiveDocument3D();
+    ksDocument3DPtr document3d = kompas->ActiveDocument3D();
     switch (comm) {
     case 1:
         settingsManager.show();
         return;
     case 2:
-        PrintPlane printPlane = getSelectedPlane(kompas);
-        std::unordered_map<ksDocument3D*, PrintPlane>::iterator it = mapPrintPlane.find(currentDocument3d);
-        if (it == mapPrintPlane.end()) {
-            mapPrintPlane.insert(std::make_pair(currentDocument3d, printPlane));
-        } else {
-            it->second = printPlane;
+        try {
+            PrintSurface printSurface = getSelectedPrintSurface(document3d);
+            std::unordered_map<ksDocument3D*, PrintSurface>::iterator it = mapPrintSurface.find(document3d);
+            if (it == mapPrintSurface.end()) {
+                mapPrintSurface.insert(std::make_pair(document3d, printSurface));
+            } else {
+                it->second = printSurface;
+            }
+            kompas->ksMessage("Плоскость печати успешно выбрана!");
+        } catch (const std::runtime_error& e) {
+            kompas->ksMessage(e.what());
         }
         return;
     }
@@ -54,15 +60,17 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
     
-    PrintPlane printPlane = mapPrintPlane.find(currentDocument3d)->second;
+    PrintSurface printSurface = mapPrintSurface.find(document3d)->second;
+    ksPartPtr part = document3d->GetPart(pTop_Part);
+
     switch (comm) {
     case 3: {
         std::ostringstream oss;
         oss << "Высота слоя: " << settingsManager.getLayerHeight() << "\n"
             << "Максимальный угол нависаний: " << settingsManager.getOverhangThreshold();
-        ksChooseMngPtr chooseMng(currentDocument3d->GetChooseMng());
+        ksChooseMngPtr chooseMng(document3d->GetChooseMng());
         chooseMng->UnChooseAll();
-        chooseMng->Choose(printPlane.face);
+        chooseMng->Choose(printSurface.face);
         kompas->ksMessage(oss.str().c_str());
         return;
     }
@@ -75,38 +83,38 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         if (kompas->ksReadDouble("Граничный угол: ", 85, 0.0, 90.0, &angle) != 1) {
             return;
         }
-        optimizeByRounding(kompas, printPlane.face, printPlane.eq, radius, angle);
+        optimizeRounding(part, printSurface.face, radius, angle);
         break;
     }
     case 5:
-        optimizeElephantFoot(kompas, printPlane.face, printPlane.eq, 2 * settingsManager.getLayerHeight());
+        optimizeElephantFoot(part, printSurface, 2 * settingsManager.getLayerHeight());
         break;
     case 6:
-        optimizeRoundingEdgesOnPrintFace(kompas, currentDocument3d->GetPart(pTop_Part), printPlane.face,
+        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface.face,
             settingsManager.getOverhangThreshold(), ReworkType::ALL);
         break;
     case 7:
-        optimizeRoundingEdgesOnPrintFace(kompas, currentDocument3d->GetPart(pTop_Part), printPlane.face,
-            settingsManager.getLayerHeight(), ReworkType::ONLY_WITHOUT_REWORK);
+        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface.face,
+            settingsManager.getOverhangThreshold(), ReworkType::ONLY_WITHOUT_REWORK);
         break;
     case 8:
-        optimizeBridgeHoleFill(currentDocument3d, currentDocument3d->GetPart(pTop_Part), printPlane.face,
+        optimizeBridgeHoleFill(document3d, part, printSurface.face,
             settingsManager.getLayerHeight(), HoleType::NOT_CIRCLE);
-        optimizeBridgeHoleBuild(kompas, currentDocument3d, currentDocument3d->GetPart(pTop_Part), printPlane.face,
+        optimizeBridgeHoleBuild(kompas, document3d, part, printSurface.face,
             settingsManager.getLayerHeight());
         break;
     case 9:
-        optimizeBridgeHoleFill(currentDocument3d, currentDocument3d->GetPart(pTop_Part), printPlane.face,
+        optimizeBridgeHoleFill(document3d, part, printSurface.face,
             settingsManager.getLayerHeight(), HoleType::ALL);
         break;
     case 10:
-        optimizeBridgeHoleBuild(kompas, currentDocument3d, currentDocument3d->GetPart(pTop_Part), printPlane.face,
+        optimizeBridgeHoleBuild(kompas, document3d, part, printSurface.face,
             settingsManager.getLayerHeight());
         break;
     case 11:
-        optimizeCircleHorizontalHoles(kompas, 90, printPlane.face, printPlane.eq);
+        optimizeCircleHorizontalHoles(kompas, 90, printSurface.face, printSurface.eq);
         break;
     }
-    currentDocument3d->RebuildDocument();
+    document3d->RebuildDocument();
     kompas->ksMessage("Оптимизация модели была выполнена!");
 }

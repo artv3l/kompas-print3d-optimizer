@@ -158,7 +158,7 @@
     <ClInclude Include="..\general\include\optimization\elephantFoot.hpp" />
     <ClInclude Include="..\general\include\optimization\rounding.hpp" />
     <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp" />
-    <ClInclude Include="..\general\include\selectPlane.hpp" />
+    <ClInclude Include="..\general\include\PrintSurface.hpp" />
     <ClInclude Include="..\general\include\utils.hpp" />
     <ClInclude Include="include\connection.hpp" />
     <ClInclude Include="include\stdafx.h" />
@@ -177,7 +177,7 @@
     <ClCompile Include="..\general\src\optimization\elephantFoot.cpp" />
     <ClCompile Include="..\general\src\optimization\rounding.cpp" />
     <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp" />
-    <ClCompile Include="..\general\src\selectPlane.cpp" />
+    <ClCompile Include="..\general\src\PrintSurface.cpp" />
     <ClCompile Include="..\general\src\utils.cpp" />
     <ClCompile Include="src\connection.cpp" />
     <ClCompile Include="src\mainDll.cpp" />

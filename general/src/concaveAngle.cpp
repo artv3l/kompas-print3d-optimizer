@@ -17,16 +17,12 @@ bool isConcaveAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
     ksEntityCollectionPtr array(chamfer->array());
     array->Add(edge);
     chamferEntity->hidden = true;
-    bool isCreated = chamferEntity->Create();
 
-    if (!isCreated) {
+    if (!chamferEntity->Create()) {
         throw std::runtime_error("Ошибка создания фаски");
     }
 
     massInertiaParam = part->CalcMassInertiaProperties(0x1 | 0x10); // mm kg
-    bool isConcaveAngle = massInertiaParam->v > startVolume;
-
     document3d->DeleteObject(chamferEntity);
-
-    return isConcaveAngle;
+    return massInertiaParam->v > startVolume;
 }

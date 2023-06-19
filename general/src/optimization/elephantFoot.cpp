@@ -1,54 +1,53 @@
 #include "stdafx.h"
 #include "optimization/elephantFoot.hpp"
 
-#include <iostream>
-#include <set>
+#include <list>
 
-#include "selectPlane.hpp"
+#include "PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
 
-const char* MACRO_NAME_ELEPHANT_FOOT = "Оптимизирующие фаски слоновьей ноги";
+const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
 
-void optimizeElephantFoot(KompasObjectPtr kompas, ksFaceDefinitionPtr face, PlaneEq planeEq, double width) {
-	IApplicationPtr api7 = kompas->ksGetApplication7();
-	IKompasDocument3DPtr document3d(api7->GetActiveDocument());
-	IPart7Ptr topPart(document3d->GetTopPart());
-	ksPartPtr part = kompas->TransferInterface(topPart, 1, 0);
-	ksFeaturePtr feature(part->GetFeature());
+std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSurface) {
+	std::list<ksLoopPtr> elephantFootTargets;
+
+	ksBodyPtr body = part->GetMainBody();
+	ksFaceCollectionPtr faces = body->FaceCollection();
+	int nFaces = faces->GetCount();
+	for (int iFace = 0; iFace < nFaces; iFace++) {
+		ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+		if ((face != printSurface.face) && (PlaneEq(face) != printSurface.eq)) {
+			continue;
+		}
+		ksLoopCollectionPtr loops(face->LoopCollection());
+		for (int iLoop = 0; iLoop < loops->GetCount(); iLoop++) {
+			elephantFootTargets.push_back(loops->GetByIndex(iLoop));
+		}
+	}
+	return elephantFootTargets;
+}
+
+void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width) {
 	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
+	for (ksLoopPtr loopTarget : elephantFootTargets) {
+		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
+		ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
+		chamfer->SetChamferParam(true, width, width);
+		ksEntityCollectionPtr array(chamfer->array());
 
-	ksEntityCollectionPtr entityCollection(feature->EntityCollection(o3d_face));
-	std::set<ksEdgeDefinitionPtr> edgesTargets;
-	for (int i = 0; i < entityCollection->GetCount(); i++) {
-		ksEntityPtr entity(entityCollection->GetByIndex(i));
-		ksFaceDefinitionPtr currFace(entity->GetDefinition());
-		if (currFace && currFace->IsPlanar()) {
-			PlaneEq currPlaneEq(currFace);
-			if (currPlaneEq.equals(planeEq)) {
-				std::cout << "Найдена поверхность в плоскости печати \n";
-				ksEdgeCollectionPtr edges(currFace->EdgeCollection());
-				for (int i = 0; i < edges->GetCount(); i++) {
-					edgesTargets.insert(ksEdgeDefinitionPtr(edges->GetByIndex(i)));
-				}
-			}
+		ksEdgeCollectionPtr edges(loopTarget->EdgeCollection());
+		int nEdges = edges->GetCount();
+		for (int iEdge = 0; iEdge < nEdges; iEdge++) {
+			array->Add(edges->GetByIndex(iEdge));
+		}
+
+		if (chamferEntity->Create()) {
+			macro.add(chamferEntity);
 		}
 	}
-	for (std::set<ksEdgeDefinitionPtr>::iterator iter = edgesTargets.begin(); iter != edgesTargets.end(); iter++) {
-		ksEntityCollectionPtr allEdgesCollection(feature->EntityCollection(o3d_edge));
-		if (allEdgesCollection->FindIt((*iter)->GetEntity()) != -1) {
-			ksEntityPtr chamferEntity(part->NewEntity(o3d_chamfer));
-			ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
-			ksEntityCollectionPtr array(chamfer->array());
-			chamfer->SetChamferParam(true, width, width);
-			array->Add((*iter));
-			chamferEntity->hidden = true;
-			bool isCreated = chamferEntity->Create();
-			if (isCreated) {
-				macro.add(chamferEntity);
-			} else {
-				array->Clear();
-			}
-		}
-	}
-	document3d->RebuildDocument();
+}
+
+void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, double width) {
+	std::list<ksLoopPtr> elephantFootTargets = getElephantFootTargets(part, printSurface);
+	createElephantFootChamfers(part, elephantFootTargets, width);
 }
