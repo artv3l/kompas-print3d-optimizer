@@ -8,6 +8,7 @@
 #include "apiutil/Macro.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
+#include "PrintSurface.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -85,69 +86,82 @@ bool targetNeedRework(RoundingEdgeOnPrintFaceTarget target) {
     return false;
 }
 
-std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksFaceDefinitionPtr printFace, ReworkType reworkType) {
+std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPartPtr part, PrintSurface printSurface, ReworkType reworkType) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets;
 
-    ksLoopCollectionPtr loops(printFace->LoopCollection());
-    for (int loopIndex = 0; loopIndex < loops->GetCount(); loopIndex++) {
-        ksLoopPtr loop(loops->GetByIndex(loopIndex));
+    ksBodyPtr body = part->GetMainBody();
+    ksFaceCollectionPtr faces = body->FaceCollection();
+    int nFaces = faces->GetCount();
+    for (int iFace = 0; iFace < nFaces; iFace++) {
+        ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+        if (!face->IsPlanar()) {
+            continue;
+        }
+        if ((face != printSurface.face) && (PlaneEq(face) != printSurface.eq)) {
+            continue;
+        }
+        
+        ksLoopCollectionPtr loops(face->LoopCollection());
+        for (int loopIndex = 0; loopIndex < loops->GetCount(); loopIndex++) {
+            ksLoopPtr loop(loops->GetByIndex(loopIndex));
 
-        RoundingEdgeOnPrintFaceTarget target;
-        double radius = 0.0;
+            RoundingEdgeOnPrintFaceTarget target;
+            double radius = 0.0;
 
-        bool firstEdgeInTarget = false;
-        bool firstTargetInLoopCompleted = false;
-        double firstEdgeRadius = 0.0;
-        std::list<RoundingEdgeOnPrintFaceTarget>::iterator targetWithFirstEdge;
+            bool firstEdgeInTarget = false;
+            bool firstTargetInLoopCompleted = false;
+            double firstEdgeRadius = 0.0;
+            std::list<RoundingEdgeOnPrintFaceTarget>::iterator targetWithFirstEdge;
 
-        ksEdgeCollectionPtr edges(loop->EdgeCollection());
-        for (int iEdge = 0; iEdge < edges->GetCount(); iEdge++) {
-            ksEdgeDefinitionPtr edge(edges->GetByIndex(iEdge));
+            ksEdgeCollectionPtr edges(loop->EdgeCollection());
+            for (int iEdge = 0; iEdge < edges->GetCount(); iEdge++) {
+                ksEdgeDefinitionPtr edge(edges->GetByIndex(iEdge));
 
-            ksFaceDefinitionPtr roundingFace(edge->GetAdjacentFace(false));
-            if (roundingFace == printFace) {
-                roundingFace = edge->GetAdjacentFace(true);
-            }
+                ksFaceDefinitionPtr roundingFace(edge->GetAdjacentFace(false));
+                if (roundingFace == face) {
+                    roundingFace = edge->GetAdjacentFace(true);
+                }
 
-            if ((edge->IsStraight() && roundingFace->IsCylinder()) ||
+                if ((edge->IsStraight() && roundingFace->IsCylinder()) ||
                     ((edge->IsCircle() || edge->IsArc()) && roundingFace->IsTorus())) {
-                if (target.trajectory.empty()) {
-                    radius = getCylinderOrTorusRadius(roundingFace);
-                    target.roundingFace = roundingFace;
-                } else if (!doubleEqual(radius, getCylinderOrTorusRadius(roundingFace))) {
+                    if (target.trajectory.empty()) {
+                        radius = getCylinderOrTorusRadius(roundingFace);
+                        target.roundingFace = roundingFace;
+                    } else if (!doubleEqual(radius, getCylinderOrTorusRadius(roundingFace))) {
+                        targets.push_back(target);
+                        target = RoundingEdgeOnPrintFaceTarget();
+
+                        if (firstEdgeInTarget && !firstTargetInLoopCompleted) {
+                            targetWithFirstEdge = --targets.end();
+                        }
+                        firstTargetInLoopCompleted = true;
+                    }
+                    target.trajectory.push_back(edge);
+
+                    if (iEdge == 0) {
+                        firstEdgeInTarget = true;
+                        firstEdgeRadius = radius;
+                    }
+                } else if (!target.trajectory.empty()) {
                     targets.push_back(target);
                     target = RoundingEdgeOnPrintFaceTarget();
-                    
+
                     if (firstEdgeInTarget && !firstTargetInLoopCompleted) {
                         targetWithFirstEdge = --targets.end();
                     }
                     firstTargetInLoopCompleted = true;
                 }
-                target.trajectory.push_back(edge);
-                
-                if (iEdge == 0) {
-                    firstEdgeInTarget = true;
-                    firstEdgeRadius = radius;
-                }
-            } else if (!target.trajectory.empty()) {
-                targets.push_back(target);
-                target = RoundingEdgeOnPrintFaceTarget();
-                
-                if (firstEdgeInTarget && !firstTargetInLoopCompleted) {
-                    targetWithFirstEdge = --targets.end();
-                }
-                firstTargetInLoopCompleted = true;
             }
-        }
 
-        if (!target.trajectory.empty()) {
-            if (firstEdgeInTarget && firstTargetInLoopCompleted && doubleEqual(firstEdgeRadius, radius)) {
-                RoundingEdgeOnPrintFaceTarget firstTarget = *(targetWithFirstEdge);
-                targets.erase(targetWithFirstEdge);
-                target.trajectory.insert(target.trajectory.cbegin(), firstTarget.trajectory.cbegin(), firstTarget.trajectory.cend());
-                target.roundingFace = firstTarget.roundingFace;
+            if (!target.trajectory.empty()) {
+                if (firstEdgeInTarget && firstTargetInLoopCompleted && doubleEqual(firstEdgeRadius, radius)) {
+                    RoundingEdgeOnPrintFaceTarget firstTarget = *(targetWithFirstEdge);
+                    targets.erase(targetWithFirstEdge);
+                    target.trajectory.insert(target.trajectory.cbegin(), firstTarget.trajectory.cbegin(), firstTarget.trajectory.cend());
+                    target.roundingFace = firstTarget.roundingFace;
+                }
+                targets.push_back(target);
             }
-            targets.push_back(target);
         }
     }
 
@@ -280,9 +294,9 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     constrCreator.equalRadius(roundingArc);
 }
 
-void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ksFaceDefinitionPtr printFace, double overhangThreshold,
+void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, PrintSurface printSurface, double overhangThreshold,
         ReworkType reworkType) {
-    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(printFace, reworkType);
+    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, printSurface, reworkType);
     Macro macro(part, MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE, true);
 
     for (RoundingEdgeOnPrintFaceTarget target : targets) {

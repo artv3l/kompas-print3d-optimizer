@@ -3,6 +3,7 @@
 
 #include <list>
 
+#include "PrintSurface.hpp"
 #include "utils.hpp"
 
 enum class ReworkType {
@@ -21,9 +22,9 @@ double getCylinderOrTorusRadius(ksFaceDefinitionPtr face);
 bool faceNeedRework(ksFaceDefinitionPtr roundingFace);
 bool targetNeedRework(RoundingEdgeOnPrintFaceTarget target);
 
-std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksFaceDefinitionPtr printFace, ReworkType reworkType);
+std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPartPtr part, PrintSurface printSurface, ReworkType reworkType);
 void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double overhangThreshold);
-void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, ksFaceDefinitionPtr printFace, double overhangThreshold,
+void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, PrintSurface printSurface, double overhangThreshold,
         ReworkType reworkType);
 
 #endif /* ROUNDING_EDGES_ON_PRINT_FACE_HPP */

@@ -7,6 +7,9 @@
 #include "utils.hpp"
 
 PlaneEq::PlaneEq(ksFaceDefinitionPtr face) {
+	if (!face->IsPlanar()) {
+		throw std::runtime_error("The face is not planar");
+	}
 	ksSurfacePtr surface(face->GetSurface());
 	double x0 = 0.0, y0 = 0.0, z0 = 0.0;
 	surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), &x0, &y0, &z0);

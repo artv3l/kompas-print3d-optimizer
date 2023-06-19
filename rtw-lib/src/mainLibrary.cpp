@@ -90,11 +90,11 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         optimizeElephantFoot(part, printSurface, 2 * settingsManager.getLayerHeight());
         break;
     case 6:
-        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface.face,
+        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface,
             settingsManager.getOverhangThreshold(), ReworkType::ALL);
         break;
     case 7:
-        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface.face,
+        optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface,
             settingsManager.getOverhangThreshold(), ReworkType::ONLY_WITHOUT_REWORK);
         break;
     case 8:
