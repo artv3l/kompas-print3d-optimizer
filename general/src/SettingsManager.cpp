@@ -2,117 +2,86 @@
 #include "SettingsManager.hpp"
 
 #include <utility>
+#include <stdexcept>
 
 #include "apiutil/PropertyManagerObject.hpp"
 
-const Settings DEFAULT_SETTINGS {0.2, 45, 1, 5, 2, 1, 1};
+const double DEFAULT_LAYER_HEIGHT = 0.2;
+const double DEFAULT_OVERHANG_THRESHOLD = 45.0;
+const double DEFAULT_ROUNDING_RADIUS = 1.0;
+const double DEFAULT_ROUNDING_DEFLECTION_ANGLE = 5.0;
+const uint8_t DEFAULT_ELEPHANT_FOOT_LAYERS_COUNT = 2;
+const uint8_t DEFAULT_BRIDGE_HOLE_FILL_LAYERS_COUNT = 1;
+const uint8_t DEFAULT_BRIDGE_HOLE_BUILD_LAYERS_COUNT = 1;
+
+Settings::Settings():
+    printSurface(),
+    layerHeight(DEFAULT_LAYER_HEIGHT), overhangThreshold(DEFAULT_OVERHANG_THRESHOLD),
+    roundingRadius(DEFAULT_ROUNDING_RADIUS), roundingDeflectionAngle(DEFAULT_ROUNDING_DEFLECTION_ANGLE),
+    elephantFootLayersCount(DEFAULT_ELEPHANT_FOOT_LAYERS_COUNT),
+    bridgeHoleFillLayersCount(DEFAULT_BRIDGE_HOLE_FILL_LAYERS_COUNT), bridgeHoleBuildLayersCount(DEFAULT_BRIDGE_HOLE_BUILD_LAYERS_COUNT)
+{}
+
+Settings::Settings(const PrintSurface& printSurface_):
+    Settings()
+{
+    printSurface = printSurface_;
+}
 
 SettingsManager::SettingsManager(KompasObjectPtr kompas) :
     PropertyManagerObject(kompas),
-    mainTab_(propertyManager_->PropertyTabs->Add("MainTab")), controls_(mainTab_->PropertyControls),
-    settings_(DEFAULT_SETTINGS)
+    mainTab_(propertyManager_->PropertyTabs->Add("MainTab")), controls_(mainTab_->PropertyControls)
 {
     propertyManager_->Layout = PropertyManagerLayout::pmAlignRight;
     propertyManager_->SpecToolbar = SpecPropertyToolBarEnum::pnEnterEscHelp;
     propertyManager_->Caption = _T("Параметры печати");
 
-    {
-        IPropertyGroupBeginPtr printSettingsGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
-        printSettingsGroupBegin->Name = "Параметры печати";
-        printSettingsGroupBegin->Expanding = true;
+    initControls();
+}
 
-        layerHeightEdit_ = controls_->Add(ControlTypeEnum::ksControlEditReal);
-        layerHeightEdit_->Name = "Высота слоя";
-        layerHeightEdit_->SetValueRange(0.04, 0.4);
-        layerHeightEdit_->Step = 0.04;
-        layerHeightEdit_->Value = DEFAULT_SETTINGS.layerHeight;
+void SettingsManager::show() {
+    fillSettingsToEdits();
+    PropertyManagerObject::show();
+}
 
-        overhangThresholdEdit_ = controls_->Add(ControlTypeEnum::ksControlEditInt);
-        overhangThresholdEdit_->Name = "Максимальный угол нависаний";
-        overhangThresholdEdit_->SetValueRange(0, 90);
-        overhangThresholdEdit_->Step = 5;
-        overhangThresholdEdit_->Value = DEFAULT_SETTINGS.overhangThreshold;
-
-        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* printSettings */
-    }
-    {
-        IPropertyGroupBeginPtr roundingGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
-        roundingGroupBegin->Name = "Выпирающие углы";
-        roundingGroupBegin->Expanding = true;
-
-        roundingRadiusEdit_ = controls_->Add(ControlTypeEnum::ksControlEditReal);
-        roundingRadiusEdit_->Name = "Радиус";
-        roundingRadiusEdit_->SetValueRange(0.1, 10.0);
-        roundingRadiusEdit_->Step = 0.1;
-        roundingRadiusEdit_->Value = DEFAULT_SETTINGS.roundingRadius;
-
-        roundingDeflectionAngleEdit_ = controls_->Add(ControlTypeEnum::ksControlEditInt);
-        roundingDeflectionAngleEdit_->Name = "Угол отклонения";
-        roundingDeflectionAngleEdit_->SetValueRange(0, 20);
-        roundingDeflectionAngleEdit_->Step = 1;
-        roundingDeflectionAngleEdit_->Value = DEFAULT_SETTINGS.roundingDeflectionAngle;
-
-        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* rounding */
-    }
-    {
-        IPropertyGroupBeginPtr elephantFootGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
-        elephantFootGroupBegin->Name = "Слоновья нога";
-        elephantFootGroupBegin->Expanding = true;
-
-        elephantFootLayersCountEdit_ = controls_->Add(ControlTypeEnum::ksControlEditInt);
-        elephantFootLayersCountEdit_->Name = "Кол-во слоев";
-        elephantFootLayersCountEdit_->SetValueRange(1, 5);
-        elephantFootLayersCountEdit_->Step = 1;
-        elephantFootLayersCountEdit_->Value = DEFAULT_SETTINGS.elephantFootLayersCount;
-
-        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* elephantFoot */
-    }
-    {
-        IPropertyGroupBeginPtr bridgeHoleFillGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
-        bridgeHoleFillGroupBegin->Name = "Нависающие отверстия: закрытие диафрагмой";
-        bridgeHoleFillGroupBegin->Expanding = true;
-
-        bridgeHoleFillLayersCountEdit_ = controls_->Add(ControlTypeEnum::ksControlEditInt);
-        bridgeHoleFillLayersCountEdit_->Name = "Слоев в диафрагме";
-        bridgeHoleFillLayersCountEdit_->SetValueRange(1, 5);
-        bridgeHoleFillLayersCountEdit_->Step = 1;
-        bridgeHoleFillLayersCountEdit_->Value = DEFAULT_SETTINGS.bridgeHoleFillLayersCount;
-
-        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleFill */
-    }
-    {
-        IPropertyGroupBeginPtr bridgeHoleBuildGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
-        bridgeHoleBuildGroupBegin->Name = "Нависающие отверстия: достройка до набора мостов";
-        bridgeHoleBuildGroupBegin->Expanding = true;
-
-        bridgeHoleBuildLayersCountEdit_ = controls_->Add(ControlTypeEnum::ksControlEditInt);
-        bridgeHoleBuildLayersCountEdit_->Name = "Слоев в мосте";
-        bridgeHoleBuildLayersCountEdit_->SetValueRange(1, 5);
-        bridgeHoleBuildLayersCountEdit_->Step = 1;
-        bridgeHoleBuildLayersCountEdit_->Value = DEFAULT_SETTINGS.bridgeHoleBuildLayersCount;
-
-        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleBuild */
+void SettingsManager::setPrintSurface(ksDocument3DPtr document3d, const PrintSurface& printSurface) {
+    DocumentSettingsMap::iterator it = mapDocumentSettings_.find(document3d);
+    if (it == mapDocumentSettings_.end()) {
+        mapDocumentSettings_.insert(std::make_pair(document3d, Settings(printSurface)));
+    } else {
+        it->second.printSurface = printSurface;
     }
 }
 
-Settings SettingsManager::getSettings() const {
-    return settings_;
+Settings* SettingsManager::getSettings(ksDocument3DPtr document3d) {
+    DocumentSettingsMap::iterator it = mapDocumentSettings_.find(document3d);
+    if (it == mapDocumentSettings_.end()) {
+        DocumentSettingsMap::iterator created = mapDocumentSettings_.insert(std::make_pair(document3d, Settings())).first;
+        return &created->second;
+    }
+    return &it->second;
 }
 
 bool SettingsManager::buttonClick(long buttonId) {
+    ksDocument3DPtr document3d = kompas_->ActiveDocument3D();
+    if (!document3d) {
+        return false;
+    }
+    Settings* settings = getSettings(document3d);
+
     /*
         Почему-то, при чтении Value, его значение запоминается в панели автоматически (если же это значение не прочитать, то оно не сохранится).
         Поэтому заненсение значений настроек в поля при показе панели и не реализовано (это происходит само по себе).
     */
     switch (buttonId) {
     case SpecPropertyButtonEnum::pbEnter:
-        settings_.layerHeight = layerHeightEdit_->Value;
-        settings_.overhangThreshold = overhangThresholdEdit_->Value;
-        settings_.roundingRadius = roundingRadiusEdit_->Value;
-        settings_.roundingDeflectionAngle = roundingDeflectionAngleEdit_->Value;
-        settings_.elephantFootLayersCount = elephantFootLayersCountEdit_->Value;
-        settings_.bridgeHoleFillLayersCount = bridgeHoleFillLayersCountEdit_->Value;
-        settings_.bridgeHoleBuildLayersCount = bridgeHoleBuildLayersCountEdit_->Value;
+        settings->layerHeight = edits_.layerHeight->Value;
+        settings->overhangThreshold = edits_.overhangThreshold->Value;
+        settings->roundingRadius = edits_.roundingRadius->Value;
+        settings->roundingDeflectionAngle = edits_.roundingDeflectionAngle->Value;
+        settings->elephantFootLayersCount = edits_.elephantFootLayersCount->Value;
+        settings->bridgeHoleFillLayersCount = edits_.bridgeHoleFillLayersCount->Value;
+        settings->bridgeHoleBuildLayersCount = edits_.bridgeHoleBuildLayersCount->Value;
 
         hide();
         break;
@@ -123,4 +92,99 @@ bool SettingsManager::buttonClick(long buttonId) {
         break;
     }
     return true;
+}
+
+void SettingsManager::initControls() {
+    {
+        IPropertyGroupBeginPtr printSettingsGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
+        printSettingsGroupBegin->Name = "Параметры печати";
+        printSettingsGroupBegin->Expanding = true;
+
+        edits_.layerHeight = controls_->Add(ControlTypeEnum::ksControlEditReal);
+        edits_.layerHeight->Name = "Высота слоя";
+        edits_.layerHeight->SetValueRange(0.04, 0.4);
+        edits_.layerHeight->Step = 0.04;
+        edits_.layerHeight->Value = DEFAULT_LAYER_HEIGHT;
+
+        edits_.overhangThreshold = controls_->Add(ControlTypeEnum::ksControlEditInt);
+        edits_.overhangThreshold->Name = "Максимальный угол нависаний";
+        edits_.overhangThreshold->SetValueRange(0, 90);
+        edits_.overhangThreshold->Step = 5;
+        edits_.overhangThreshold->Value = DEFAULT_OVERHANG_THRESHOLD;
+
+        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* printSettings */
+    }
+    {
+        IPropertyGroupBeginPtr roundingGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
+        roundingGroupBegin->Name = "Выпирающие углы";
+        roundingGroupBegin->Expanding = true;
+
+        edits_.roundingRadius = controls_->Add(ControlTypeEnum::ksControlEditReal);
+        edits_.roundingRadius->Name = "Радиус";
+        edits_.roundingRadius->SetValueRange(0.1, 10.0);
+        edits_.roundingRadius->Step = 0.1;
+        edits_.roundingRadius->Value = DEFAULT_ROUNDING_RADIUS;
+
+        edits_.roundingDeflectionAngle = controls_->Add(ControlTypeEnum::ksControlEditInt);
+        edits_.roundingDeflectionAngle->Name = "Угол отклонения";
+        edits_.roundingDeflectionAngle->SetValueRange(0, 20);
+        edits_.roundingDeflectionAngle->Step = 1;
+        edits_.roundingDeflectionAngle->Value = DEFAULT_ROUNDING_DEFLECTION_ANGLE;
+
+        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* rounding */
+    }
+    {
+        IPropertyGroupBeginPtr elephantFootGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
+        elephantFootGroupBegin->Name = "Слоновья нога";
+        elephantFootGroupBegin->Expanding = true;
+
+        edits_.elephantFootLayersCount = controls_->Add(ControlTypeEnum::ksControlEditInt);
+        edits_.elephantFootLayersCount->Name = "Кол-во слоев";
+        edits_.elephantFootLayersCount->SetValueRange(1, 5);
+        edits_.elephantFootLayersCount->Step = 1;
+        edits_.elephantFootLayersCount->Value = DEFAULT_ELEPHANT_FOOT_LAYERS_COUNT;
+
+        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* elephantFoot */
+    }
+    {
+        IPropertyGroupBeginPtr bridgeHoleFillGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
+        bridgeHoleFillGroupBegin->Name = "Нависающие отверстия: закрытие диафрагмой";
+        bridgeHoleFillGroupBegin->Expanding = true;
+
+        edits_.bridgeHoleFillLayersCount = controls_->Add(ControlTypeEnum::ksControlEditInt);
+        edits_.bridgeHoleFillLayersCount->Name = "Слоев в диафрагме";
+        edits_.bridgeHoleFillLayersCount->SetValueRange(1, 5);
+        edits_.bridgeHoleFillLayersCount->Step = 1;
+        edits_.bridgeHoleFillLayersCount->Value = DEFAULT_BRIDGE_HOLE_FILL_LAYERS_COUNT;
+
+        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleFill */
+    }
+    {
+        IPropertyGroupBeginPtr bridgeHoleBuildGroupBegin = controls_->Add(ControlTypeEnum::ksControlGroupBegin);
+        bridgeHoleBuildGroupBegin->Name = "Нависающие отверстия: достройка до набора мостов";
+        bridgeHoleBuildGroupBegin->Expanding = true;
+
+        edits_.bridgeHoleBuildLayersCount = controls_->Add(ControlTypeEnum::ksControlEditInt);
+        edits_.bridgeHoleBuildLayersCount->Name = "Слоев в мосте";
+        edits_.bridgeHoleBuildLayersCount->SetValueRange(1, 5);
+        edits_.bridgeHoleBuildLayersCount->Step = 1;
+        edits_.bridgeHoleBuildLayersCount->Value = DEFAULT_BRIDGE_HOLE_BUILD_LAYERS_COUNT;
+
+        controls_->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleBuild */
+    }
+}
+
+void SettingsManager::fillSettingsToEdits() {
+    ksDocument3DPtr document3d = kompas_->ActiveDocument3D();
+    if (!document3d) {
+        return;
+    }
+    Settings* settings = getSettings(document3d);
+    edits_.layerHeight->Value = settings->layerHeight;
+    edits_.overhangThreshold->Value = settings->overhangThreshold;
+    edits_.roundingRadius->Value = settings->roundingRadius;
+    edits_.roundingDeflectionAngle->Value = settings->roundingDeflectionAngle;
+    edits_.elephantFootLayersCount->Value = settings->elephantFootLayersCount;
+    edits_.bridgeHoleFillLayersCount->Value = settings->bridgeHoleFillLayersCount;
+    edits_.bridgeHoleBuildLayersCount->Value = settings->bridgeHoleBuildLayersCount;
 }

@@ -51,7 +51,7 @@ void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFoo
 	}
 }
 
-void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, const Settings& settings) {
-	std::list<ksLoopPtr> elephantFootTargets = getElephantFootTargets(part, printSurface);
+void optimizeElephantFoot(ksPartPtr part, const Settings& settings) {
+	std::list<ksLoopPtr> elephantFootTargets = getElephantFootTargets(part, settings.printSurface.value());
 	createElephantFootChamfers(part, elephantFootTargets, settings.elephantFootLayersCount * settings.layerHeight);
 }

@@ -2,10 +2,16 @@
 #define SETTINGS_MANAGER_HPP
 
 #include <utility>
+#include <unordered_map>
+#include <memory>
 
 #include "apiutil/PropertyManagerObject.hpp"
+#include "PrintSurface.hpp"
+#include "Optional.hpp"
 
 struct Settings {
+    Optional<PrintSurface> printSurface;
+
     double layerHeight;
     double overhangThreshold;
 
@@ -16,6 +22,9 @@ struct Settings {
 
     uint8_t bridgeHoleFillLayersCount;
     uint8_t bridgeHoleBuildLayersCount;
+
+    Settings();
+    Settings(const PrintSurface& printSurface_);
 };
 
 class SettingsManager : public PropertyManagerObject {
@@ -23,26 +32,35 @@ public:
     SettingsManager(KompasObjectPtr kompas);
     virtual ~SettingsManager() = default;
 
-    Settings getSettings() const;
+    void show() override;
+
+    void setPrintSurface(ksDocument3DPtr document3d, const PrintSurface& printSurface);
+    Settings* getSettings(ksDocument3DPtr document3d);
 
 private:
-    virtual bool buttonClick(long buttonId) override;
+    using DocumentSettingsMap = std::unordered_map<ksDocument3D*, Settings>;
 
-    Settings settings_;
-
+    DocumentSettingsMap mapDocumentSettings_;
     IPropertyTabPtr mainTab_;
     IPropertyControlsPtr controls_;
 
-    IPropertyEditPtr layerHeightEdit_;
-    IPropertyEditPtr overhangThresholdEdit_;
+    struct {
+        IPropertyEditPtr layerHeight;
+        IPropertyEditPtr overhangThreshold;
 
-    IPropertyEditPtr roundingRadiusEdit_;
-    IPropertyEditPtr roundingDeflectionAngleEdit_;
+        IPropertyEditPtr roundingRadius;
+        IPropertyEditPtr roundingDeflectionAngle;
 
-    IPropertyEditPtr elephantFootLayersCountEdit_;
+        IPropertyEditPtr elephantFootLayersCount;
 
-    IPropertyEditPtr bridgeHoleFillLayersCountEdit_;
-    IPropertyEditPtr bridgeHoleBuildLayersCountEdit_;
+        IPropertyEditPtr bridgeHoleFillLayersCount;
+        IPropertyEditPtr bridgeHoleBuildLayersCount;
+    } edits_;
+
+    virtual bool buttonClick(long buttonId) override;
+
+    void initControls();
+    void fillSettingsToEdits();
 };
 
 #endif /* SETTINGS_MANAGER_HPP */

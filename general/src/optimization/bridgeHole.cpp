@@ -209,8 +209,8 @@ void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHol
 	}
 }
 
-void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings, HoleType holeType) {
-	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, printFace, holeType);
+void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType) {
+	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.printSurface.value().face, holeType);
 	fillBridgeHoles(kompas, part, targets, settings.bridgeHoleFillLayersCount * settings.layerHeight);
 }
 
@@ -569,7 +569,7 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 	}
 }
 
-void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings) {
-	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, printFace);
+void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
+	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.printSurface.value().face);
 	buildBridgeHoles(kompas, part, targets, settings.bridgeHoleBuildLayersCount * settings.layerHeight);
 }

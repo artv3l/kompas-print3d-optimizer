@@ -9,6 +9,6 @@
 std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSurface);
 void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width);
 
-void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, const Settings& settings);
+void optimizeElephantFoot(ksPartPtr part, const Settings& settings);
 
 #endif /* ELEPHANT_FOOT_HPP */

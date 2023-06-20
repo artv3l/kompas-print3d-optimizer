@@ -13,8 +13,8 @@ public:
 
     virtual bool buttonClick(long buttonId) = 0;
 
-    void show();
-    void hide();
+    virtual void show();
+    virtual void hide();
 
 protected:
     KompasObjectPtr kompas_;
