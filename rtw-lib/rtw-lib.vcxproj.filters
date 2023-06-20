@@ -55,6 +55,9 @@
     <ClInclude Include="..\general\include\SettingsManager.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\general\include\Optional.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">

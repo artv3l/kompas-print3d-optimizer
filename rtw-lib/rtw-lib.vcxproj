@@ -161,6 +161,7 @@
     <ClInclude Include="..\general\include\optimization\elephantFoot.hpp" />
     <ClInclude Include="..\general\include\optimization\rounding.hpp" />
     <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp" />
+    <ClInclude Include="..\general\include\Optional.hpp" />
     <ClInclude Include="..\general\include\PrintSurface.hpp" />
     <ClInclude Include="..\general\include\SettingsManager.hpp" />
     <ClInclude Include="..\general\include\utils.hpp" />
@@ -183,7 +184,9 @@
     <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp" />
     <ClCompile Include="..\general\src\PrintSurface.cpp" />
     <ClCompile Include="..\general\src\SettingsManager.cpp" />
-    <ClCompile Include="..\general\src\utils.cpp" />
+    <ClCompile Include="..\general\src\utils.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\connection.cpp" />
     <ClCompile Include="src\mainDll.cpp" />
     <ClCompile Include="src\mainLibrary.cpp" />
