@@ -5,6 +5,7 @@
 
 #include "PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
+#include "apiutil/SettingsManager.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
 
@@ -16,6 +17,9 @@ std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSu
 	int nFaces = faces->GetCount();
 	for (int iFace = 0; iFace < nFaces; iFace++) {
 		ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+		if (!face->IsPlanar()) {
+			continue;
+		}
 		if ((face != printSurface.face) && (PlaneEq(face) != printSurface.eq)) {
 			continue;
 		}
@@ -47,7 +51,7 @@ void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFoo
 	}
 }
 
-void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, double width) {
+void optimizeElephantFoot(ksPartPtr part, PrintSurface printSurface, const Settings& settings) {
 	std::list<ksLoopPtr> elephantFootTargets = getElephantFootTargets(part, printSurface);
-	createElephantFootChamfers(part, elephantFootTargets, width);
+	createElephantFootChamfers(part, elephantFootTargets, settings.elephantFootLayersCount * settings.layerHeight);
 }

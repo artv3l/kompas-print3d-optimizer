@@ -60,7 +60,7 @@ void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, 
 	filletEntity->Create();
 }
 
-void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, double radius, double deflectionAngle) {
-	std::list<ksEdgeDefinitionPtr> roundingTargets = getRoundingTargets(part, printFace, deflectionAngle);
-	roundEdges(part, roundingTargets, radius);
+void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings) {
+	std::list<ksEdgeDefinitionPtr> roundingTargets = getRoundingTargets(part, printFace, settings.roundingDeflectionAngle);
+	roundEdges(part, roundingTargets, settings.roundingRadius);
 }

@@ -3,11 +3,13 @@
 
 #include <list>
 
+#include "apiutil/SettingsManager.hpp"
+
 bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 
 std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
 
-void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, double radius, double deflectionAngle);
+void optimizeRounding(ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings);
 
 #endif /* ROUNDING_HPP */

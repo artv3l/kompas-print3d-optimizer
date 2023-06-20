@@ -209,9 +209,9 @@ void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHol
 	}
 }
 
-void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, double extrusionDepth, HoleType holeType) {
+void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings, HoleType holeType) {
 	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, printFace, holeType);
-	fillBridgeHoles(kompas, part, targets, extrusionDepth);
+	fillBridgeHoles(kompas, part, targets, settings.bridgeHoleFillLayersCount * settings.layerHeight);
 }
 
 /* Достройка нависающих отверстий для печати мостами */
@@ -569,7 +569,7 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 	}
 }
 
-void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, double stepDepth) {
+void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings) {
 	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, printFace);
-	buildBridgeHoles(kompas, part, targets, stepDepth);
+	buildBridgeHoles(kompas, part, targets, settings.bridgeHoleBuildLayersCount * settings.layerHeight);
 }

@@ -63,53 +63,43 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     PrintSurface printSurface = mapPrintSurface.find(document3d)->second;
     ksPartPtr part = document3d->GetPart(pTop_Part);
 
+    Settings settings = settingsManager.getSettings();
+
     switch (comm) {
     case 3: {
-        std::ostringstream oss;
-        oss << "Высота слоя: " << settingsManager.getLayerHeight() << "\n"
-            << "Максимальный угол нависаний: " << settingsManager.getOverhangThreshold();
         ksChooseMngPtr chooseMng(document3d->GetChooseMng());
         chooseMng->UnChooseAll();
         chooseMng->Choose(printSurface.face);
-        kompas->ksMessage(oss.str().c_str());
         return;
     }
     case 4: {
-        double radius = 0.0;
-        if (kompas->ksReadDouble("Радиус:", 0.5, 0.0, DBL_MAX, &radius) != 1) {
-            return;
-        }
-        double angle = 5.0;
-        if (kompas->ksReadDouble("Граничный угол: ", 5, 0.0, 90.0, &angle) != 1) {
-            return;
-        }
-        optimizeRounding(part, printSurface.face, radius, angle);
+        optimizeRounding(part, printSurface.face, settings);
         break;
     }
     case 5:
-        optimizeElephantFoot(part, printSurface, 2 * settingsManager.getLayerHeight());
+        optimizeElephantFoot(part, printSurface, settings);
         break;
     case 6:
         optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface,
-            settingsManager.getOverhangThreshold(), ReworkType::ALL);
+                                         settings, ReworkType::ALL);
         break;
     case 7:
         optimizeRoundingEdgesOnPrintFace(kompas, part, printSurface,
-            settingsManager.getOverhangThreshold(), ReworkType::ONLY_WITHOUT_REWORK);
+                                         settings, ReworkType::ONLY_WITHOUT_REWORK);
         break;
     case 8:
         optimizeBridgeHoleFill(kompas, document3d, part, printSurface.face,
-            settingsManager.getLayerHeight(), HoleType::NOT_CIRCLE);
+                               settings, HoleType::NOT_CIRCLE);
         optimizeBridgeHoleBuild(kompas, document3d, part, printSurface.face,
-            settingsManager.getLayerHeight());
+                                settings);
         break;
     case 9:
         optimizeBridgeHoleFill(kompas, document3d, part, printSurface.face,
-            settingsManager.getLayerHeight(), HoleType::ALL);
+                               settings, HoleType::ALL);
         break;
     case 10:
         optimizeBridgeHoleBuild(kompas, document3d, part, printSurface.face,
-            settingsManager.getLayerHeight());
+                                settings);
         break;
     case 11:
         optimizeCircleHorizontalHoles(kompas, 90, printSurface.face, printSurface.eq);

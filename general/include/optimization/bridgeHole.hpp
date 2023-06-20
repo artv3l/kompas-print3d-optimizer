@@ -4,6 +4,7 @@
 #include <list>
 
 #include "apiutil/Sketch.hpp"
+#include "apiutil/SettingsManager.hpp"
 
 struct BridgeHoleFillTarget {
     ksLoopPtr loop;
@@ -31,7 +32,7 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 
 std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, HoleType holeType);
 void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleTargets, double extrusionDepth);
-void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, double extrusionDepth, HoleType holeType);
+void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings, HoleType holeType);
 
 bool isOuterLoopForBuild(ksLoopPtr loop);
 void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop);
@@ -42,6 +43,6 @@ void closeContour(ILineSegmentsPtr lineSegments, std::list<std::pair<double, ILi
 void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target);
 void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount);
 void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleTargets, double stepDepth);
-void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, double stepDepth);
+void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, const Settings& settings);
 
 #endif /* BRIDGE_HOLE_HPP */
