@@ -126,8 +126,11 @@
       <AdditionalIncludeDirectories>$(KOMPAS_SDK)\Include;</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)kompas-print3d-optimizer\kompas-print3d-optimizer.rtw"</Command>
+      <Command>$(KOMPAS_DEVUTIL)\add-lib.exe $(SolutionDir)\$(Platform)\$(Configuration)\$(TargetFileName)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>$(KOMPAS_DEVUTIL)\delete-lib.exe "Подготовка модели к 3d печати"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -151,7 +154,6 @@
     <ClInclude Include="..\general\include\apiutil\Macro.hpp" />
     <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp" />
     <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp" />
-    <ClInclude Include="..\general\include\apiutil\SettingsManager.hpp" />
     <ClInclude Include="..\general\include\apiutil\Sketch.hpp" />
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
     <ClInclude Include="..\general\include\optimization\bridgeHole.hpp" />
@@ -160,6 +162,7 @@
     <ClInclude Include="..\general\include\optimization\rounding.hpp" />
     <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp" />
     <ClInclude Include="..\general\include\PrintSurface.hpp" />
+    <ClInclude Include="..\general\include\SettingsManager.hpp" />
     <ClInclude Include="..\general\include\utils.hpp" />
     <ClInclude Include="include\connection.hpp" />
     <ClInclude Include="include\stdafx.h" />
@@ -171,7 +174,6 @@
     <ClCompile Include="..\general\src\apiutil\Macro.cpp" />
     <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp" />
     <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp" />
-    <ClCompile Include="..\general\src\apiutil\SettingsManager.cpp" />
     <ClCompile Include="..\general\src\apiutil\Sketch.cpp" />
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
     <ClCompile Include="..\general\src\optimization\bridgeHole.cpp" />
@@ -180,6 +182,7 @@
     <ClCompile Include="..\general\src\optimization\rounding.cpp" />
     <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp" />
     <ClCompile Include="..\general\src\PrintSurface.cpp" />
+    <ClCompile Include="..\general\src\SettingsManager.cpp" />
     <ClCompile Include="..\general\src\utils.cpp" />
     <ClCompile Include="src\connection.cpp" />
     <ClCompile Include="src\mainDll.cpp" />

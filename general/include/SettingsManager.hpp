@@ -1,11 +1,9 @@
 #ifndef SETTINGS_MANAGER_HPP
 #define SETTINGS_MANAGER_HPP
 
-#include "stdafx.h"
-
 #include <utility>
 
-#include "PropertyManagerObject.hpp"
+#include "apiutil/PropertyManagerObject.hpp"
 
 struct Settings {
     double layerHeight;

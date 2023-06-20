@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 

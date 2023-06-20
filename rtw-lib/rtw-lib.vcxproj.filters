@@ -49,11 +49,11 @@
     <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp">
       <Filter>general\include\apiutil</Filter>
     </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\SettingsManager.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
     <ClInclude Include="..\general\include\apiutil\Sketch.hpp">
       <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\SettingsManager.hpp">
+      <Filter>general\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -108,11 +108,11 @@
     <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp">
       <Filter>general\src\apiutil</Filter>
     </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\SettingsManager.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
     <ClCompile Include="..\general\src\apiutil\Sketch.cpp">
       <Filter>general\src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\SettingsManager.cpp">
+      <Filter>general\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

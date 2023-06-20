@@ -9,7 +9,7 @@
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
 #include "PrintSurface.hpp"
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";

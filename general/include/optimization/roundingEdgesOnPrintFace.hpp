@@ -5,7 +5,7 @@
 
 #include "PrintSurface.hpp"
 #include "utils.hpp"
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 enum class ReworkType {
     ALL,

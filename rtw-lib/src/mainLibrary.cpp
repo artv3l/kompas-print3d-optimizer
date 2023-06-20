@@ -14,7 +14,7 @@
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 #include "optimization/circleHorizontalHoles.hpp"
 
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 
 KompasObjectPtr kompas = getKompasObjectPtr();

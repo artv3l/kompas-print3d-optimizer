@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 #include <utility>
 

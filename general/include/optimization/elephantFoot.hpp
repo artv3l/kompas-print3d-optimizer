@@ -4,7 +4,7 @@
 #include <list>
 
 #include "PrintSurface.hpp"
-#include "apiutil/SettingsManager.hpp"
+#include "SettingsManager.hpp"
 
 std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSurface);
 void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width);
