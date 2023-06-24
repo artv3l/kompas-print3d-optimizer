@@ -78,7 +78,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         optimizeBridgeHoleBuild(kompas, document3d, part, *settings);
         break;
     case 11:
-        optimizeCircleHorizontalHoles(kompas, 90, settings->printSurface.value().face, settings->printSurface.value().eq);
+        //optimizeCircleHorizontalHoles(kompas, 90, settings->printSurface.value().face, settings->printSurface.value().eq);
         break;
     }
     document3d->RebuildDocument();

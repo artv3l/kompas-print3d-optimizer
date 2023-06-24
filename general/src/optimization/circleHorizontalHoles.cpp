@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "optimization/circleHorizontalHoles.hpp"
-#include "apiutil/ConstraintsCreator.hpp"
+
+#pragma region version1
 
 #include <iostream>
 #include <set>
@@ -14,12 +15,13 @@
 #include "concaveAngle.hpp"
 #include "PrintSurface.hpp"
 #include "apiutil/Sketch.hpp"
+#include "apiutil/ConstraintsCreator.hpp"
 
 #define EPS_ANGLE 0.001
 #define EPS_DISTANCE 0.00001
 
 bool checkAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
-  
+
     try {
         return isConcaveAngle(document3d, edge);
     } catch (const std::runtime_error&) {
@@ -46,7 +48,6 @@ bool checkPlaneEntities(ksPartPtr part, ksEntityPtr first, ksEntityPtr second) {
     double distance = measurer->distance;
     return (abs(angle) < EPS_ANGLE || abs(angle - 180) < EPS_ANGLE) && abs(distance) < EPS_DISTANCE;
 }
-
 
 ksEntityPtr createCute(ksPartPtr part, Sketch sketch, ksFaceDefinitionPtr depthFace1, ksFaceDefinitionPtr depthFace2) {
 
@@ -75,7 +76,6 @@ ksEntityPtr createCute(ksPartPtr part, Sketch sketch, ksFaceDefinitionPtr depthF
     }
     return cutEntity;
 }
-
 
 std::set<ksFaceDefinitionPtr> getHorizontalCircleHoles(ksDocument3DPtr document3d, ksFaceDefinitionPtr printFace, PlaneEq planeEq) {
     ksPartPtr part(document3d->GetPart(pTop_Part));
@@ -125,11 +125,11 @@ std::set<ksFaceDefinitionPtr> getHorizontalCircleHoles(ksDocument3DPtr document3
 }
 
 std::vector<ILineSegmentPtr> createTriangle(IDrawingContainerPtr drawingContainer,
-    double p_x_1, double p_x_2, double p_x_3, double p_x_c,
-    double p_y_1, double p_y_2, double p_y_3, double p_y_c,
-    ICirclePtr circle, ILinePtr line, ISymbols2DContainerPtr symbols2dContainer,
-    double overhangThreshold
-    ) {
+                                            double p_x_1, double p_x_2, double p_x_3, double p_x_c,
+                                            double p_y_1, double p_y_2, double p_y_3, double p_y_c,
+                                            ICirclePtr circle, ILinePtr line, ISymbols2DContainerPtr symbols2dContainer,
+                                            double overhangThreshold
+) {
     ILineSegmentPtr line1(drawingContainer->LineSegments->Add());
     ILineSegmentPtr line2(drawingContainer->LineSegments->Add());
     ILineSegmentPtr line3(drawingContainer->LineSegments->Add());
@@ -195,10 +195,9 @@ std::vector<ILineSegmentPtr> createTriangle(IDrawingContainerPtr drawingContaine
         constraint->Create();
     }
 
-    std::vector <ILineSegmentPtr> lines = { line1, line2, line3 };
+    std::vector <ILineSegmentPtr> lines = {line1, line2, line3};
     return lines;
 }
-
 
 void createMaxAngleDim(IDrawingContainerPtr drawingContainer, ISymbols2DContainerPtr symbols2dContainer, ILineSegmentPtr line1, ILineSegmentPtr line2, _bstr_t value) {
     //IPointPtr  p0(drawingContainer->Points->Add());
@@ -207,8 +206,8 @@ void createMaxAngleDim(IDrawingContainerPtr drawingContainer, ISymbols2DContaine
     angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
     angleDim->BaseObject1 = IDrawingObjectPtr(line1);
     angleDim->BaseObject2 = IDrawingObjectPtr(line2);
-    double x = (((line1->X1 + line1->X2) / 2.0) + ((line2->X1 + line2->X2) / 2.0))/ 2.0;
-    double y = (((line1->Y1 + line1->Y2) / 2.0) + ((line2->Y1 + line2->Y2) / 2.0))/ 2.0;
+    double x = (((line1->X1 + line1->X2) / 2.0) + ((line2->X1 + line2->X2) / 2.0)) / 2.0;
+    double y = (((line1->Y1 + line1->Y2) / 2.0) + ((line2->Y1 + line2->Y2) / 2.0)) / 2.0;
     angleDim->X3 = x;
     angleDim->Y3 = y;
     //p0->X = x;
@@ -246,7 +245,7 @@ void axisConstr(IDrawingContainerPtr drawingContainer, ISymbols2DContainerPtr sy
     ax1->Y2 = line1_2->Y1;
 
     ILineSegmentPtr ax2(drawingContainer->LineSegments->Add());
-    ax2->X1 = line2_2->X2; 
+    ax2->X1 = line2_2->X2;
     ax2->Y1 = line2_2->Y2;
     ax2->X2 = line1_2->X2;
     ax2->Y2 = line1_2->Y2;
@@ -271,7 +270,7 @@ void axisConstr(IDrawingContainerPtr drawingContainer, ISymbols2DContainerPtr sy
 }
 
 void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksFaceDefinitionPtr printFace, PlaneEq printPlaneEq) {
-    
+
     IApplicationPtr api7 = kompas->ksGetApplication7();
     IKompasDocument3DPtr document3d(api7->GetActiveDocument());
     IPart7Ptr topPart(document3d->GetTopPart());
@@ -342,7 +341,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksF
             sketch.definition->AddProjectionOf(face);
             sketch.definition->AddProjectionOf(axis2);
             macroElement->Add(axis2);
-            
+
 
             IViewsAndLayersManagerPtr viewsAndLayersManager(sketch.document2d_api7->ViewsAndLayersManager);
             IViewsPtr views(viewsAndLayersManager->Views);
@@ -372,8 +371,8 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksF
 
                 double x_diag_vector_2 = (x_vect * cos_alpha) + (y_vect * sin_alpha),
                     y_diag_vector_2 = -(x_vect * sin_alpha) + (y_vect * cos_alpha); // единичный вектор повёрнутый на -45 град
-                
-                double tg_max_angle = tan(((slotAngle/2) * M_PI) / 180);
+
+                double tg_max_angle = tan(((slotAngle / 2) * M_PI) / 180);
                 double ext_dist = r / (3.0 * tg_max_angle);
                 double p1_x = x0 + ((r + ext_dist) * x_vect), p1_y = y0 + ((r + ext_dist) * y_vect);
                 double p1_x_1 = x0 + (r * x_diag_vector_1), p1_y_1 = y0 + (r * y_diag_vector_1);
@@ -387,7 +386,7 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksF
                 std::vector<ILineSegmentPtr> lines1 = createTriangle(drawingContainer, p1_x, p1_x_1, p1_x_2, x0, p1_y, p1_y_1, p1_y_2, y0, circle, line, symbols2dContainer, slotAngle);
                 std::vector<ILineSegmentPtr> lines2 = createTriangle(drawingContainer, p2_x, p2_x_1, p2_x_2, x0, p2_y, p2_y_1, p2_y_2, y0, circle, line, symbols2dContainer, slotAngle);
                 axisConstr(drawingContainer, symbols2dContainer, lines1, lines2);
-                
+
             } else {
                 removeItPls = true;
                 std::cout << "error\n";
@@ -413,3 +412,130 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, double slotAngle, ksF
     mainMacroElementEntity->Update();
     doc3d->RebuildDocument();
 }
+
+#pragma endregion
+
+#include <list>
+
+#include "SettingsManager.hpp"
+#include "apiutil/Macro.hpp"
+
+const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
+const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
+
+ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, bool hidden) {
+    ksEntityPtr entity = part->NewEntity(Obj3dType::o3d_axisConeFace);
+    ksAxisConefaceDefinitionPtr axis = entity->GetDefinition();
+    axis->SetFace(coneFace);
+    entity->hidden = hidden;
+    entity->Create();
+    return entity;
+}
+
+ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityPtr point, bool hidden) {
+    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_planePerpendicular));
+    ksPlanePerpendicularDefinitionPtr definition(entity->GetDefinition());
+    definition->SetPoint(point);
+    definition->SetEdge(axis);
+    entity->hidden = hidden;
+    entity->Create();
+    return entity;
+}
+
+IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden) {
+     
+    IModelContainerPtr modelContainer(part7);
+
+    IPoints3DPtr points3d(modelContainer->Points3D);
+    IPoint3DPtr point3d(points3d->Add());
+    point3d->ParameterType = ksPoint3DTypeEnum::ksPCenter;
+    point3d->Hidden = hidden;
+    IPoint3DParamCenterPtr point3dParamCenter(point3d->Parameters);
+
+    IModelObjectPtr faceModelObject(face7);
+    point3dParamCenter->SetObject(faceModelObject);
+    point3d->Update();
+
+    return point3d;
+}
+
+void buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr target) {
+    Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
+
+    ksEntityPtr axis = createConeFaceAxis(part, target);
+    macro.add(axis);
+
+    IPart7Ptr part7 = kompas->TransferInterface(part, ksAPITypeEnum::ksAPI7Dual, 0);
+    IFacePtr targetFace7 = kompas->TransferInterface(target, ksAPITypeEnum::ksAPI7Dual, 0);
+    IPoint3DPtr point7 = createPointCenter(part7, targetFace7);
+    // Т.к. macro это API5, а point3d это API7, то добавить точку напрямую мы не можем. Мне показалось, что проще всего найти эту же точку в EntityCollection
+    ksEntityPtr point = nullptr;
+    ksEntityCollectionPtr entityCollection = part->EntityCollection(Obj3dType::o3d_point3D);
+    for (int i = 0; i < entityCollection->GetCount(); i++) {
+        ksEntityPtr entity = entityCollection->GetByIndex(i);
+        if (entity->name == point7->Name) {
+            point = entity;
+            break;
+        }
+    }
+    macro.add(point);
+
+    ksEntityPtr plane = createPlanePerpendicular(part, axis, point);
+    macro.add(plane);
+
+}
+
+std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
+    ksBodyPtr body = part->GetMainBody();
+    std::list<ksFaceDefinitionPtr> targets;
+
+    ksFaceCollectionPtr faces = body->FaceCollection();
+    for (int iFace = 0; iFace < faces->GetCount(); iFace++) {
+        ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+        if (!face->IsCylinder()) {
+            continue;
+        }
+
+        // проверяем, что цилиндрическая поверхность горизонтальна
+        ksMeasurerPtr measurer = part->GetMeasurer();
+        measurer->SetObject1(settings.printSurface.value().face);
+        measurer->SetObject2(face);
+        measurer->Calc();
+        double angle = measurer->angle;
+        if (!(doubleEqual(angle, 0.0) || doubleEqual(angle, 180.0))) {
+            continue;
+        }
+
+        // проверяем, что цилиндрическая поверхность является отверстием
+        /*
+        * Цилиндрическая поверхность замкнута по U. При этом 0 <= u <= 2pi
+        * 
+        * Получаем нормаль для точки (0, vMin). Нормаль смотрит наружу/из детали
+        * Строим вектор из точки (0, vMin) в точку (pi, vMin)
+        * Если эти 2 вектора указывают в одном направлении (скалярное произведение больше нуля), то поверхность является отверстием
+        */
+        ksSurfacePtr surface = face->GetSurface();
+        double uMin = surface->GetParamUMin(), uMax = surface->GetParamUMax();
+        double vMin = surface->GetParamVMin(), vMax = surface->GetParamVMax();
+
+        double xNormal = 0.0, yNormal = 0.0, zNormal = 0.0;
+        surface->GetNormal(0, vMin, &xNormal, &yNormal, &zNormal);
+        if (!face->normalOrientation) {
+            xNormal = -xNormal; yNormal = -yNormal; zNormal = -zNormal;
+        }
+
+        double x0 = 0.0, y0 = 0.0, z0 = 0.0;
+        surface->GetPoint(0, vMin, &x0, &y0, &z0);
+
+        double x = 0.0, y = 0.0, z = 0.0;
+        surface->GetPoint(M_PI, vMin, &x, &y, &z);
+        x -= x0; y -= y0; z -= z0;
+
+        double dot = (x * xNormal) + (y * yNormal) + (z * zNormal);
+        if (dot > 0) {
+            targets.push_back(face);
+        }
+    }
+    return targets;
+}
+
