@@ -15,6 +15,10 @@ PlaneEq::PlaneEq(ksFaceDefinitionPtr face) {
 	surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), &x0, &y0, &z0);
 	surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), &a_, &b_, &c_);
 	d_ = -((a_ * x0) + (b_ * y0) + (c_ * z0));
+
+	if (!face->normalOrientation) {
+		invert();
+	}
 }
 
 bool PlaneEq::operator==(const PlaneEq& other) const {
@@ -90,9 +94,5 @@ PrintSurface getSelectedPrintSurface(ksDocument3DPtr document3d) {
 		throw std::runtime_error("Плоскость печати пересекает деталь!");
 	}
 
-	if (nPointsOnEachSide.first == 0) {
-		planeEq.invert();
-		std::swap(nPointsOnEachSide.first, nPointsOnEachSide.second);
-	}
 	return PrintSurface{face, planeEq};
 }
