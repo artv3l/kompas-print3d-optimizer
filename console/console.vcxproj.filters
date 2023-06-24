@@ -43,6 +43,18 @@
     <ClCompile Include="..\general\src\apiutil\Sketch.cpp">
       <Filter>general\src\apiutil</Filter>
     </ClCompile>
+    <ClCompile Include="..\general\src\SettingsManager.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\AutomationBaseEvent.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\connection.hpp">
@@ -83,6 +95,18 @@
     </ClInclude>
     <ClInclude Include="..\general\include\apiutil\Sketch.hpp">
       <Filter>general\include\apiutil</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\SettingsManager.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\general\include\apiutil\AutomationBaseEvent.hpp">
+      <Filter>general\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

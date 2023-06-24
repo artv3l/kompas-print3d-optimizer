@@ -13,7 +13,6 @@ public:
     static void terminateEvents(); // Отписать все события
     static void terminateEvents(IID iid);
     static void terminateEvents(IID iid, IUnknown *object);
-    static void destroyList();
     static bool findEvent(IID iid, IUnknown *object);
 
     int advise(); // Подписаться на получение событий
@@ -24,7 +23,7 @@ public:
     virtual void clear();
 
 protected:
-    static CObList &eventList_; // Список обработчиков событий
+    static CObList eventList_; // Список обработчиков событий
     DWORD dwCookie_; // Идентификатор соединения
     IID iidEvent_; // IID интерфейса событий
     IConnectionPoint *connectionPoint_; // Соединение

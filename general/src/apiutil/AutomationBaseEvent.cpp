@@ -8,7 +8,7 @@
 #include <cassert>
 #include <afxpriv2.h>
 
-CObList &AutomationBaseEvent::eventList_ = *(new CObList());
+CObList AutomationBaseEvent::eventList_;
 
 AutomationBaseEvent::AutomationBaseEvent(IUnknown *object, IID iidEvent) :
         CCmdTarget(),
@@ -48,12 +48,6 @@ void AutomationBaseEvent::terminateEvents(IID iid, IUnknown *object) {
             (IsEqualIID(iid, GUID_NULL) || IsEqualIID(iid, event->iidEvent_))) {
             event->disconnect();
         }
-    }
-}
-
-void AutomationBaseEvent::destroyList() {
-    if (&eventList_) {
-        delete &eventList_;
     }
 }
 
