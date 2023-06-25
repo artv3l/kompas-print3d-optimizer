@@ -29,9 +29,8 @@ int main() {
     ksBodyPtr body = part->GetMainBody();
     ksFaceCollectionPtr faces = body->FaceCollection();
 
-    Settings sett(printSurface);
-    std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, sett);
-    buildHoleTriangle(kompas, document3d, part, targets.front());
+    Settings settings(printSurface);
+    optimizeCircleHorizontalHoles(kompas, document3d, part, settings);
 
     CoUninitialize();
     return 0;
