@@ -13,6 +13,7 @@
 
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
+const double RADIUS_RATIO = 1 / 3;
 
 ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, bool hidden) {
     ksEntityPtr entity = part->NewEntity(Obj3dType::o3d_axisConeFace);
@@ -33,8 +34,18 @@ ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityP
     return entity;
 }
 
+ksEntityPtr createPlaneLineToPlane(ksPartPtr part, ksEntityPtr line, ksEntityPtr plane, bool isParallel, bool hidden) {
+    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_planeLineToPlane));
+    ksPlaneLineToPlaneDefinitionPtr definition(entity->GetDefinition());
+    bool a2 = definition->SetEdge(line);
+    bool a1 = definition->SetPlane(plane);
+    definition->parallel = isParallel;
+    entity->hidden = hidden;
+    bool a = entity->Create();
+    return entity;
+}
+
 IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden) {
-     
     IModelContainerPtr modelContainer(part7);
 
     IPoints3DPtr points3d(modelContainer->Points3D);
@@ -50,7 +61,7 @@ IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden) {
     return point3d;
 }
 
-ICirclesPtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable) {
+ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable) {
     ksEdgeCollectionPtr edges = target->EdgeCollection();
     ksEdgeDefinitionPtr edge = edges->GetByIndex(0);
     sketch.definition->AddProjectionOf(edge);
@@ -93,14 +104,27 @@ ICirclesPtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t&
     return baseCircle;
 }
 
-void drawSketchTriangles(Sketch sketch, ksFaceDefinitionPtr target) {
+void drawSketchTriangles(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane) {
     _bstr_t radiusVariable;
     ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
+    double radius = baseCircle->Radius;
+
+    sketch.definition->AddProjectionOf(verticalPlane);
+    ILinesPtr lines(sketch.drawingContainer->Lines);
+    ILinePtr verticalLine(lines->GetLine(0));
+
+    ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+
+    // левый отрезок
+    ILineSegmentPtr lineSegL(lineSegments->Add());
+    
+
+
 
 
 }
 
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr target) {
+Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target) {
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
 
     // ось по цилиндрической поверхности
@@ -123,13 +147,17 @@ Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPa
     }
     macro.add(point);
 
-    // плоскость перпендикулярно оси через точку
-    ksEntityPtr plane = createPlanePerpendicular(part, axis, point);
-    macro.add(plane);
+    // плоскость перпендикулярно оси через точку - плоскость эскиза
+    ksEntityPtr sketchPlane = createPlanePerpendicular(part, axis, point);
+    macro.add(sketchPlane);
+
+    // плоскость, перпендикулярная эскизу. При ее проецировании на эскиз получим вертикальную ось
+    ksEntityPtr verticalPlane = createPlaneLineToPlane(part, axis, printFace->GetEntity(), false);
+    macro.add(verticalPlane);
 
     // эскиз
-    Sketch sketch(kompas, part, plane);
-    drawSketchTriangles(sketch, target);
+    Sketch sketch(kompas, part, sketchPlane);
+    drawSketchTriangles(sketch, target, verticalPlane);
     sketch.endEdit();
     macro.add(sketch.entity);
 
@@ -160,7 +188,7 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
         // проверяем, что цилиндрическая поверхность является отверстием
         /*
         * Цилиндрическая поверхность замкнута по U. При этом 0 <= u <= 2pi
-        * 
+        *
         * Получаем нормаль для точки (0, vMin). Нормаль смотрит наружу/из детали
         * Строим вектор из точки (0, vMin) в точку (pi, vMin)
         * Если эти 2 вектора указывают в одном направлении (скалярное произведение больше нуля), то поверхность является отверстием
@@ -194,6 +222,6 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr docum
     std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, settings.printSurface.value().face);
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, target));
+        macro.add(buildHoleTriangle(kompas, document3d, part, settings.printSurface.value().face, target));
     }
 }
