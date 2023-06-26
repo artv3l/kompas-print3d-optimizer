@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "apiutil/ConstraintsCreator.hpp"
 
+#include <comutil.h>
+
 ConstraintsCreator::ConstraintsCreator(IDrawingObjectPtr drawingObject):
     drawingObject_(drawingObject),
     drawingObject1_(drawingObject) {
@@ -56,6 +58,19 @@ bool ConstraintsCreator::mergePoints(long index, IDrawingObjectPtr partner, long
     constraint->Index = index;
     constraint->Partner = static_cast<IDispatch*>(partner);
     constraint->PartnerIndex = partnerIndex;
+    return constraint->Create();
+}
+
+bool ConstraintsCreator::dimWithVariable(_bstr_t expression) {
+    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
+    constraint->ConstraintType = ksConstraintTypeEnum::ksCDimWithVariable;
+    constraint->Expression = expression;
+    return constraint->Create();
+}
+
+bool ConstraintsCreator::fixedDim() {
+    IParametriticConstraintPtr constraint(drawingObject1_->NewConstraint());
+    constraint->ConstraintType = ksConstraintTypeEnum::ksCFixedDim;
     return constraint->Create();
 }
 

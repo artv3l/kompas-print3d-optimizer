@@ -11,7 +11,12 @@ ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, boo
 ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityPtr point, bool hidden = true);
 ksEntityPtr createPlaneLineToPlane(ksPartPtr part, ksEntityPtr line, ksEntityPtr plane, bool isParallel, bool hidden = true);
 IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden = true);
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target);
+ksEntityPtr createCutExtrusion(ksPartPtr part, Sketch sketch);
+
+ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable);
+void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, double overhangThreshold, double rotationOffset);
+void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, double overhangThreshold);
+Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, double overhangThreshold);
 
 std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace);
 void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings);

@@ -4,16 +4,18 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <list>
+#include <sstream>
 
 #include "SettingsManager.hpp"
 #include "apiutil/Macro.hpp"
 #include "apiutil/Sketch.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
 #include "utils.hpp"
+#include "LinAlg.hpp"
 
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
-const double RADIUS_RATIO = 1 / 3;
+const double RADIUS_RATIO = 1.0 / 3.0;
 
 ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, bool hidden) {
     ksEntityPtr entity = part->NewEntity(Obj3dType::o3d_axisConeFace);
@@ -61,6 +63,22 @@ IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden) {
     return point3d;
 }
 
+ksEntityPtr createCutExtrusion(ksPartPtr part, Sketch sketch) {
+    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_cutExtrusion));
+    ksCutExtrusionDefinitionPtr definition(entity->GetDefinition());
+    definition->cut = true;
+    definition->chooseType = ksChBodiesAndParts;
+    definition->directionType = ksDirectionTypeEnum::dtBoth;
+    definition->SetSketch(sketch.entity);
+
+    ksExtrusionParamPtr param(definition->ExtrusionParam());
+    param->typeNormal = ksEndTypeEnum::etUpToNearSurface;
+    param->typeReverse = ksEndTypeEnum::etUpToNearSurface;
+
+    entity->Create();
+    return entity;
+}
+
 ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable) {
     ksEdgeCollectionPtr edges = target->EdgeCollection();
     ksEdgeDefinitionPtr edge = edges->GetByIndex(0);
@@ -104,27 +122,101 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     return baseCircle;
 }
 
-void drawSketchTriangles(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane) {
+void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, double overhangThreshold, double rotationOffset) {
+    double radius = baseCircle->Radius;
+    ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+
+    // Считаем координаты треугольников в системе координат, где начало - центр baseCircle, ось y - verticalLine
+    double dx = radius * RADIUS_RATIO;
+    double y1 = std::sin(std::acos(dx / radius)) * radius;
+    double y2 = y1 + (std::tan(degreeToRadian(overhangThreshold)) * dx);
+    Vec2d l1(-dx, y1), r1(dx, y1), lr2(0, y2);
+
+    // Через матрицу трансформации преобразуем эти координаты к координатам эскиза
+    double angle = std::atan2(verticalLine->Y2 - verticalLine->Y1, verticalLine->X2 - verticalLine->X1) + rotationOffset;
+    TransformationMatrix2d matrix(angle, baseCircle->Xc, baseCircle->Yc);
+    l1 = matrix * l1; r1 = matrix * r1; lr2 = matrix * lr2;
+
+    // строим отрезки
+    ILineSegmentPtr lineSegL(lineSegments->Add());
+    lineSegL->X1 = l1.x; lineSegL->Y1 = l1.y;
+    lineSegL->X2 = lr2.x; lineSegL->Y2 = lr2.y;
+    lineSegL->Update();
+    ILineSegmentPtr lineSegR(lineSegments->Add());
+    lineSegR->X1 = r1.x; lineSegR->Y1 = r1.y;
+    lineSegR->X2 = lr2.x; lineSegR->Y2 = lr2.y;
+    lineSegR->Update();
+    ConstraintsCreator constrCreator(lineSegL);
+    constrCreator.pointOnCurve(0, baseCircle);
+    constrCreator.mergePoints(1, lineSegR, 1);
+    constrCreator.pointOnCurve(1, verticalLine);
+    constrCreator = ConstraintsCreator(lineSegR);
+    constrCreator.pointOnCurve(0, baseCircle);
+    constrCreator.equalLength(lineSegL);
+
+    // строим дугу
+    IArcsPtr arcs(sketch.drawingContainer->Arcs);
+    IArcPtr arc(arcs->Add());
+    arc->Xc = baseCircle->Xc; arc->Yc = baseCircle->Yc;
+    arc->Radius = radius;
+    arc->X1 = l1.x; arc->Y1 = l1.y;
+    arc->X2 = r1.x; arc->Y2 = r1.y;
+    arc->Direction = true;
+    arc->Update();
+    constrCreator = ConstraintsCreator(arc);
+    constrCreator.mergePoints(0, baseCircle, 0);
+    constrCreator.mergePoints(1, lineSegL, 0);
+    constrCreator.mergePoints(2, lineSegR, 0);
+
+    ISymbols2DContainerPtr symbols2dContainer(sketch.view);
+    ILineDimensionsPtr lineDimensions(symbols2dContainer->LineDimensions);
+    IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
+
+    // линейный размер
+    ILineDimensionPtr lineDim(lineDimensions->Add());
+    lineDim->X1 = l1.x; lineDim->Y1 = l1.y;
+    lineDim->X2 = r1.x; lineDim->Y2 = r1.y;
+    lineDim->X3 = (l1.x + r1.x) / 2; lineDim->Y3 = (l1.y + r1.y) / 2;
+    lineDim->Orientation = ksLineDimensionOrientationEnum::ksLinDParallel;
+    lineDim->Update();
+    constrCreator = ConstraintsCreator(lineDim);
+    constrCreator.mergePoints(0, lineSegL, 0);
+    constrCreator.mergePoints(1, lineSegR, 0);
+    constrCreator.fixedDim();
+    constrCreator.dimWithVariable(radiusVariable + " / 1.5");
+
+    // угловой размер
+    double dimAngle = 180.0 - (2.0 * overhangThreshold);
+    IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
+    angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+    angleDim->BaseObject1 = lineSegL;
+    angleDim->BaseObject2 = lineSegR;
+    angleDim->Radius = 0;
+    angleDim->X3 = (l1.x + r1.x) / 2; angleDim->Y3 = (l1.y + r1.y) / 2;
+    if (dimAngle > 90.0) {
+        angleDim->DimensionType = ksAngleDimTypeEnum::ksADMaxAngle;
+    } else {
+        angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+    }
+    angleDim->Update();
+    constrCreator = ConstraintsCreator(angleDim);
+    constrCreator.fixedDim();
+    constrCreator.dimWithVariable(_bstr_t(dimAngle));
+}
+
+void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, double overhangThreshold) {
     _bstr_t radiusVariable;
     ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
-    double radius = baseCircle->Radius;
-
+    
     sketch.definition->AddProjectionOf(verticalPlane);
     ILinesPtr lines(sketch.drawingContainer->Lines);
     ILinePtr verticalLine(lines->GetLine(0));
 
-    ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
-
-    // левый отрезок
-    ILineSegmentPtr lineSegL(lineSegments->Add());
-    
-
-
-
-
+    drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, -M_PI_2);
+    drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, M_PI_2);
 }
 
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target) {
+Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, double overhangThreshold) {
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
 
     // ось по цилиндрической поверхности
@@ -157,9 +249,12 @@ Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPa
 
     // эскиз
     Sketch sketch(kompas, part, sketchPlane);
-    drawSketchTriangles(sketch, target, verticalPlane);
+    drawSketch(sketch, target, verticalPlane, overhangThreshold);
     sketch.endEdit();
     macro.add(sketch.entity);
+
+    ksEntityPtr cutExtrusion = createCutExtrusion(part, sketch);
+    macro.add(cutExtrusion);
 
     return macro;
 }
@@ -222,6 +317,6 @@ void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr docum
     std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, settings.printSurface.value().face);
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, settings.printSurface.value().face, target));
+        macro.add(buildHoleTriangle(kompas, document3d, part, settings.printSurface.value().face, target, settings.overhangThreshold));
     }
 }

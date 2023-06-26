@@ -1,6 +1,8 @@
 #ifndef CONSTRAINTS_CREATOR_HPP
 #define CONSTRAINTS_CREATOR_HPP
 
+#include <comutil.h>
+
 class ConstraintsCreator {
 public:
     ConstraintsCreator(IDrawingObjectPtr drawingObject);
@@ -12,6 +14,8 @@ public:
     bool equalRadius(IDrawingObjectPtr partner);                                          // 8
     bool horizontalAlignPoints(long index, IDrawingObjectPtr partner, long partnerIndex); // 9
     bool mergePoints(long index, IDrawingObjectPtr partner, long partnerIndex);           // 11
+    bool dimWithVariable(_bstr_t expression);                                             // 13
+    bool fixedDim();                                                                      // 14
     bool tangentTwoCurves(IDrawingObjectPtr partner);                                     // 15
     
 private:
