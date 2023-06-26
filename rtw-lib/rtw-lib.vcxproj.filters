@@ -58,6 +58,9 @@
     <ClInclude Include="..\general\include\Optional.hpp">
       <Filter>general\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\general\include\LinAlg.hpp">
+      <Filter>general\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">
@@ -115,6 +118,9 @@
       <Filter>general\src\apiutil</Filter>
     </ClCompile>
     <ClCompile Include="..\general\src\SettingsManager.cpp">
+      <Filter>general\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\general\src\LinAlg.cpp">
       <Filter>general\src</Filter>
     </ClCompile>
   </ItemGroup>

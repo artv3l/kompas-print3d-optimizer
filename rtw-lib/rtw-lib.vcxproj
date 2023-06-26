@@ -156,6 +156,7 @@
     <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp" />
     <ClInclude Include="..\general\include\apiutil\Sketch.hpp" />
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
+    <ClInclude Include="..\general\include\LinAlg.hpp" />
     <ClInclude Include="..\general\include\optimization\bridgeHole.hpp" />
     <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp" />
     <ClInclude Include="..\general\include\optimization\elephantFoot.hpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp" />
     <ClCompile Include="..\general\src\apiutil\Sketch.cpp" />
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
+    <ClCompile Include="..\general\src\LinAlg.cpp" />
     <ClCompile Include="..\general\src\optimization\bridgeHole.cpp" />
     <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp" />
     <ClCompile Include="..\general\src\optimization\elephantFoot.cpp" />
