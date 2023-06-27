@@ -85,7 +85,9 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     sketch.definition->AddProjectionOf(edge);
     ICirclesPtr circles = sketch.drawingContainer->Circles;
     ICirclePtr baseCircle = nullptr;
-    if (edge->IsArc()) {
+    if (circles->Count != 0) {
+        baseCircle = circles->GetCircle(0); 
+    } else {
         baseCircle = circles->Add();
 
         IArcsPtr arcs = sketch.drawingContainer->Arcs;
@@ -99,8 +101,6 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
         ConstraintsCreator constrCreator(baseCircle);
         constrCreator.mergePoints(0, baseArc, 0);
         constrCreator.equalRadius(baseArc);
-    } else {
-        baseCircle = circles->GetCircle(0);
     }
     baseCircle->Style = ksCurveStyleEnum::ksCSThin;
     baseCircle->Update();
