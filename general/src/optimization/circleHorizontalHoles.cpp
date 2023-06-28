@@ -313,10 +313,14 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
     return targets;
 }
 
-void optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
+size_t optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
     std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, settings.printSurface.value().face);
+    if (targets.empty()) {
+        return 0;
+    }
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
         macro.add(buildHoleTriangle(kompas, document3d, part, settings.printSurface.value().face, target, settings.overhangThreshold));
     }
+    return targets.size();
 }

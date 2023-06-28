@@ -295,8 +295,11 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     constrCreator.equalRadius(roundingArc);
 }
 
-void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType) {
+size_t optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.printSurface.value(), reworkType);
+    if (targets.empty()) {
+        return 0;
+    }
     Macro macro(part, MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE, true);
 
     for (RoundingEdgeOnPrintFaceTarget target : targets) {
@@ -333,4 +336,5 @@ void optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, co
         macroElement.add(evolutionEntity);
         macro.add(macroElement);
     }
+    return targets.size();
 }

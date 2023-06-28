@@ -12,6 +12,7 @@ public:
     bool add(IDispatchPtr obj);
     bool add(Macro macro);
     bool update();
+    bool isCreated();
 
 private:
     ksEntityPtr entity_;

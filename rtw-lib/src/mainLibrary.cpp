@@ -47,6 +47,8 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     ksPartPtr part = document3d->GetPart(pTop_Part);
+    size_t count = 0;
+
     switch (comm) {
     case 3:
     {
@@ -56,31 +58,35 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
     case 4:
-        optimizeRounding(part, *settings);
+        count += optimizeRounding(part, *settings);
         break;
     case 5:
-        optimizeElephantFoot(part, *settings);
+        count += optimizeElephantFoot(part, *settings);
         break;
     case 6:
-        optimizeRoundingEdgesOnPrintFace(kompas, part, *settings, ReworkType::ALL);
+        count += optimizeRoundingEdgesOnPrintFace(kompas, part, *settings, ReworkType::ALL);
         break;
     case 7:
-        optimizeRoundingEdgesOnPrintFace(kompas, part, *settings, ReworkType::ONLY_WITHOUT_REWORK);
+        count += optimizeRoundingEdgesOnPrintFace(kompas, part, *settings, ReworkType::ONLY_WITHOUT_REWORK);
         break;
     case 8:
-        optimizeBridgeHoleFill(kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
-        optimizeBridgeHoleBuild(kompas, document3d, part, *settings);
+        count += optimizeBridgeHoleFill(kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
+        count += optimizeBridgeHoleBuild(kompas, document3d, part, *settings);
         break;
     case 9:
-        optimizeBridgeHoleFill(kompas, document3d, part, *settings, HoleType::ALL);
+        count += optimizeBridgeHoleFill(kompas, document3d, part, *settings, HoleType::ALL);
         break;
     case 10:
-        optimizeBridgeHoleBuild(kompas, document3d, part, *settings);
+        count += optimizeBridgeHoleBuild(kompas, document3d, part, *settings);
         break;
     case 11:
-        optimizeCircleHorizontalHoles(kompas, document3d, part, *settings);
+        count += optimizeCircleHorizontalHoles(kompas, document3d, part, *settings);
         break;
     }
-    document3d->RebuildDocument();
-    kompas->ksMessage("Оптимизация модели была выполнена!");
+    if (count == 0) {
+        kompas->ksMessage("Не найдено геометрии для оптимизации");
+    } else {
+        document3d->RebuildDocument();
+        kompas->ksMessage("Оптимизация модели была выполнена!");
+    }
 }

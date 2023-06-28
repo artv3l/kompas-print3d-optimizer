@@ -24,3 +24,7 @@ bool Macro::add(Macro macro) {
 bool Macro::update() {
     return entity_->Update();
 }
+
+bool Macro::isCreated() {
+    return entity_->IsCreated();
+}

@@ -13,6 +13,7 @@
 #include "apiutil/Sketch.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
+const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Достройка нависающих отверстий";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT = "Отверстие";
 
@@ -187,8 +188,10 @@ void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHol
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_FILL, true);
 
 	for (BridgeHoleFillTarget target : bridgeHoleFillTargets) {
+		Macro macroElement(part, MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT, true);
+
 		Sketch sketch(kompas, part, target.face);
-		macro.add(sketch.entity);
+		macroElement.add(sketch.entity);
 
 		ksEdgeCollectionPtr edges(target.loop->EdgeCollection());
 		int edgesCount = edges->GetCount();
@@ -204,14 +207,19 @@ void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHol
 		extrusionDef->SetSideParam(false, etBlind, extrusionDepth, 0, false);
 		extrusionDef->SetSketch(sketch.entity);
 		extrusionEntity->Create();
+		macroElement.add(extrusionEntity);
 
-		macro.add(extrusionEntity);
+		macro.add(macroElement);
 	}
 }
 
-void optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType) {
+size_t optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType) {
 	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.printSurface.value().face, holeType);
+	if (targets.empty()) {
+		return 0;
+	}
 	fillBridgeHoles(kompas, part, targets, settings.bridgeHoleFillLayersCount * settings.layerHeight);
+	return targets.size();
 }
 
 /* Достройка нависающих отверстий для печати мостами */
@@ -569,7 +577,11 @@ void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 	}
 }
 
-void optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
+size_t optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
 	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.printSurface.value().face);
+	if (targets.empty()) {
+		return 0;
+	}
 	buildBridgeHoles(kompas, part, targets, settings.bridgeHoleBuildLayersCount * settings.layerHeight);
+	return targets.size();
 }
