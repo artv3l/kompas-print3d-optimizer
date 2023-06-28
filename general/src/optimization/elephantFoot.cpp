@@ -2,6 +2,7 @@
 #include "optimization/elephantFoot.hpp"
 
 #include <list>
+#include <utility>
 
 #include "PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
@@ -31,7 +32,7 @@ std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSu
 	return elephantFootTargets;
 }
 
-void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width) {
+Macro createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width) {
 	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
 	for (ksLoopPtr loopTarget : elephantFootTargets) {
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
@@ -49,13 +50,16 @@ void createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFoo
 			macro.add(chamferEntity);
 		}
 	}
+	return macro;
 }
 
-size_t optimizeElephantFoot(ksPartPtr part, const Settings& settings) {
+std::pair<size_t, Optional<Macro>> optimizeElephantFoot(ksPartPtr part, const Settings& settings) {
 	std::list<ksLoopPtr> targets = getElephantFootTargets(part, settings.printSurface.value());
 	if (targets.empty()) {
-		return 0;
+		return std::make_pair(0, Optional<Macro>());
 	}
-	createElephantFootChamfers(part, targets, settings.elephantFootLayersCount * settings.layerHeight);
-	return targets.size();
+	return std::make_pair(
+		targets.size(),
+		createElephantFootChamfers(part, targets, settings.elephantFootLayersCount * settings.layerHeight)
+	);
 }

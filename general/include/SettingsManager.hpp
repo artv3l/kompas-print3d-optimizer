@@ -9,6 +9,8 @@
 #include "PrintSurface.hpp"
 #include "Optional.hpp"
 
+class DocumentsManager;
+
 struct Settings {
     Optional<PrintSurface> printSurface;
 
@@ -29,7 +31,7 @@ struct Settings {
 
 class SettingsManager : public PropertyManagerObject {
 public:
-    SettingsManager(KompasObjectPtr kompas);
+    SettingsManager(KompasObjectPtr kompas, DocumentsManager& documentsManager);
     virtual ~SettingsManager() = default;
 
     void show() override;
@@ -38,9 +40,7 @@ public:
     Settings* getSettings(ksDocument3DPtr document3d);
 
 private:
-    using DocumentSettingsMap = std::unordered_map<ksDocument3D*, Settings>;
-
-    DocumentSettingsMap mapDocumentSettings_;
+    DocumentsManager& documentsManager_;
     IPropertyTabPtr mainTab_;
     IPropertyControlsPtr controls_;
 

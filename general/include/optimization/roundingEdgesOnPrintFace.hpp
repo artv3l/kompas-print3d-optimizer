@@ -2,10 +2,12 @@
 #define ROUNDING_EDGES_ON_PRINT_FACE_HPP
 
 #include <list>
+#include <utility>
 
 #include "PrintSurface.hpp"
 #include "utils.hpp"
 #include "SettingsManager.hpp"
+#include "apiutil/Macro.hpp"
 
 enum class ReworkType {
     ALL,
@@ -25,6 +27,6 @@ bool targetNeedRework(RoundingEdgeOnPrintFaceTarget target);
 
 std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPartPtr part, PrintSurface printSurface, ReworkType reworkType);
 void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double overhangThreshold);
-size_t optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType);
+std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType);
 
 #endif /* ROUNDING_EDGES_ON_PRINT_FACE_HPP */

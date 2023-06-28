@@ -2,6 +2,7 @@
 #define CIRCLE_HORIZONTAL_HOLES_HPP
 
 #include <list>
+#include <utility>
 
 #include "PrintSurface.hpp"
 #include "SettingsManager.hpp"
@@ -19,6 +20,6 @@ void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalP
 Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, double overhangThreshold);
 
 std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace);
-size_t optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings);
+std::pair<size_t, Optional<Macro>> optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings);
 
 #endif /* CIRCLE_HORIZONTAL_HOLES_HPP */

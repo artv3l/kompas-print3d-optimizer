@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "apiutil/PropertyManagerObject.hpp"
+#include "DocumentsManager.hpp"
 
 const double DEFAULT_LAYER_HEIGHT = 0.2;
 const double DEFAULT_OVERHANG_THRESHOLD = 45.0;
@@ -28,8 +29,9 @@ Settings::Settings(const PrintSurface& printSurface_):
     printSurface = printSurface_;
 }
 
-SettingsManager::SettingsManager(KompasObjectPtr kompas) :
+SettingsManager::SettingsManager(KompasObjectPtr kompas, DocumentsManager& documentsManager) :
     PropertyManagerObject(kompas),
+    documentsManager_(documentsManager),
     mainTab_(propertyManager_->PropertyTabs->Add("MainTab")), controls_(mainTab_->PropertyControls)
 {
     propertyManager_->Layout = PropertyManagerLayout::pmAlignRight;
@@ -45,21 +47,13 @@ void SettingsManager::show() {
 }
 
 void SettingsManager::setPrintSurface(ksDocument3DPtr document3d, const PrintSurface& printSurface) {
-    DocumentSettingsMap::iterator it = mapDocumentSettings_.find(document3d);
-    if (it == mapDocumentSettings_.end()) {
-        mapDocumentSettings_.insert(std::make_pair(document3d, Settings(printSurface)));
-    } else {
-        it->second.printSurface = printSurface;
-    }
+    DocumentData* documentData = documentsManager_.getOrCreateDocumentData(document3d);
+    documentData->settings.printSurface = printSurface;
 }
 
 Settings* SettingsManager::getSettings(ksDocument3DPtr document3d) {
-    DocumentSettingsMap::iterator it = mapDocumentSettings_.find(document3d);
-    if (it == mapDocumentSettings_.end()) {
-        DocumentSettingsMap::iterator created = mapDocumentSettings_.insert(std::make_pair(document3d, Settings())).first;
-        return &created->second;
-    }
-    return &it->second;
+    DocumentData* documentData = documentsManager_.getOrCreateDocumentData(document3d);
+    return &documentData->settings;
 }
 
 bool SettingsManager::buttonClick(long buttonId) {

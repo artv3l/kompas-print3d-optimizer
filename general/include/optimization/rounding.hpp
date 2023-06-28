@@ -2,14 +2,14 @@
 #define ROUNDING_HPP
 
 #include <list>
-
+#include <utility>
 #include "SettingsManager.hpp"
 
 bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 
 std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
-void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
+ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
 
-size_t optimizeRounding(ksPartPtr part, const Settings& settings);
+std::pair<size_t, Optional<ksEntityPtr>> optimizeRounding(ksPartPtr part, const Settings& settings);
 
 #endif /* ROUNDING_HPP */

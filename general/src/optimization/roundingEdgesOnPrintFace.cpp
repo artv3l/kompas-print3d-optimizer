@@ -2,6 +2,7 @@
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 
 #include <sstream>
+#include <utility>
 #include <atlbase.h>
 
 #include "utils.hpp"
@@ -295,10 +296,10 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     constrCreator.equalRadius(roundingArc);
 }
 
-size_t optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType) {
+std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.printSurface.value(), reworkType);
     if (targets.empty()) {
-        return 0;
+        return std::make_pair(0, Optional<Macro>());
     }
     Macro macro(part, MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE, true);
 
@@ -336,5 +337,5 @@ size_t optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, 
         macroElement.add(evolutionEntity);
         macro.add(macroElement);
     }
-    return targets.size();
+    return std::make_pair(targets.size(), macro);
 }

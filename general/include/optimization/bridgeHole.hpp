@@ -2,9 +2,12 @@
 #define BRIDGE_HOLE_HPP
 
 #include <list>
+#include <utility>
 
+#include "Optional.hpp"
 #include "apiutil/Sketch.hpp"
 #include "SettingsManager.hpp"
+#include "apiutil/Macro.hpp"
 
 struct BridgeHoleFillTarget {
     ksLoopPtr loop;
@@ -31,8 +34,8 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDirection, double depth);
 
 std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, HoleType holeType);
-void fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleTargets, double extrusionDepth);
-size_t optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType);
+Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleTargets, double extrusionDepth);
+std::pair<size_t, Optional<Macro>> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType);
 
 bool isOuterLoopForBuild(ksLoopPtr loop);
 void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop);
@@ -42,7 +45,7 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 void closeContour(ILineSegmentsPtr lineSegments, std::list<std::pair<double, ILineSegmentPtr>> points, double y, long partnerIndex);
 void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target);
 void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount);
-void buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleTargets, double stepDepth);
-size_t optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings);
+Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleTargets, double stepDepth);
+std::pair<size_t, Optional<Macro>> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings);
 
 #endif /* BRIDGE_HOLE_HPP */

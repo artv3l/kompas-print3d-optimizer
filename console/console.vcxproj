@@ -145,6 +145,7 @@
     <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp" />
     <ClCompile Include="..\general\src\apiutil\Sketch.cpp" />
     <ClCompile Include="..\general\src\concaveAngle.cpp" />
+    <ClCompile Include="..\general\src\DocumentsManager.cpp" />
     <ClCompile Include="..\general\src\LinAlg.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -177,6 +178,7 @@
     <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp" />
     <ClInclude Include="..\general\include\apiutil\Sketch.hpp" />
     <ClInclude Include="..\general\include\concaveAngle.hpp" />
+    <ClInclude Include="..\general\include\DocumentsManager.hpp" />
     <ClInclude Include="..\general\include\LinAlg.hpp" />
     <ClInclude Include="..\general\include\optimization\bridgeHole.hpp" />
     <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp" />

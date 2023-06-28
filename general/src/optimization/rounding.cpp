@@ -2,9 +2,10 @@
 #include "optimization/rounding.hpp"
 
 #include <list>
+#include <utility>
 #define _USE_MATH_DEFINES \ #include <cmath>
 
-#include "apiutil/Macro.hpp"
+#include "Optional.hpp"
 #include "utils.hpp"
 
 const char* NAME_ROUNDING = "Скругления для выпирающих углов";
@@ -46,7 +47,7 @@ std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefiniti
 	return roundingTargets;
 }
 
-void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius) {
+ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius) {
 	ksEntityPtr filletEntity(part->NewEntity(o3d_fillet));
 	ksFilletDefinitionPtr fillet(filletEntity->GetDefinition());
 	ksEntityCollectionPtr array(fillet->array());
@@ -58,13 +59,15 @@ void roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, 
 	}
 
 	filletEntity->Create();
+	return filletEntity;
 }
 
-size_t optimizeRounding(ksPartPtr part, const Settings& settings) {
+std::pair<size_t, Optional<ksEntityPtr>> optimizeRounding(ksPartPtr part, const Settings& settings) {
 	std::list<ksEdgeDefinitionPtr> targets = getRoundingTargets(part, settings.printSurface.value().face, settings.roundingDeflectionAngle);
 	if (targets.empty()) {
-		return 0;
+		return std::make_pair(0, Optional<ksEntityPtr>());
 	}
-	roundEdges(part, targets, settings.roundingRadius);
-	return targets.size();
+	
+	ksEntityPtr filletEntity = roundEdges(part, targets, settings.roundingRadius);
+	return std::make_pair(targets.size(), filletEntity);
 }
