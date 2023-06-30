@@ -2,155 +2,29 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">
-      <Filter>console\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
-      <Filter>console\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
-      <Filter>console\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\concaveAngle.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\utils.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\bridgeHole.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\elephantFoot.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\rounding.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\Macro.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\PrintSurface.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\Sketch.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\SettingsManager.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\AutomationBaseEvent.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\LinAlg.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\DocumentsManager.cpp">
-      <Filter>general\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\connection.hpp">
-      <Filter>console\include</Filter>
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\stdafx.h">
-      <Filter>console\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\concaveAngle.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\utils.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\bridgeHole.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\elephantFoot.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\rounding.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\Macro.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\PrintSurface.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\Sketch.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\SettingsManager.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\AutomationBaseEvent.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\LinAlg.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\DocumentsManager.hpp">
-      <Filter>general\include</Filter>
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="console">
-      <UniqueIdentifier>{f9c06c74-6d91-493d-878b-bd256d5ae8e5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="console\include">
+    <Filter Include="include">
       <UniqueIdentifier>{27004fcd-b595-4aae-accb-81bbd7a22727}</UniqueIdentifier>
     </Filter>
-    <Filter Include="console\src">
+    <Filter Include="src">
       <UniqueIdentifier>{97d6afce-00fd-4539-9fad-552ea27e7bdc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general">
-      <UniqueIdentifier>{fdccbcde-f11b-4e70-992a-83ac6174cc25}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src">
-      <UniqueIdentifier>{10f2f7d3-b526-421e-b231-4d6285e03b42}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include">
-      <UniqueIdentifier>{98df2fb1-aabb-479c-82a8-0dd8feaf7a5a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src\optimization">
-      <UniqueIdentifier>{6ef3f863-0bb1-4083-937f-1095219361ed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include\optimization">
-      <UniqueIdentifier>{102032e7-b8cc-4a94-9dd0-a44c59a9c16f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include\apiutil">
-      <UniqueIdentifier>{b6f88fb9-239d-4627-91d3-201630bfbc96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src\apiutil">
-      <UniqueIdentifier>{8d7a152e-8fb0-4f95-8196-70fb884f614c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

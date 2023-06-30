@@ -2,185 +2,46 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="include\connection.hpp">
-      <Filter>rtw-lib\include</Filter>
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\stdafx.h">
-      <Filter>rtw-lib\include</Filter>
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="resource\resource.h">
-      <Filter>rtw-lib\resource</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\concaveAngle.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\PrintSurface.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\utils.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\ConstraintsCreator.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\Macro.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\bridgeHole.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\circleHorizontalHoles.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\elephantFoot.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\rounding.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\optimization\roundingEdgesOnPrintFace.hpp">
-      <Filter>general\include\optimization</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\AutomationBaseEvent.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\PropertyManagerEvent.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\PropertyManagerObject.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\apiutil\Sketch.hpp">
-      <Filter>general\include\apiutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\SettingsManager.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\Optional.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\LinAlg.hpp">
-      <Filter>general\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\general\include\DocumentsManager.hpp">
-      <Filter>general\include</Filter>
+      <Filter>resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp">
-      <Filter>rtw-lib\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\mainDll.cpp">
-      <Filter>rtw-lib\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\mainLibrary.cpp">
-      <Filter>rtw-lib\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
-      <Filter>rtw-lib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\concaveAngle.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\PrintSurface.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\utils.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\ConstraintsCreator.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\Macro.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\bridgeHole.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\circleHorizontalHoles.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\elephantFoot.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\rounding.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\optimization\roundingEdgesOnPrintFace.cpp">
-      <Filter>general\src\optimization</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\AutomationBaseEvent.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\PropertyManagerEvent.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\PropertyManagerObject.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\apiutil\Sketch.cpp">
-      <Filter>general\src\apiutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\SettingsManager.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\LinAlg.cpp">
-      <Filter>general\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\general\src\DocumentsManager.cpp">
-      <Filter>general\src</Filter>
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="kompas-print3d-optimizer">
-      <UniqueIdentifier>{155efd5b-de9c-45d4-a693-2f13ab442294}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="rtw-lib">
-      <UniqueIdentifier>{c7fd1d50-bbcd-4719-9252-9e90b9a0085f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="rtw-lib\include">
+    <Filter Include="include">
       <UniqueIdentifier>{ac423c9c-2b9f-4b1f-86bb-63f8dc593eb9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="rtw-lib\resource">
+    <Filter Include="resource">
       <UniqueIdentifier>{edb72a8d-0938-482b-a41f-6bec9c45d426}</UniqueIdentifier>
     </Filter>
-    <Filter Include="rtw-lib\src">
+    <Filter Include="src">
       <UniqueIdentifier>{dc04d42c-727a-48b0-909a-e06458518aec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="general">
-      <UniqueIdentifier>{8dbb7632-bec9-42d3-a30a-4911394dfa48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src">
-      <UniqueIdentifier>{3224d7a1-918e-4696-b14b-c9bbae6925e1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include">
-      <UniqueIdentifier>{4d310d3f-5c88-4c66-82c3-be79cc75f729}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include\apiutil">
-      <UniqueIdentifier>{222f8d9c-bd52-48ed-b6ae-fda85f254215}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\include\optimization">
-      <UniqueIdentifier>{8bf52e98-bdcc-46fb-9c37-3ac097bbea15}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src\apiutil">
-      <UniqueIdentifier>{52c18769-ddfe-428b-83f8-f9578491cc48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="general\src\optimization">
-      <UniqueIdentifier>{d588f3cb-8743-4046-8035-09a70f98a578}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="..\kompas-print3d-optimizer\kompas-print3d-optimizer.xml">
-      <Filter>kompas-print3d-optimizer</Filter>
-    </Xml>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="rtw-lib.def">
-      <Filter>rtw-lib</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\resource.rc">
-      <Filter>rtw-lib\resource</Filter>
+      <Filter>resource</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="rtw-lib.def" />
   </ItemGroup>
 </Project>

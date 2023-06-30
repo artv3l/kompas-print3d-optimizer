@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "console", "console\console.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rtw-lib", "rtw-lib\rtw-lib.vcxproj", "{7EF5F72B-5860-401B-ADAA-80E3C55799CB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "general", "general\general.vcxitems", "{10EF27FC-AC09-4394-B8BE-AE92C3AF1D74}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,5 +39,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7E5EB920-11A1-4344-A3F4-FFF5EAB66AFC}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		general\general.vcxitems*{10ef27fc-ac09-4394-b8be-ae92c3af1d74}*SharedItemsImports = 9
+		general\general.vcxitems*{7ef5f72b-5860-401b-adaa-80e3c55799cb}*SharedItemsImports = 4
+		general\general.vcxitems*{e8ad208a-82f2-4f05-b259-88ea418bce0f}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal
