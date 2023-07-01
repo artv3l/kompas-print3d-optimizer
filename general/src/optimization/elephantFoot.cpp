@@ -4,9 +4,9 @@
 #include <list>
 #include <utility>
 
-#include "PrintSurface.hpp"
+#include "settings/PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
-#include "SettingsManager.hpp"
+#include "settings/DocumentData.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
 
@@ -53,13 +53,14 @@ Macro createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFo
 	return macro;
 }
 
-std::pair<size_t, Optional<Macro>> optimizeElephantFoot(ksPartPtr part, const Settings& settings) {
-	std::list<ksLoopPtr> targets = getElephantFootTargets(part, settings.printSurface.value());
+std::pair<size_t, Optional<Macro>> optimizeElephantFoot(ksPartPtr part, DocumentData::Settings& settings) {
+	std::list<ksLoopPtr> targets = getElephantFootTargets(part, settings.getPrintSurface());
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
+	double width = settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		createElephantFootChamfers(part, targets, settings.elephantFootLayersCount * settings.layerHeight)
+		createElephantFootChamfers(part, targets, width)
 	);
 }

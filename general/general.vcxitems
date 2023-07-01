@@ -21,7 +21,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\PropertyManagerObject.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\Sketch.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\concaveAngle.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DocumentsManager.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\LinAlg.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\optimization\bridgeHole.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\optimization\circleHorizontalHoles.hpp" />
@@ -29,8 +28,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\optimization\rounding.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\optimization\roundingEdgesOnPrintFace.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Optional.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\PrintSurface.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\SettingsManager.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentData.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentsManager.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\NumericSetting.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\PrintSurface.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingInitializer.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingsManager.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -41,7 +44,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\PropertyManagerObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\Sketch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\concaveAngle.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\DocumentsManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\LinAlg.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -50,8 +52,14 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\optimization\elephantFoot.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\optimization\rounding.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\optimization\roundingEdgesOnPrintFace.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\PrintSurface.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\SettingsManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentData.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentsManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\NumericSetting.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\PrintSurface.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingInitializer.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingsManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\utils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -5,16 +5,11 @@
 
 #include "apiutil/Macro.hpp"
 #include "Optional.hpp"
-#include "SettingsManager.hpp"
-
-struct DocumentData {
-    Settings settings;
-    Optional<Macro> rootMacro;
-};
+#include "DocumentData.hpp"
 
 class DocumentsManager {
 public:
-    DocumentData* getOrCreateDocumentData(ksDocument3DPtr document3d);
+    DocumentData& getOrCreateDocumentData(ksDocument3DPtr document3d);
 
 private:
     using DocumentDataMap = std::unordered_map<ksDocument3D*, DocumentData>;

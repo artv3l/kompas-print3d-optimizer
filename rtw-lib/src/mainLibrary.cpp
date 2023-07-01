@@ -8,7 +8,7 @@
 #include "resource.h"
 #include "connection.hpp"
 
-#include "PrintSurface.hpp"
+#include "settings/PrintSurface.hpp"
 #include "optimization/rounding.hpp"
 #include "optimization/elephantFoot.hpp"
 #include "optimization/bridgeHole.hpp"
@@ -16,8 +16,8 @@
 #include "optimization/circleHorizontalHoles.hpp"
 #include "Optional.hpp"
 
-#include "DocumentsManager.hpp"
-#include "SettingsManager.hpp"
+#include "settings/DocumentsManager.hpp"
+#include "settings/SettingsManager.hpp"
 
 
 const char* ROOT_MACRO_NAME = "Оптимизации";
@@ -40,14 +40,21 @@ unsigned int WINAPI LIBRARYID() {
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
     ksDocument3DPtr document3d = kompas->ActiveDocument3D();
+    if (!document3d) {
+        kompas->ksMessage("Необходимо открыть документ-модель");
+    }
+
+    DocumentData& documentData = documentsManager.getOrCreateDocumentData(document3d);
+    DocumentData::Settings& settings = documentData.getSettings();
+
     switch (comm) {
     case 1:
-        settingsManager.show();
+        settingsManager.show(settings);
         return;
     case 2:
         try {
             PrintSurface printSurface = getSelectedPrintSurface(document3d);
-            settingsManager.setPrintSurface(document3d, printSurface);
+            settings.setPrintSurface(printSurface);
             kompas->ksMessage("Плоскость печати успешно выбрана!");
         } catch (const std::runtime_error& e) {
             kompas->ksMessage(e.what());
@@ -55,26 +62,20 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
-    DocumentData* documentData = documentsManager.getOrCreateDocumentData(document3d);
-    const Settings& settings = documentData->settings;
-
-    if (!settings.printSurface) {
+    if (!settings.isPrintSurfaceSelected()) {
         kompas->ksMessage("Плоскость печати не выбрана!");
         return;
     }
+
+    Macro rootMacro = documentData.getRootMacro();
     ksPartPtr part = document3d->GetPart(pTop_Part);
-    
-    if (!documentData->rootMacro) {
-        documentData->rootMacro = Macro(part, ROOT_MACRO_NAME, true);
-    }
-    Macro rootMacro(documentData->rootMacro.value());
     size_t count = 0;
 
     switch (comm) {
     case 3: {
         ksChooseMngPtr chooseMng(document3d->GetChooseMng());
         chooseMng->UnChooseAll();
-        chooseMng->Choose(settings.printSurface.value().face);
+        chooseMng->Choose(settings.getPrintSurface().face);
         return;
     }
     case 4:

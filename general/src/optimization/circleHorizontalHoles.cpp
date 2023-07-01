@@ -7,7 +7,7 @@
 #include <sstream>
 #include <utility>
 
-#include "SettingsManager.hpp"
+#include "settings/DocumentData.hpp"
 #include "apiutil/Macro.hpp"
 #include "apiutil/Sketch.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
@@ -314,15 +314,16 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
     return targets;
 }
 
-std::pair<size_t, Optional<Macro>> optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
-    std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, settings.printSurface.value().face);
+std::pair<size_t, Optional<Macro>> optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+    PrintSurface printSurface = settings.getPrintSurface();
+    std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
     if (targets.empty()) {
         return std::make_pair(0, Optional<Macro>());
     }
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, settings.printSurface.value().face, target, settings.overhangThreshold));
+        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)->getValue()));
     }
     return std::make_pair(targets.size(), macro);
 }

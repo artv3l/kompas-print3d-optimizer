@@ -19,6 +19,12 @@
     <Filter Include="src\optimization">
       <UniqueIdentifier>{153bec58-e183-4833-a323-02a94a44016f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\settings">
+      <UniqueIdentifier>{9f9197b6-ff0e-47b0-baf4-a33eec817397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\settings">
+      <UniqueIdentifier>{6d830652-739c-4abe-8fd8-5ddb96ca78fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\AutomationBaseEvent.hpp">
@@ -57,39 +63,39 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\concaveAngle.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DocumentsManager.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\LinAlg.hpp">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Optional.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\PrintSurface.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\SettingsManager.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\utils.hpp">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentData.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentsManager.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\NumericSetting.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\PrintSurface.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingsManager.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingInitializer.hpp">
+      <Filter>include\settings</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\concaveAngle.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\DocumentsManager.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\LinAlg.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\PrintSurface.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\SettingsManager.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\utils.cpp">
@@ -127,6 +133,24 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\Sketch.cpp">
       <Filter>src\apiutil</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentData.cpp">
+      <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentsManager.cpp">
+      <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\NumericSetting.cpp">
+      <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\PrintSurface.cpp">
+      <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingsManager.cpp">
+      <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingInitializer.cpp">
+      <Filter>src\settings</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

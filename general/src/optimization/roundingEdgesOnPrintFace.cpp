@@ -9,8 +9,8 @@
 #include "apiutil/Macro.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
-#include "PrintSurface.hpp"
-#include "SettingsManager.hpp"
+#include "settings/PrintSurface.hpp"
+#include "settings/DocumentData.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -296,8 +296,8 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double over
     constrCreator.equalRadius(roundingArc);
 }
 
-std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, const Settings& settings, ReworkType reworkType) {
-    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.printSurface.value(), reworkType);
+std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, DocumentData::Settings& settings, ReworkType reworkType) {
+    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.getPrintSurface(), reworkType);
     if (targets.empty()) {
         return std::make_pair(0, Optional<Macro>());
     }
@@ -319,7 +319,7 @@ std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObject
         
         // Создаем эскиз
         Sketch sketch(kompas, part, sketchPlane);
-        drawSketch(sketch, target, settings.overhangThreshold);
+        drawSketch(sketch, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)->getValue());
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
         

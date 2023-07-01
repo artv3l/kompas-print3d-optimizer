@@ -13,6 +13,7 @@
 #include "apiutil/Macro.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
+#include "settings/DocumentData.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
@@ -216,14 +217,15 @@ Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 	return macro;
 }
 
-std::pair<size_t, Optional<Macro>> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings, HoleType holeType) {
-	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.printSurface.value().face, holeType);
+std::pair<size_t, Optional<Macro>> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings, HoleType holeType) {
+	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface().face, holeType);
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
+	double extrusionDepth = settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		fillBridgeHoles(kompas, part, targets, settings.bridgeHoleFillLayersCount * settings.layerHeight)
+		fillBridgeHoles(kompas, part, targets, extrusionDepth)
 	);
 }
 
@@ -583,13 +585,14 @@ Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeH
 	return macro;
 }
 
-std::pair<size_t, Optional<Macro>> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, const Settings& settings) {
-	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.printSurface.value().face);
+std::pair<size_t, Optional<Macro>> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface().face);
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
+	double stepDepth = settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		buildBridgeHoles(kompas, part, targets, settings.bridgeHoleBuildLayersCount * settings.layerHeight)
+		buildBridgeHoles(kompas, part, targets, stepDepth)
 	);
 }
