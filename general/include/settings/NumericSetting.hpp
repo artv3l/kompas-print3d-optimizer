@@ -16,7 +16,7 @@ public:
 
     virtual ~NumericSetting() = default;
 
-    std::string getName() const;
+    virtual std::string getName() const;
 
     virtual double getValue() = 0;
     virtual void setValue(double value) = 0;
@@ -52,7 +52,7 @@ public:
 
     virtual ~VariableNumericSetting() = default;
 
-    std::string getVariableName() const;
+    std::string getName() const override;
     double getValue() override;
     void setValue(double value) override;
 

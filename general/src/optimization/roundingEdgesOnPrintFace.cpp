@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 
-#include <sstream>
+#include <string>
 #include <utility>
 #include <atlbase.h>
 
@@ -188,11 +188,9 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPa
     return targets;
 }
 
-void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double overhangThreshold) {
-    std::ostringstream oss;
-    oss << (180.0 - overhangThreshold);
-    CComBSTR temp(oss.str().c_str());
-    _bstr_t expression = temp.Detach();
+void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSetting::Ptr overhangThreshold) {
+    std::string temp = "180 - " + overhangThreshold->getName();
+    _bstr_t expression(temp.c_str());
     
     // Добавляем проекции
     sketch.definition->AddProjectionOf(target.trajectory.front()->GetVertex(true));
@@ -319,7 +317,7 @@ std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObject
         
         // Создаем эскиз
         Sketch sketch(kompas, part, sketchPlane);
-        drawSketch(sketch, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)->getValue());
+        drawSketch(sketch, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName));
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
         

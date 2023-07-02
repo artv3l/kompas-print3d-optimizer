@@ -26,7 +26,7 @@ bool faceNeedRework(ksFaceDefinitionPtr roundingFace);
 bool targetNeedRework(RoundingEdgeOnPrintFaceTarget target);
 
 std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPartPtr part, PrintSurface printSurface, ReworkType reworkType);
-void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, double overhangThreshold);
+void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSetting::Ptr overhangThreshold);
 std::pair<size_t, Optional<Macro>> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, DocumentData::Settings& settings, ReworkType reworkType);
 
 #endif /* ROUNDING_EDGES_ON_PRINT_FACE_HPP */

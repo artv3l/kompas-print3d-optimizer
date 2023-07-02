@@ -123,14 +123,14 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     return baseCircle;
 }
 
-void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, double overhangThreshold, double rotationOffset) {
+void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, NumericSetting::Ptr overhangThreshold, double rotationOffset) {
     double radius = baseCircle->Radius;
     ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 
     // Считаем координаты треугольников в системе координат, где начало - центр baseCircle, ось y - verticalLine
     double dx = radius * RADIUS_RATIO;
     double y1 = std::sin(std::acos(dx / radius)) * radius;
-    double y2 = y1 + (std::tan(degreeToRadian(overhangThreshold)) * dx);
+    double y2 = y1 + (std::tan(degreeToRadian(overhangThreshold->getValue())) * dx);
     Vec2d l1(-dx, y1), r1(dx, y1), lr2(0, y2);
 
     // Через матрицу трансформации преобразуем эти координаты к координатам эскиза
@@ -187,7 +187,7 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     constrCreator.dimWithVariable(radiusVariable + " / 1.5");
 
     // угловой размер
-    double dimAngle = 180.0 - (2.0 * overhangThreshold);
+    double dimAngle = 180.0 - (2.0 * overhangThreshold->getValue());
     IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
     angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
     angleDim->BaseObject1 = lineSegL;
@@ -202,10 +202,11 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     angleDim->Update();
     constrCreator = ConstraintsCreator(angleDim);
     constrCreator.fixedDim();
-    constrCreator.dimWithVariable(_bstr_t(dimAngle));
+    std::string expression = "180 - 2 * " + overhangThreshold->getName();
+    constrCreator.dimWithVariable(expression.c_str());
 }
 
-void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, double overhangThreshold) {
+void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, NumericSetting::Ptr overhangThreshold) {
     _bstr_t radiusVariable;
     ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
     
@@ -217,7 +218,7 @@ void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalP
     drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, M_PI_2);
 }
 
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, double overhangThreshold) {
+Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, NumericSetting::Ptr overhangThreshold) {
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
 
     // ось по цилиндрической поверхности
@@ -323,7 +324,7 @@ std::pair<size_t, Optional<Macro>> optimizeCircleHorizontalHoles(KompasObjectPtr
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)->getValue()));
+        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)));
     }
     return std::make_pair(targets.size(), macro);
 }

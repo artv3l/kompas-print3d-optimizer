@@ -36,7 +36,7 @@ VariableNumericSetting::VariableNumericSetting(ksPartPtr part, std::string name,
 {
     assert(range.first < range.second);
     if (!isValidValue(defaultValue)) {
-        throw std::runtime_error("Значение переменной " + getVariableName() + " находится вне допустимого диапазона");
+        throw std::runtime_error("Значение переменной " + getName() + " находится вне допустимого диапазона");
     }
     m_range = range;
     m_defaultValue = defaultValue;
@@ -61,8 +61,8 @@ VariableNumericSetting::VariableNumericSetting(ksPartPtr part, SettingInitialize
     getVariableOrCreateDefault(); // создаем переменную
 }
 
-std::string VariableNumericSetting::getVariableName() const {
-    return VARIABLE_NAME_PREFIX + getName();
+std::string VariableNumericSetting::getName() const {
+    return VARIABLE_NAME_PREFIX + NumericSetting::getName();
 }
 
 double VariableNumericSetting::getValue() {
@@ -72,20 +72,20 @@ double VariableNumericSetting::getValue() {
 
 void VariableNumericSetting::setValue(double value) {
     if (!isValidValue(value)) {
-        throw std::runtime_error("Значение переменной " + getVariableName() + " находится вне допустимого диапазона");
+        throw std::runtime_error("Значение переменной " + getName() + " находится вне допустимого диапазона");
     }
     ksVariablePtr variable = getVariableOrCreateDefault();
     variable->value = value;
 }
 
 ksVariablePtr VariableNumericSetting::getVariable() const {
-    return m_variableCollection->GetByName(getVariableName().c_str(), true, false);
+    return m_variableCollection->GetByName(getName().c_str(), true, false);
 }
 
 ksVariablePtr VariableNumericSetting::getVariableOrCreateDefault() {
     ksVariablePtr variable = getVariable();
     if (!variable) {
-        m_variableCollection->AddNewVariable(getVariableName().c_str(), m_defaultValue, m_note.c_str());
+        m_variableCollection->AddNewVariable(getName().c_str(), m_defaultValue, m_note.c_str());
     }
     return variable;
 }
