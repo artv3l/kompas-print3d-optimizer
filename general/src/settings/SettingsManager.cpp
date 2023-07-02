@@ -31,7 +31,7 @@ void SettingsManager::show(DocumentData::Settings& settings) {
 }
 
 bool SettingsManager::buttonClick(long buttonId) {
-        switch (buttonId) {
+    switch (buttonId) {
     case SpecPropertyButtonEnum::pbEnter:
         for (std::pair<std::string, IPropertyEditPtr> kv : m_editMap) {
             NumericSetting::Ptr setting = m_shownSettings->getSetting(kv.first);

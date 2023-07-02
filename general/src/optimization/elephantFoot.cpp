@@ -3,6 +3,7 @@
 
 #include <list>
 #include <utility>
+#include <sstream>
 
 #include "settings/PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
@@ -32,11 +33,13 @@ std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSu
 	return elephantFootTargets;
 }
 
-Macro createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, double width) {
+Macro createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, DocumentData::Settings& settings) {
 	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
 	for (ksLoopPtr loopTarget : elephantFootTargets) {
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
 		ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
+
+		double width = settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 		chamfer->SetChamferParam(true, width, width);
 		ksEntityCollectionPtr array(chamfer->array());
 
@@ -47,6 +50,18 @@ Macro createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFo
 		}
 
 		if (chamferEntity->Create()) {
+			{ // Привязываем размеры к переменным
+				ksFeaturePtr feature(chamferEntity->GetFeature());
+				ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+				ksVariablePtr variable2(variableCollection->GetByIndex(2)); // Индекс=2 - "Длина 1"
+				ksVariablePtr variable3(variableCollection->GetByIndex(3)); // Индекс=3 - "Длина 2"
+
+				std::ostringstream oss;
+				oss << settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() << " * " << settings.getSetting(SI_LAYER_HEIGHT.variableName)->getName();
+				variable2->Expression = oss.str().c_str();
+				variable3->Expression = oss.str().c_str();
+			}
+
 			macro.add(chamferEntity);
 		}
 	}
@@ -58,9 +73,8 @@ std::pair<size_t, Optional<Macro>> optimizeElephantFoot(ksPartPtr part, Document
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
-	double width = settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		createElephantFootChamfers(part, targets, width)
+		createElephantFootChamfers(part, targets, settings)
 	);
 }

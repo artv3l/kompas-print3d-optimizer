@@ -42,6 +42,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     ksDocument3DPtr document3d = kompas->ActiveDocument3D();
     if (!document3d) {
         kompas->ksMessage("Необходимо открыть документ-модель");
+        return;
     }
 
     DocumentData& documentData = documentsManager.getOrCreateDocumentData(document3d);

@@ -3,6 +3,7 @@
 
 #include <list>
 #include <utility>
+#include <sstream>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -129,7 +130,7 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 	return false;
 }
 
-ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDirection, double depth) {
+ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDirection, DocumentData::Settings& settings, int multiplier) {
 	ksEntityPtr extrusionEntity(part->NewEntity(o3d_cutExtrusion));
 	ksCutExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
 	extrusionDef->cut = true;
@@ -139,9 +140,25 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 	} else {
 		extrusionDef->directionType = dtReverse;
 	}
+	double depth = settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() *
+		settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue() * multiplier;
 	extrusionDef->SetSideParam(normalDirection, etBlind, depth, 0, false);
 	extrusionDef->SetSketch(sketchEntity);
 	extrusionEntity->Create();
+
+	{ // Привязываем размеры к переменным
+		ksFeaturePtr feature(extrusionEntity->GetFeature());
+		ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+		ksVariablePtr variable(variableCollection->GetByIndex(1)); // Индекс=3 - "Расстояние 1"
+
+		std::ostringstream oss;
+		oss << multiplier << " * ("
+			<< settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() << " * "
+			<< settings.getSetting(SI_LAYER_HEIGHT.variableName)->getName()
+			<< ")";
+		variable->Expression = oss.str().c_str();
+	}
+
 	return extrusionEntity;
 }
 
@@ -187,7 +204,7 @@ std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr documen
 	return bridgeHoleFillTargets;
 }
 
-Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, double extrusionDepth) {
+Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, DocumentData::Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_FILL, true);
 
 	for (BridgeHoleFillTarget target : bridgeHoleFillTargets) {
@@ -203,6 +220,7 @@ Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 		}
 		sketch.endEdit();
 
+		double extrusionDepth = settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 		ksEntityPtr extrusionEntity(part->NewEntity(o3d_bossExtrusion));
 		ksBossExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
 		extrusionDef->chooseType = ksChBodiesAndParts;
@@ -210,6 +228,15 @@ Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 		extrusionDef->SetSideParam(false, etBlind, extrusionDepth, 0, false);
 		extrusionDef->SetSketch(sketch.entity);
 		extrusionEntity->Create();
+		{ // Привязываем размеры к переменным
+			ksFeaturePtr feature(extrusionEntity->GetFeature());
+			ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+			ksVariablePtr variable(variableCollection->GetByIndex(3)); // Индекс=3 - "Расстояние 2"
+
+			std::ostringstream oss;
+			oss << settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() << " * " << settings.getSetting(SI_LAYER_HEIGHT.variableName)->getName();
+			variable->Expression = oss.str().c_str();
+		}
 		macroElement.add(extrusionEntity);
 
 		macro.add(macroElement);
@@ -222,10 +249,9 @@ std::pair<size_t, Optional<Macro>> optimizeBridgeHoleFill(KompasObjectPtr kompas
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
-	double extrusionDepth = settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		fillBridgeHoles(kompas, part, targets, extrusionDepth)
+		fillBridgeHoles(kompas, part, targets, settings)
 	);
 }
 
@@ -549,7 +575,7 @@ void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHol
 	constrCreator.horizontalAlignPoints(1, regularPolygon, 2);
 }
 
-Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, double stepDepth) {
+Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, DocumentData::Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_BUILD, true);
 
 	for (BridgeHoleBuildTarget target : bridgeHoleBuildTargets) {
@@ -577,9 +603,9 @@ Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeH
 		sketch3.endEdit();
 		macroElement.add(sketch3.entity);
 
-		macroElement.add(cutExtrusion(part, sketch.entity, true, stepDepth));
-		macroElement.add(cutExtrusion(part, sketch2.entity, true, stepDepth * 2));
-		macroElement.add(cutExtrusion(part, sketch3.entity, true, stepDepth * 3));
+		macroElement.add(cutExtrusion(part, sketch.entity, true, settings, 1));
+		macroElement.add(cutExtrusion(part, sketch2.entity, true, settings, 2));
+		macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
 		macro.add(macroElement);
 	}
 	return macro;
@@ -590,9 +616,8 @@ std::pair<size_t, Optional<Macro>> optimizeBridgeHoleBuild(KompasObjectPtr kompa
 	if (targets.empty()) {
 		return std::make_pair(0, Optional<Macro>());
 	}
-	double stepDepth = settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 	return std::make_pair(
 		targets.size(),
-		buildBridgeHoles(kompas, part, targets, stepDepth)
+		buildBridgeHoles(kompas, part, targets, settings)
 	);
 }

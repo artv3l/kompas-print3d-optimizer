@@ -14,6 +14,7 @@
 #include "optimization/circleHorizontalHoles.hpp"
 #include "optimization/bridgeHole.hpp"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
+#include "settings/DocumentData.hpp"
 
 int main() {
     CoInitialize(nullptr);
@@ -25,9 +26,15 @@ int main() {
     ksChooseMngPtr chooseMng = document3d->GetChooseMng();
     ksPartPtr part = document3d->GetPart(pTop_Part);
 
-    //PrintSurface printSurface(getSelectedPrintSurface(document3d));
+    PrintSurface printSurface(getSelectedPrintSurface(document3d));
     ksBodyPtr body = part->GetMainBody();
     
+    DocumentData::Settings settings(document3d);
+    settings.setPrintSurface(printSurface);
+
+    optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE);
+    optimizeBridgeHoleBuild(kompas, document3d, part, settings);
+
     CoUninitialize();
     return 0;
 }
