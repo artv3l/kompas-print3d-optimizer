@@ -19,8 +19,8 @@ public:
     _bstr_t getName() const;
 
 private:
-    ksEntityPtr entity_;
-    ksMacro3DDefinitionPtr definition_;
+    ksEntityPtr m_entity;
+    ksMacro3DDefinitionPtr m_definition;
 
 };
 

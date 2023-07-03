@@ -13,8 +13,8 @@ PlaneEq::PlaneEq(ksFaceDefinitionPtr face) {
 	ksSurfacePtr surface(face->GetSurface());
 	double x0 = 0.0, y0 = 0.0, z0 = 0.0;
 	surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), &x0, &y0, &z0);
-	surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), &a_, &b_, &c_);
-	d_ = -((a_ * x0) + (b_ * y0) + (c_ * z0));
+	surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), &a, &b, &c);
+	d = -((a * x0) + (b * y0) + (c * z0));
 
 	if (!face->normalOrientation) {
 		invert();
@@ -23,15 +23,15 @@ PlaneEq::PlaneEq(ksFaceDefinitionPtr face) {
 
 bool PlaneEq::operator==(const PlaneEq& other) const {
 	double scale = 0.0;
-	if (!doubleEqual(other.a_, 0.0)) {
-		scale = a_ / other.a_;
-	} else if (!doubleEqual(other.b_, 0.0)) {
-		scale = b_ / other.b_;
-	} else if (!doubleEqual(other.c_, 0.0)) {
-		scale = c_ / other.c_;
+	if (!doubleEqual(other.a, 0.0)) {
+		scale = a / other.a;
+	} else if (!doubleEqual(other.b, 0.0)) {
+		scale = b / other.b;
+	} else if (!doubleEqual(other.c, 0.0)) {
+		scale = c / other.c;
 	}
-	return doubleEqual(a_, other.a_ * scale) && doubleEqual(b_, other.b_ * scale) &&
-		doubleEqual(c_, other.c_ * scale) && doubleEqual(d_, other.d_ * scale);
+	return doubleEqual(a, other.a * scale) && doubleEqual(b, other.b * scale) &&
+		doubleEqual(c, other.c * scale) && doubleEqual(d, other.d * scale);
 }
 
 bool PlaneEq::operator!=(const PlaneEq& other) const {
@@ -39,7 +39,7 @@ bool PlaneEq::operator!=(const PlaneEq& other) const {
 }
 
 void PlaneEq::invert() {
-	a_ = -a_; b_ = -b_; c_ = -c_; d_ = -d_;
+	a = -a; b = -b; c = -c; d = -d;
 }
 
 std::pair<int, int> countPointsOnEachSide(ksPartPtr part, const PlaneEq& planeEq) {
@@ -56,7 +56,7 @@ std::pair<int, int> countPointsOnEachSide(ksPartPtr part, const PlaneEq& planeEq
 
 		double x, y, z;
 		vertex->GetPoint(&x, &y, &z);
-		double planeValue = (x * planeEq.a_) + (y * planeEq.b_) + (z * planeEq.c_) + planeEq.d_;
+		double planeValue = (x * planeEq.a) + (y * planeEq.b) + (z * planeEq.c) + planeEq.d;
 		if (doubleEqual(planeValue, 0.0)) {
 			continue;
 		}

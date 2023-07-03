@@ -18,10 +18,14 @@
 
 int main() {
     CoInitialize(nullptr);
-    KompasObjectPtr kompas = kompasInit();
-    if (!kompas) {
-        return 0;
+    KompasObjectPtr kompas = nullptr;
+    try {
+        kompas = kompasInit();
+    } catch (const std::runtime_error& e) {
+        std::cout << e.what() << "\n";
+        return 2;
     }
+
     ksDocument3DPtr document3d = kompas->ActiveDocument3D();
     ksChooseMngPtr chooseMng = document3d->GetChooseMng();
     ksPartPtr part = document3d->GetPart(pTop_Part);

@@ -19,7 +19,7 @@ public:
     DECLARE_EVENTSINK_MAP();
 
 private:
-    PropertyManagerObject *propertyManager_;
+    PropertyManagerObject *m_propertyManager;
     
 };
 

@@ -4,19 +4,19 @@
 #include "apiutil/PropertyManagerEvent.hpp"
 
 PropertyManagerObject::PropertyManagerObject(KompasObjectPtr kompas) :
-        kompas_(kompas), application_(kompas->ksGetApplication7()),
-        propertyManager_(application_->CreatePropertyManager(true)),
-        event_(new PropertyManagerEvent(this)) {
+        m_kompas(kompas), m_application(kompas->ksGetApplication7()),
+        m_propertyManager(m_application->CreatePropertyManager(true)),
+        m_event(new PropertyManagerEvent(this)) {
 }
 
 IPropertyManagerPtr PropertyManagerObject::getPropertyManager() {
-    return propertyManager_;
+    return m_propertyManager;
 }
 
 void PropertyManagerObject::show() {
-    propertyManager_->ShowTabs();
+    m_propertyManager->ShowTabs();
 }
 
 void PropertyManagerObject::hide() {
-    propertyManager_->HideTabs();
+    m_propertyManager->HideTabs();
 }

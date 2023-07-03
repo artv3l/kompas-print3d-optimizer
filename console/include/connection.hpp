@@ -1,10 +1,8 @@
-#ifndef KOMPAS_UTILS_HPP
-#define KOMPAS_UTILS_HPP
-
-#include "stdafx.h"
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 bool isKompasInstalled();
 bool isKompasRun();
 KompasObjectPtr kompasInit();
 
-#endif /* KOMPAS_UTILS_HPP */
+#endif /* CONNECTION_HPP */

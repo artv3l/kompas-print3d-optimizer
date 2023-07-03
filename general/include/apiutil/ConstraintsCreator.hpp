@@ -19,8 +19,8 @@ public:
     bool tangentTwoCurves(IDrawingObjectPtr partner);                                     // 15
     
 private:
-    IDrawingObjectPtr drawingObject_;
-    IDrawingObject1Ptr drawingObject1_;
+    IDrawingObjectPtr m_drawingObject;
+    IDrawingObject1Ptr m_drawingObject1;
 
 };
 

@@ -14,7 +14,7 @@ public:
 private:
     using DocumentDataMap = std::unordered_map<ksDocument3D*, DocumentData>;
 
-    DocumentDataMap documentDataMap_;
+    DocumentDataMap m_documentDataMap;
 };
 
 #endif /* DOCUMENTS_MANAGER_HPP */

@@ -8,7 +8,7 @@
 
 PropertyManagerEvent::PropertyManagerEvent(PropertyManagerObject *propertyManager) :
         AutomationBaseEvent(static_cast<IUnknown *>(propertyManager->getPropertyManager()), DIID_ksPropertyManagerNotify),
-        propertyManager_(propertyManager) {
+        m_propertyManager(propertyManager) {
     advise();
 }
 
@@ -18,5 +18,5 @@ BEGIN_EVENTSINK_MAP(PropertyManagerEvent, AutomationBaseEvent)
 END_EVENTSINK_MAP()
 
 afx_msg bool PropertyManagerEvent::buttonClick(long buttonId) {
-    return propertyManager_->buttonClick(buttonId);
+    return m_propertyManager->buttonClick(buttonId);
 }

@@ -30,88 +30,88 @@ public:
 	const T& value() const;
 
 private:
-	T* value_;
+	T* m_value;
 };
 
 template<typename T>
 inline Optional<T>::Optional() :
-	value_(nullptr)
+	m_value(nullptr)
 {}
 
 template<typename T>
 inline Optional<T>::Optional(const T& value) :
-	value_(new T(value))
+	m_value(new T(value))
 {}
 
 template<typename T>
 inline Optional<T>::Optional(const Optional& obj) {
 	if (obj) {
-		value_ = new T(*obj.value_);
+		m_value = new T(*obj.m_value);
 	} else {
-		value_ = nullptr;
+		m_value = nullptr;
 	}
 }
 
 template<typename T>
 inline Optional<T>::Optional(Optional&& obj) noexcept :
-	value_(obj.value_)
+	m_value(obj.m_value)
 {
-	obj.value_ = nullptr;
+	obj.m_value = nullptr;
 }
 
 template<typename T>
 inline Optional<T>::~Optional() {
-	if (value_) {
-		delete value_;
+	if (m_value) {
+		delete m_value;
 	}
 }
 
 template<typename T>
 inline Optional<T>& Optional<T>::operator=(const Optional& obj) {
-	if (value_) {
-		delete value_;
+	if (m_value) {
+		delete m_value;
 	}
 	if (obj) {
-		value_ = new T(obj.value_);
+		m_value = new T(obj.m_value);
 	} else {
-		value_ = nullptr;
+		m_value = nullptr;
 	}
 	return *this;
 }
 
 template<typename T>
 inline Optional<T>& Optional<T>::operator=(Optional&& obj) noexcept {
-	if (value_) {
-		delete value_;
+	if (m_value) {
+		delete m_value;
 	}
 	if (obj) {
-		value_ = obj.value_;
-		obj.value_ = nullptr;
+		m_value = obj.m_value;
+		obj.m_value = nullptr;
 	} else {
-		value_ = nullptr;
+		m_value = nullptr;
 	}
 	return *this;
 }
 
 template<typename T>
 inline Optional<T>::operator bool() const {
-	return (value_ != nullptr);
+	return (m_value != nullptr);
 }
 
 template<typename T>
 inline T& Optional<T>::value() {
-	if (!value_) {
+	if (!m_value) {
 		throw Exception("Optional does not contain a value");
 	}
-	return *value_;
+	return *m_value;
 }
 
 template<typename T>
 inline const T& Optional<T>::value() const {
-	if (!value_) {
+	if (!m_value) {
 		throw Exception("Optional does not contain a value");
 	}
-	return *value_;
+	return *m_value;
 }
 
 #endif /* OPTIONAL_HPP */

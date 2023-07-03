@@ -8,29 +8,29 @@
 #include <cassert>
 #include <afxpriv2.h>
 
-CObList AutomationBaseEvent::eventList_;
+CObList AutomationBaseEvent::m_eventList;
 
 AutomationBaseEvent::AutomationBaseEvent(IUnknown *object, IID iidEvent) :
         CCmdTarget(),
-        dwCookie_(0), object_(object), iidEvent_(iidEvent), connectionPoint_(nullptr) {
-    if (object_) {
-        object_->AddRef();
+        m_dwCookie(0), m_object(object), m_iidEvent(iidEvent), m_connectionPoint(nullptr) {
+    if (m_object) {
+        m_object->AddRef();
     }
-    assert(!IsEqualIID(iidEvent_, GUID_NULL));
-    eventList_.AddTail(this);
+    assert(!IsEqualIID(m_iidEvent, GUID_NULL));
+    m_eventList.AddTail(this);
 }
 
 AutomationBaseEvent::~AutomationBaseEvent() {
     removeThis();
-    if (object_) {
-        object_->Release();
-        object_ = nullptr;
+    if (m_object) {
+        m_object->Release();
+        m_object = nullptr;
     }
 }
 
 void AutomationBaseEvent::terminateEvents() {
-    while (!eventList_.IsEmpty()) {
-        AutomationBaseEvent *headEvent = static_cast<AutomationBaseEvent *>(eventList_.RemoveHead());
+    while (!m_eventList.IsEmpty()) {
+        AutomationBaseEvent *headEvent = static_cast<AutomationBaseEvent *>(m_eventList.RemoveHead());
         headEvent->disconnect();
     }
 }
@@ -40,24 +40,24 @@ void AutomationBaseEvent::terminateEvents(IID iid) {
 }
 
 void AutomationBaseEvent::terminateEvents(IID iid, IUnknown *object) {
-    INT_PTR count = eventList_.GetCount();
+    INT_PTR count = m_eventList.GetCount();
     for (INT_PTR i = 0; i < count; i++) {
-        CObject *obj = eventList_.GetAt(eventList_.FindIndex(i));
+        CObject *obj = m_eventList.GetAt(m_eventList.FindIndex(i));
         AutomationBaseEvent *event = static_cast<AutomationBaseEvent *>(obj);
-        if (event && ((!object) || event->object_ == object) &&
-            (IsEqualIID(iid, GUID_NULL) || IsEqualIID(iid, event->iidEvent_))) {
+        if (event && ((!object) || event->m_object == object) &&
+            (IsEqualIID(iid, GUID_NULL) || IsEqualIID(iid, event->m_iidEvent))) {
             event->disconnect();
         }
     }
 }
 
 bool AutomationBaseEvent::findEvent(IID iid, IUnknown *object) {
-    INT_PTR count = eventList_.GetCount();
+    INT_PTR count = m_eventList.GetCount();
     for (INT_PTR i = 0; i < count; i++) {
-        CObject *obj = eventList_.GetAt(eventList_.FindIndex(i));
+        CObject *obj = m_eventList.GetAt(m_eventList.FindIndex(i));
         AutomationBaseEvent *event = static_cast<AutomationBaseEvent *>(obj);
-        if (event && ((!object) || event->object_ == object) &&
-            (IsEqualIID(iid, GUID_NULL) || IsEqualIID(iid, event->iidEvent_))) {
+        if (event && ((!object) || event->m_object == object) &&
+            (IsEqualIID(iid, GUID_NULL) || IsEqualIID(iid, event->m_iidEvent))) {
             return true;
         }
     }
@@ -65,37 +65,37 @@ bool AutomationBaseEvent::findEvent(IID iid, IUnknown *object) {
 }
 
 int AutomationBaseEvent::advise() {
-    assert(dwCookie_ == 0);
-    if (object_) {
+    assert(m_dwCookie == 0);
+    if (m_object) {
         IConnectionPointContainer *connectionPointContainer = nullptr;
-        if (SUCCEEDED(object_->QueryInterface(IID_IConnectionPointContainer, (LPVOID *)&connectionPointContainer))) {
-            if (connectionPointContainer && SUCCEEDED(connectionPointContainer->FindConnectionPoint(iidEvent_, &connectionPoint_))) {
-                assert(connectionPoint_ != nullptr);
-                connectionPoint_->Advise(&m_xEventHandler, &dwCookie_);
+        if (SUCCEEDED(m_object->QueryInterface(IID_IConnectionPointContainer, (LPVOID *)&connectionPointContainer))) {
+            if (connectionPointContainer && SUCCEEDED(connectionPointContainer->FindConnectionPoint(m_iidEvent, &m_connectionPoint))) {
+                assert(m_connectionPoint != nullptr);
+                m_connectionPoint->Advise(&m_xEventHandler, &m_dwCookie);
             }
             connectionPointContainer->Release();
         }
     }
-    if (!dwCookie_) {
+    if (!m_dwCookie) {
         delete this;
         return 0;
     }
-    return dwCookie_;
+    return m_dwCookie;
 }
 
 void AutomationBaseEvent::unadvise() {
-    if (connectionPoint_) {
-        connectionPoint_->Unadvise(dwCookie_);
-        connectionPoint_->Release();
-        connectionPoint_ = nullptr;
+    if (m_connectionPoint) {
+        m_connectionPoint->Unadvise(m_dwCookie);
+        m_connectionPoint->Release();
+        m_connectionPoint = nullptr;
     }
-    dwCookie_ = 0;
+    m_dwCookie = 0;
 }
 
 void AutomationBaseEvent::removeThis() {
-    POSITION position = eventList_.Find(this);
+    POSITION position = m_eventList.Find(this);
     if (position) {
-        eventList_.RemoveAt(position);
+        m_eventList.RemoveAt(position);
         unadvise();
     }
 }
@@ -107,11 +107,11 @@ void AutomationBaseEvent::disconnect() {
 }
 
 void AutomationBaseEvent::clear() {
-    if (object_) {
-        object_->Release();
-        object_ = nullptr;
+    if (m_object) {
+        m_object->Release();
+        m_object = nullptr;
     }
-    iidEvent_ = GUID_NULL;
+    m_iidEvent = GUID_NULL;
 }
 
 // Карта интерфейса
@@ -168,7 +168,7 @@ STDMETHODIMP AutomationBaseEvent::XEventHandler::QueryInterface(REFIID iid, LPVO
     METHOD_PROLOGUE(AutomationBaseEvent, EventHandler);
 
     *ppvObj = nullptr;
-    if ((iid == IID_IUnknown) || (iid == IID_IDispatch) || (iid == pThis->iidEvent_)) {
+    if ((iid == IID_IUnknown) || (iid == IID_IDispatch) || (iid == pThis->m_iidEvent)) {
         *ppvObj = this;
     }
     if (*ppvObj) {

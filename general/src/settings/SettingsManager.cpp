@@ -12,13 +12,13 @@
 SettingsManager::SettingsManager(KompasObjectPtr kompas, DocumentsManager& documentsManager):
     PropertyManagerObject(kompas),
     m_documentsManager(documentsManager),
-    m_mainTab(propertyManager_->PropertyTabs->Add("MainTab")), m_controls(m_mainTab->PropertyControls),
+    m_mainTab(m_propertyManager->PropertyTabs->Add("MainTab")), m_controls(m_mainTab->PropertyControls),
     m_editMap(),
     m_shownSettings(nullptr)
 {
-    propertyManager_->Layout = PropertyManagerLayout::pmAlignRight;
-    propertyManager_->SpecToolbar = SpecPropertyToolBarEnum::pnEnterEscHelp;
-    propertyManager_->Caption = _T("Параметры печати");
+    m_propertyManager->Layout = PropertyManagerLayout::pmAlignRight;
+    m_propertyManager->SpecToolbar = SpecPropertyToolBarEnum::pnEnterEscHelp;
+    m_propertyManager->Caption = _T("Параметры печати");
 
     initControls();
 }

@@ -2,15 +2,15 @@
 #include "apiutil/Macro.hpp"
 
 Macro::Macro(ksPartPtr part, _bstr_t name, bool staffVisible):
-        entity_(part->NewEntity(o3d_MacroObject)),
-        definition_(entity_->GetDefinition()) {
-    entity_->name = name;
-    definition_->StaffVisible = staffVisible;
-    entity_->Create();
+        m_entity(part->NewEntity(o3d_MacroObject)),
+        m_definition(m_entity->GetDefinition()) {
+    m_entity->name = name;
+    m_definition->StaffVisible = staffVisible;
+    m_entity->Create();
 }
 
 Macro::Macro(ksEntityPtr entity) :
-    entity_(entity), definition_(entity_->GetDefinition())
+    m_entity(entity), m_definition(m_entity->GetDefinition())
 {}
 
 
@@ -24,21 +24,21 @@ ksEntityPtr Macro::findMacro(ksPartPtr part, _bstr_t name) {
 }
 
 bool Macro::add(IDispatchPtr obj) {
-    return definition_->Add(obj);
+    return m_definition->Add(obj);
 }
 
 bool Macro::add(Macro macro) {
-    return definition_->Add(macro.entity_);
+    return m_definition->Add(macro.m_entity);
 }
 
 bool Macro::update() {
-    return entity_->Update();
+    return m_entity->Update();
 }
 
 bool Macro::isCreated() const {
-    return entity_->IsCreated();
+    return m_entity->IsCreated();
 }
 
 _bstr_t Macro::getName() const {
-    return entity_->name;
+    return m_entity->name;
 }

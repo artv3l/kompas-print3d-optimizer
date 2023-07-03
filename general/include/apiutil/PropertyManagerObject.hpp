@@ -17,12 +17,12 @@ public:
     virtual void hide();
 
 protected:
-    KompasObjectPtr kompas_;
-    IApplicationPtr application_;
-    IPropertyManagerPtr propertyManager_;
+    KompasObjectPtr m_kompas;
+    IApplicationPtr m_application;
+    IPropertyManagerPtr m_propertyManager;
 
 private:
-    PropertyManagerEvent *event_;
+    PropertyManagerEvent *m_event;
 
 };
 

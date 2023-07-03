@@ -30,14 +30,13 @@ bool isKompasRun()
 
 KompasObjectPtr kompasInit() {
     if (!isKompasInstalled()) {
-        std::cerr << "Компас не установлен" << "\n";
-        return nullptr;
+        throw std::runtime_error("Kompas-3D is not installed");
     }
     KompasObjectPtr kompas;
     if (isKompasRun()) {
         kompas.GetActiveObject(objectName);
     } else {
-        kompas.CreateInstance(objectName);
+        throw std::runtime_error("Kompas-3D is not running");
     }
     kompas->Visible = true;
     return kompas;

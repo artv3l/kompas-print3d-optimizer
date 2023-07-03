@@ -4,7 +4,7 @@
 #include <utility>
 
 struct PlaneEq {
-    double a_, b_, c_, d_;
+    double a, b, c, d;
 
     PlaneEq(ksFaceDefinitionPtr face);
 

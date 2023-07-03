@@ -23,11 +23,11 @@ public:
     virtual void clear();
 
 protected:
-    static CObList eventList_; // Список обработчиков событий
-    DWORD dwCookie_; // Идентификатор соединения
-    IID iidEvent_; // IID интерфейса событий
-    IConnectionPoint *connectionPoint_; // Соединение
-    IUnknown *object_; // Источник событий
+    static CObList m_eventList; // Список обработчиков событий
+    DWORD m_dwCookie; // Идентификатор соединения
+    IID m_iidEvent; // IID интерфейса событий
+    IConnectionPoint *m_connectionPoint; // Соединение
+    IUnknown *m_object; // Источник событий
 
     BEGIN_INTERFACE_PART(EventHandler, IDispatch)
         INIT_INTERFACE_PART(AutomationBaseEvent, EventHandler)
