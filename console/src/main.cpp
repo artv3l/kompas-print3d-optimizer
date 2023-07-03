@@ -25,15 +25,12 @@ int main() {
     ksDocument3DPtr document3d = kompas->ActiveDocument3D();
     ksChooseMngPtr chooseMng = document3d->GetChooseMng();
     ksPartPtr part = document3d->GetPart(pTop_Part);
+    ksBodyPtr body = part->GetMainBody();
 
     PrintSurface printSurface(getSelectedPrintSurface(document3d));
-    ksBodyPtr body = part->GetMainBody();
-    
     DocumentData::Settings settings(document3d);
     settings.setPrintSurface(printSurface);
 
-    optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE);
-    optimizeBridgeHoleBuild(kompas, document3d, part, settings);
 
     CoUninitialize();
     return 0;

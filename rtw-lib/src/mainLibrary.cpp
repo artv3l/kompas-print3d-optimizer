@@ -19,9 +19,6 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 
-
-const char* ROOT_MACRO_NAME = "Оптимизации";
-
 KompasObjectPtr kompas = getKompasObjectPtr();
 DocumentsManager documentsManager;
 SettingsManager settingsManager(kompas, documentsManager);
