@@ -5,7 +5,7 @@
 #include <utility>
 #include <cassert>
 #include <stdexcept>
-#include "settings/NumericSetting.hpp"
+#include <sstream>
 
 NumericSetting::NumericSetting(std::string name):
     m_name(name)
@@ -29,6 +29,12 @@ double LocalNumericSetting::getValue() {
 
 void LocalNumericSetting::setValue(double value) {
     m_value = value;
+}
+
+std::string LocalNumericSetting::getExpression() const {
+    std::ostringstream oss;
+    oss << m_value;
+    return oss.str();
 }
 
 VariableNumericSetting::VariableNumericSetting(ksPartPtr part, std::string name, double defaultValue, Range range, std::string note):
@@ -61,10 +67,6 @@ VariableNumericSetting::VariableNumericSetting(ksPartPtr part, SettingInitialize
     getVariableOrCreateDefault(); // создаем переменную
 }
 
-std::string VariableNumericSetting::getName() const {
-    return VARIABLE_NAME_PREFIX + NumericSetting::getName();
-}
-
 double VariableNumericSetting::getValue() {
     ksVariablePtr variable = getVariableOrCreateDefault();
     return variable->value;
@@ -78,14 +80,22 @@ void VariableNumericSetting::setValue(double value) {
     variable->value = value;
 }
 
+std::string VariableNumericSetting::getExpression() const {
+    return getVariableName();
+}
+
+std::string VariableNumericSetting::getVariableName() const {
+    return VARIABLE_NAME_PREFIX + NumericSetting::getName();
+}
+
 ksVariablePtr VariableNumericSetting::getVariable() const {
-    return m_variableCollection->GetByName(getName().c_str(), true, false);
+    return m_variableCollection->GetByName(getVariableName().c_str(), true, false);
 }
 
 ksVariablePtr VariableNumericSetting::getVariableOrCreateDefault() {
     ksVariablePtr variable = getVariable();
     if (!variable) {
-        m_variableCollection->AddNewVariable(getName().c_str(), m_defaultValue, m_note.c_str());
+        m_variableCollection->AddNewVariable(getVariableName().c_str(), m_defaultValue, m_note.c_str());
     }
     return variable;
 }

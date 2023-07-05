@@ -189,7 +189,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPa
 }
 
 void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSetting::Ptr overhangThreshold) {
-    std::string temp = "180 - " + overhangThreshold->getName();
+    std::string temp = "180 - " + overhangThreshold->getExpression();
     _bstr_t expression(temp.c_str());
     
     // Добавляем проекции

@@ -20,6 +20,7 @@ public:
 
     virtual double getValue() = 0;
     virtual void setValue(double value) = 0;
+    virtual std::string getExpression() const = 0;
 
 private:
     std::string m_name;
@@ -33,8 +34,9 @@ public:
 
     virtual ~LocalNumericSetting() = default;
 
-    virtual double getValue() override;
-    virtual void setValue(double value) override;
+    double getValue() override;
+    void setValue(double value) override;
+    std::string getExpression() const override;
 
 private:
     double m_value;
@@ -52,9 +54,11 @@ public:
 
     virtual ~VariableNumericSetting() = default;
 
-    std::string getName() const override;
     double getValue() override;
     void setValue(double value) override;
+    std::string getExpression() const override;
+
+    std::string getVariableName() const;
 
 private:
     ksPartPtr m_part;

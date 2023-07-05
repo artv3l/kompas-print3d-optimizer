@@ -202,7 +202,7 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     angleDim->Update();
     constrCreator = ConstraintsCreator(angleDim);
     constrCreator.fixedDim();
-    std::string expression = "180 - 2 * " + overhangThreshold->getName();
+    std::string expression = "180 - 2 * " + overhangThreshold->getExpression();
     constrCreator.dimWithVariable(expression.c_str());
 }
 
