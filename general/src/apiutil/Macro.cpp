@@ -42,3 +42,7 @@ bool Macro::isCreated() const {
 _bstr_t Macro::getName() const {
     return m_entity->name;
 }
+
+ksEntityPtr Macro::getEntity() const {
+    return m_entity;
+}

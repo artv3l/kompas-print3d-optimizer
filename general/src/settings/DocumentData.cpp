@@ -8,6 +8,7 @@
 #include "settings/NumericSetting.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "apiutil/Macro.hpp"
+#include "Optional.hpp"
 
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 

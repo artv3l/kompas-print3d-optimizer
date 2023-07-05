@@ -7,6 +7,7 @@
 #include "PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
 #include "NumericSetting.hpp"
+#include "Optional.hpp"
 
 class DocumentData {
 public:

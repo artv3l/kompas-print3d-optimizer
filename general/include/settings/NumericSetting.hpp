@@ -4,8 +4,6 @@
 #include <string>
 #include <utility>
 #include <memory>
-
-#include "Optional.hpp"
 #include "SettingInitializer.hpp"
 
 class NumericSetting {

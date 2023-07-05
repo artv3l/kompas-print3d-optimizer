@@ -8,7 +8,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "Optional.hpp"
 #include "utils.hpp"
 #include "concaveAngle.hpp"
 #include "apiutil/Macro.hpp"
@@ -204,7 +203,7 @@ std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr documen
 	return bridgeHoleFillTargets;
 }
 
-Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, DocumentData::Settings& settings) {
+ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, DocumentData::Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_FILL, true);
 
 	for (BridgeHoleFillTarget target : bridgeHoleFillTargets) {
@@ -241,13 +240,13 @@ Macro fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHo
 
 		macro.add(macroElement);
 	}
-	return macro;
+	return macro.getEntity();
 }
 
-std::pair<size_t, Optional<Macro>> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings, HoleType holeType) {
+std::pair<size_t, ksEntityPtr> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings, HoleType holeType) {
 	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface().face, holeType);
 	if (targets.empty()) {
-		return std::make_pair(0, Optional<Macro>());
+		return std::make_pair(0, nullptr);
 	}
 	return std::make_pair(
 		targets.size(),
@@ -575,7 +574,7 @@ void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHol
 	constrCreator.horizontalAlignPoints(1, regularPolygon, 2);
 }
 
-Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, DocumentData::Settings& settings) {
+ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, DocumentData::Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_BUILD, true);
 
 	for (BridgeHoleBuildTarget target : bridgeHoleBuildTargets) {
@@ -608,13 +607,13 @@ Macro buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeH
 		macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
 		macro.add(macroElement);
 	}
-	return macro;
+	return macro.getEntity();
 }
 
-std::pair<size_t, Optional<Macro>> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+std::pair<size_t, ksEntityPtr> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
 	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface().face);
 	if (targets.empty()) {
-		return std::make_pair(0, Optional<Macro>());
+		return std::make_pair(0, nullptr);
 	}
 	return std::make_pair(
 		targets.size(),

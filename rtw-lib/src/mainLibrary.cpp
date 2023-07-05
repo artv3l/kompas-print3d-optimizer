@@ -14,7 +14,6 @@
 #include "optimization/bridgeHole.hpp"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 #include "optimization/circleHorizontalHoles.hpp"
-#include "Optional.hpp"
 
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
@@ -23,11 +22,10 @@ KompasObjectPtr kompas = getKompasObjectPtr();
 DocumentsManager documentsManager;
 SettingsManager settingsManager(kompas, documentsManager);
 
-template <typename T>
-void handleOptimizationResult(std::pair<size_t, Optional<T>> optimizationResult, Macro& rootMacro, size_t& outCount) {
+void handleOptimizationResult(std::pair<size_t, ksEntityPtr> optimizationResult, Macro& rootMacro, size_t& outCount) {
     outCount += optimizationResult.first;
     if (optimizationResult.second) {
-        rootMacro.add(optimizationResult.second.value());
+        rootMacro.add(optimizationResult.second);
     }
 }
 

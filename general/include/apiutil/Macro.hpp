@@ -17,6 +17,7 @@ public:
     bool update();
     bool isCreated() const;
     _bstr_t getName() const;
+    ksEntityPtr getEntity() const;
 
 private:
     ksEntityPtr m_entity;

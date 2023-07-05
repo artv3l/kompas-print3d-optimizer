@@ -5,7 +5,6 @@
 #include <utility>
 #define _USE_MATH_DEFINES \ #include <cmath>
 
-#include "Optional.hpp"
 #include "utils.hpp"
 #include "settings/DocumentData.hpp"
 
@@ -63,11 +62,11 @@ ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTa
 	return filletEntity;
 }
 
-std::pair<size_t, Optional<ksEntityPtr>> optimizeRounding(ksPartPtr part, DocumentData::Settings& settings) {
+std::pair<size_t, ksEntityPtr> optimizeRounding(ksPartPtr part, DocumentData::Settings& settings) {
 	std::list<ksEdgeDefinitionPtr> targets =
 		getRoundingTargets(part, settings.getPrintSurface().face, settings.getSetting(SI_ROUNDING_DEFLECTION_ANGLE.variableName)->getValue());
 	if (targets.empty()) {
-		return std::make_pair(0, Optional<ksEntityPtr>());
+		return std::make_pair(0, nullptr);
 	}
 	
 	ksEntityPtr filletEntity = roundEdges(part, targets, settings.getSetting(SI_ROUNDING_RADIUS.variableName)->getValue());
