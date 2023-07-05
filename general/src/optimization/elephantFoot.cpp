@@ -8,6 +8,7 @@
 #include "settings/PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
 #include "settings/DocumentData.hpp"
+#include "settings/Setting.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
 
@@ -39,7 +40,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
 		ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
 
-		double width = settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
+		double width = settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 		chamfer->SetChamferParam(true, width, width);
 		ksEntityCollectionPtr array(chamfer->array());
 

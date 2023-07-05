@@ -30,7 +30,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Optional.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentData.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentsManager.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\NumericSetting.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Setting.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\PrintSurface.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingInitializer.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingsManager.hpp" />
@@ -54,7 +54,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\optimization\roundingEdgesOnPrintFace.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentData.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentsManager.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\NumericSetting.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\Setting.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\PrintSurface.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingInitializer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

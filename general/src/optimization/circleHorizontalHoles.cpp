@@ -13,6 +13,7 @@
 #include "apiutil/ConstraintsCreator.hpp"
 #include "utils.hpp"
 #include "LinAlg.hpp"
+#include "settings/Setting.hpp"
 
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
@@ -324,7 +325,7 @@ std::pair<size_t, ksEntityPtr> optimizeCircleHorizontalHoles(KompasObjectPtr kom
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getSetting(SI_OVERHANG_THRESHOLD.variableName)));
+        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.variableName)));
     }
     return std::make_pair(targets.size(), macro.getEntity());
 }

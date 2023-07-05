@@ -14,6 +14,7 @@
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
 #include "settings/DocumentData.hpp"
+#include "settings/Setting.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
@@ -139,8 +140,8 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 	} else {
 		extrusionDef->directionType = dtReverse;
 	}
-	double depth = settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() *
-		settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue() * multiplier;
+	double depth = settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() *
+		settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue() * multiplier;
 	extrusionDef->SetSideParam(normalDirection, etBlind, depth, 0, false);
 	extrusionDef->SetSketch(sketchEntity);
 	extrusionEntity->Create();
@@ -219,7 +220,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 		}
 		sketch.endEdit();
 
-		double extrusionDepth = settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getSetting(SI_LAYER_HEIGHT.variableName)->getValue();
+		double extrusionDepth = settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue();
 		ksEntityPtr extrusionEntity(part->NewEntity(o3d_bossExtrusion));
 		ksBossExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
 		extrusionDef->chooseType = ksChBodiesAndParts;

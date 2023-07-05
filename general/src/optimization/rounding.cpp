@@ -7,6 +7,7 @@
 
 #include "utils.hpp"
 #include "settings/DocumentData.hpp"
+#include "settings/Setting.hpp"
 
 const char* NAME_ROUNDING = "Скругления для выпирающих углов";
 
@@ -64,11 +65,11 @@ ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTa
 
 std::pair<size_t, ksEntityPtr> optimizeRounding(ksPartPtr part, DocumentData::Settings& settings) {
 	std::list<ksEdgeDefinitionPtr> targets =
-		getRoundingTargets(part, settings.getPrintSurface().face, settings.getSetting(SI_ROUNDING_DEFLECTION_ANGLE.variableName)->getValue());
+		getRoundingTargets(part, settings.getPrintSurface().face, settings.getNumericSetting(SI_ROUNDING_DEFLECTION_ANGLE.variableName)->getValue());
 	if (targets.empty()) {
 		return std::make_pair(0, nullptr);
 	}
 	
-	ksEntityPtr filletEntity = roundEdges(part, targets, settings.getSetting(SI_ROUNDING_RADIUS.variableName)->getValue());
+	ksEntityPtr filletEntity = roundEdges(part, targets, settings.getNumericSetting(SI_ROUNDING_RADIUS.variableName)->getValue());
 	return std::make_pair(targets.size(), filletEntity);
 }

@@ -5,7 +5,7 @@
 #include <memory>
 #include <utility>
 
-#include "settings/NumericSetting.hpp"
+#include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "apiutil/Macro.hpp"
 #include "Optional.hpp"
@@ -37,22 +37,28 @@ Macro DocumentData::getOrCreateRootMacro(ksPartPtr part) {
 }
 
 DocumentData::Settings::Settings(ksDocument3DPtr document3d) :
-    m_document3d(document3d), m_variableCollection(nullptr), m_printSurface(), m_numericSettings()
+    m_document3d(document3d), m_variableCollection(nullptr), m_printSurface(), m_SettingsMap()
 {
     ksPartPtr part(document3d->GetPart(pTop_Part));
     ksFeaturePtr feature(part->GetFeature());
     m_variableCollection = feature->VariableCollection;
 
-    for (SettingInitializer settingInitializer : VARIABLE_SETTING_INITIALIZERS) {
-        m_numericSettings.insert(std::make_pair(
+    for (NumericSettingInitializer settingInitializer : VARIABLE_SETTING_INITIALIZERS) {
+        m_SettingsMap.insert(std::make_pair(
             settingInitializer.variableName,
             std::make_shared<VariableNumericSetting>(VariableNumericSetting(part, settingInitializer))
         ));
     }
-    for (SettingInitializer settingInitializer : LOCAL_SETTING_INITIALIZERS) {
-        m_numericSettings.insert(std::make_pair(
+    for (NumericSettingInitializer settingInitializer : LOCAL_SETTING_INITIALIZERS) {
+        m_SettingsMap.insert(std::make_pair(
             settingInitializer.variableName,
             std::make_shared<LocalNumericSetting>(LocalNumericSetting(settingInitializer))
+        ));
+    }
+    for (StringSettingInitializer settingInitializer : STRING_SETTING_INITIALIZERS) {
+        m_SettingsMap.insert(std::make_pair(
+            settingInitializer.variableName,
+            std::make_shared<StringSetting>(StringSetting(settingInitializer))
         ));
     }
 }
@@ -77,6 +83,24 @@ PrintSurface DocumentData::Settings::getPrintSurface() const {
     return m_printSurface.value();
 }
 
-NumericSetting::Ptr DocumentData::Settings::getSetting(std::string name) {
-    return m_numericSettings[name];
+Setting::Ptr DocumentData::Settings::getSetting(std::string name) {
+    return m_SettingsMap[name];
+}
+
+NumericSetting::Ptr DocumentData::Settings::getNumericSetting(std::string name) {
+    Setting::Ptr setting = getSetting(name);
+    NumericSetting::Ptr numericSetting = std::dynamic_pointer_cast<NumericSetting>(setting);
+    if (!numericSetting) {
+        throw std::runtime_error("There is no NumericSetting with name \"" + name + "\"");
+    }
+    return numericSetting;
+}
+
+StringSetting::Ptr DocumentData::Settings::getStringSetting(std::string name) {
+    Setting::Ptr setting = getSetting(name);
+    StringSetting::Ptr stringSetting = std::dynamic_pointer_cast<StringSetting>(setting);
+    if (!stringSetting) {
+        throw std::runtime_error("There is no StringSetting with name \"" + name + "\"");
+    }
+    return stringSetting;
 }

@@ -6,7 +6,7 @@
 #include <comutil.h>
 #include <list>
 
-struct SettingInitializer {
+struct NumericSettingInitializer {
     const std::string variableName;
     const double defaultValue;
     const std::pair<double, double> range;
@@ -14,15 +14,23 @@ struct SettingInitializer {
     _bstr_t variableNote;
 };
 
-extern const SettingInitializer SI_LAYER_HEIGHT;
-extern const SettingInitializer SI_OVERHANG_THRESHOLD;
-extern const SettingInitializer SI_ROUNDING_RADIUS;
-extern const SettingInitializer SI_ROUNDING_DEFLECTION_ANGLE;
-extern const SettingInitializer SI_ELEPHANT_FOOT_LAYERS_COUNT;
-extern const SettingInitializer SI_BRIDGE_HOLE_FILL_LAYERS_COUNT;
-extern const SettingInitializer SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT;
+struct StringSettingInitializer {
+    const std::string variableName;
+    const _bstr_t defaultValue;
+};
 
-extern const std::list<SettingInitializer> VARIABLE_SETTING_INITIALIZERS;
-extern const std::list<SettingInitializer> LOCAL_SETTING_INITIALIZERS;
+extern const NumericSettingInitializer SI_LAYER_HEIGHT;
+extern const NumericSettingInitializer SI_OVERHANG_THRESHOLD;
+extern const NumericSettingInitializer SI_ROUNDING_RADIUS;
+extern const NumericSettingInitializer SI_ROUNDING_DEFLECTION_ANGLE;
+extern const NumericSettingInitializer SI_ELEPHANT_FOOT_LAYERS_COUNT;
+extern const NumericSettingInitializer SI_BRIDGE_HOLE_FILL_LAYERS_COUNT;
+extern const NumericSettingInitializer SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT;
+
+extern const StringSettingInitializer SI_EXPORT_STL_FOLDER;
+
+extern const std::list<NumericSettingInitializer> VARIABLE_SETTING_INITIALIZERS;
+extern const std::list<NumericSettingInitializer> LOCAL_SETTING_INITIALIZERS;
+extern const std::list<StringSettingInitializer> STRING_SETTING_INITIALIZERS;
 
 #endif /* SETTING_INITIALIZER_HPP */

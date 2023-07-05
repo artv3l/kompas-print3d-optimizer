@@ -4,6 +4,7 @@
 #include <utility>
 #include <unordered_map>
 #include <stdexcept>
+#include <memory>
 
 #include "apiutil/PropertyManagerObject.hpp"
 #include "settings/DocumentsManager.hpp"
@@ -34,8 +35,8 @@ bool SettingsManager::buttonClick(long buttonId) {
     switch (buttonId) {
     case SpecPropertyButtonEnum::pbEnter:
         for (std::pair<std::string, IPropertyEditPtr> kv : m_editMap) {
-            NumericSetting::Ptr setting = m_shownSettings->getSetting(kv.first);
-            setting->setValue(kv.second->Value);
+            Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
+            setting->setVariantValue(kv.second->Value);
         }
         m_shownSettings->refreshVariables();
         hide();
@@ -49,11 +50,19 @@ bool SettingsManager::buttonClick(long buttonId) {
     return true;
 }
 
-void SettingsManager::createEdit(SettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName) {
-    IPropertyEditPtr edit = m_editMap.insert(std::make_pair(settingInitializer.variableName, m_controls->Add(type))).first->second;
+void SettingsManager::createEdit(NumericSettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName) {
+    IPropertyEditPtr edit = m_controls->Add(type);
+    m_editMap.insert(std::make_pair(settingInitializer.variableName, edit));
     edit->Name = editName;
     edit->SetValueRange(settingInitializer.range.first, settingInitializer.range.second);
     edit->Step = settingInitializer.step;
+    edit->Value = settingInitializer.defaultValue;
+}
+
+void SettingsManager::createEdit(StringSettingInitializer settingInitializer, _bstr_t editName) {
+    IPropertyEditPtr edit = m_controls->Add(ControlTypeEnum::ksControlEditStr);
+    m_editMap.insert(std::make_pair(settingInitializer.variableName, edit));
+    edit->Name = editName;
     edit->Value = settingInitializer.defaultValue;
 }
 
@@ -105,12 +114,20 @@ void SettingsManager::initControls() {
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleBuild */
     }
+    {
+        IPropertyGroupBeginPtr exportGroupBegin = m_controls->Add(ControlTypeEnum::ksControlGroupBegin);
+        exportGroupBegin->Name = "Экспорт";
+        exportGroupBegin->Expanding = true;
+
+        createEdit(SI_EXPORT_STL_FOLDER, "Папка для stl");
+
+        m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* export */
+    }
 }
 
 void SettingsManager::fillSettingsToEdits(DocumentData::Settings& settings) {
     for (std::pair<std::string, IPropertyEditPtr> kv : m_editMap) {
-        NumericSetting::Ptr setting = settings.getSetting(kv.first);
-        double val = setting->getValue();
-        kv.second->Value = setting->getValue();
+        Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
+        kv.second->Value = setting->getVariantValue();
     }
 }

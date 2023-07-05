@@ -32,7 +32,9 @@ private:
     
     virtual bool buttonClick(long buttonId) override;
 
-    void createEdit(SettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName);
+    void createEdit(NumericSettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName);
+    void createEdit(StringSettingInitializer settingInitializer, _bstr_t editName);
+
     void initControls();
     void fillSettingsToEdits(DocumentData::Settings& settings);
 };

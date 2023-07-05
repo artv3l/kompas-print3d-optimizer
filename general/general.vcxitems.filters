@@ -78,7 +78,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\DocumentsManager.hpp">
       <Filter>include\settings</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\NumericSetting.hpp">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Setting.hpp">
       <Filter>include\settings</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\PrintSurface.hpp">
@@ -140,7 +140,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\DocumentsManager.cpp">
       <Filter>src\settings</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\NumericSetting.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\Setting.cpp">
       <Filter>src\settings</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\PrintSurface.cpp">

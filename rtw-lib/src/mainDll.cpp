@@ -2,6 +2,10 @@
 
 #include <afxdllx.h>
 
+#include "settings/SettingsManager.hpp"
+
+extern SettingsManager settingsManager;
+
 static AFX_EXTENSION_MODULE dll = { NULL, NULL };
 HINSTANCE g_hInstance = NULL;
 
@@ -12,6 +16,7 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
         AfxInitExtensionModule(dll, hInstance);
         new CDynLinkLibrary(dll);
     } else if (dwReason == DLL_PROCESS_DETACH) {
+        settingsManager.hide();
         AfxTermExtensionModule(dll);
     }
     return 1;
