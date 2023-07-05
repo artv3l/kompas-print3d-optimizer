@@ -36,7 +36,7 @@ void fastExportStl(ksDocument3DPtr document3d, DocumentData::Settings& settings)
     param->formatBinary = true;
 
     std::pair<std::string, std::string> pair = splitFileNameAndRemoveExtension(std::string(document3d->fileName));
-    std::string stlFolder = std::string(settings.getStringSetting(SI_EXPORT_STL_FOLDER.variableName)->getValue());
+    std::string stlFolder = std::string(settings.getStringSetting(SI_EXPORT_STL_FOLDER.name)->getValue());
     
     std::string resultFolder = pair.first + "\\" + stlFolder;
     CreateDirectoryA(resultFolder.c_str(), nullptr);

@@ -16,7 +16,8 @@ public:
     public:
         Settings(ksDocument3DPtr document3d);
 
-        void refreshVariables() const;
+        void loadFromDocument();
+        void uploadToDocument();
         void setPrintSurface(PrintSurface printSurface);
         bool isPrintSurfaceSelected() const;
         PrintSurface getPrintSurface() const;
@@ -25,16 +26,19 @@ public:
         StringSetting::Ptr getStringSetting(std::string name);
 
     private:
+        using SettingsMap = std::unordered_map<std::string, Setting::Ptr>;
+
         ksDocument3DPtr m_document3d;
         ksVariableCollectionPtr m_variableCollection;
         Optional<PrintSurface> m_printSurface;
-        std::unordered_map<std::string, Setting::Ptr> m_SettingsMap;
+        SettingsMap m_settingsMap;
     };
 
     static const char* ROOT_MACRO_NAME;
 
     DocumentData(ksDocument3DPtr document3d);
 
+    void refresh();
     Settings& getSettings();
     Macro getRootMacro();
 

@@ -16,14 +16,18 @@ DocumentData::DocumentData(ksDocument3DPtr document3d):
     m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro(getOrCreateRootMacro(m_part))
 {}
 
+void DocumentData::refresh() {
+    m_settings.loadFromDocument();
+    if (!m_rootMacro.isCreated() || (m_rootMacro.getName() != _bstr_t(ROOT_MACRO_NAME))) {
+        m_rootMacro = Macro(m_part, ROOT_MACRO_NAME, true);
+    }
+}
+
 DocumentData::Settings& DocumentData::getSettings() {
     return m_settings;
 }
 
 Macro DocumentData::getRootMacro() {
-    if (!m_rootMacro.isCreated() || (m_rootMacro.getName() != _bstr_t(ROOT_MACRO_NAME))) {
-        m_rootMacro = Macro(m_part, ROOT_MACRO_NAME, true);
-    }
     return m_rootMacro;
 }
 
@@ -37,33 +41,54 @@ Macro DocumentData::getOrCreateRootMacro(ksPartPtr part) {
 }
 
 DocumentData::Settings::Settings(ksDocument3DPtr document3d) :
-    m_document3d(document3d), m_variableCollection(nullptr), m_printSurface(), m_SettingsMap()
+    m_document3d(document3d), m_variableCollection(nullptr), m_printSurface(), m_settingsMap()
 {
     ksPartPtr part(document3d->GetPart(pTop_Part));
     ksFeaturePtr feature(part->GetFeature());
     m_variableCollection = feature->VariableCollection;
 
-    for (NumericSettingInitializer settingInitializer : VARIABLE_SETTING_INITIALIZERS) {
-        m_SettingsMap.insert(std::make_pair(
-            settingInitializer.variableName,
-            std::make_shared<VariableNumericSetting>(VariableNumericSetting(part, settingInitializer))
+    for (std::pair<std::string, NumericSettingInitializer> pair : VARIABLE_SETTING_INITIALIZERS) {
+        m_settingsMap.insert(std::make_pair(
+            pair.first,
+            std::make_shared<VariableNumericSetting>(VariableNumericSetting(part, pair.second))
         ));
     }
-    for (NumericSettingInitializer settingInitializer : LOCAL_SETTING_INITIALIZERS) {
-        m_SettingsMap.insert(std::make_pair(
-            settingInitializer.variableName,
-            std::make_shared<LocalNumericSetting>(LocalNumericSetting(settingInitializer))
+    for (std::pair<std::string, NumericSettingInitializer> pair : LOCAL_SETTING_INITIALIZERS) {
+        m_settingsMap.insert(std::make_pair(
+            pair.first,
+            std::make_shared<LocalNumericSetting>(LocalNumericSetting(pair.second))
         ));
     }
-    for (StringSettingInitializer settingInitializer : STRING_SETTING_INITIALIZERS) {
-        m_SettingsMap.insert(std::make_pair(
-            settingInitializer.variableName,
-            std::make_shared<StringSetting>(StringSetting(settingInitializer))
+    for (std::pair<std::string, StringSettingInitializer> pair : STRING_SETTING_INITIALIZERS) {
+        m_settingsMap.insert(std::make_pair(
+            pair.first,
+            std::make_shared<StringSetting>(StringSetting(pair.second))
         ));
     }
 }
 
-void DocumentData::Settings::refreshVariables() const {
+void DocumentData::Settings::loadFromDocument() {
+    m_variableCollection->refresh();
+    m_document3d->RebuildDocument();
+    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
+        VariableNumericSetting::Ptr vns = std::dynamic_pointer_cast<VariableNumericSetting>(it->second);
+        if (vns) {
+            vns->loadOrCreateVariable(m_document3d->GetPart(Part_Type::pTop_Part), vns->getName(),
+                                      VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).note,
+                                      VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).defaultValue);
+        }
+    }
+}
+
+void DocumentData::Settings::uploadToDocument() {
+    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
+        VariableNumericSetting::Ptr vns = std::dynamic_pointer_cast<VariableNumericSetting>(it->second);
+        if (vns) {
+            vns->createIfNotExists(m_document3d->GetPart(Part_Type::pTop_Part),
+                                   VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).note,
+                                   VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).defaultValue);
+        }
+    }
     m_variableCollection->refresh();
     m_document3d->RebuildDocument();
 }
@@ -84,7 +109,7 @@ PrintSurface DocumentData::Settings::getPrintSurface() const {
 }
 
 Setting::Ptr DocumentData::Settings::getSetting(std::string name) {
-    return m_SettingsMap[name];
+    return m_settingsMap[name];
 }
 
 NumericSetting::Ptr DocumentData::Settings::getNumericSetting(std::string name) {

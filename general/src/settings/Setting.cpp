@@ -21,10 +21,10 @@ StringSetting::StringSetting(std::string name, _bstr_t value):
 {}
 
 StringSetting::StringSetting(StringSettingInitializer settingInitializer):
-    Setting(settingInitializer.variableName), m_value(settingInitializer.defaultValue)
+    Setting(settingInitializer.name), m_value(settingInitializer.defaultValue)
 {}
 
-_variant_t StringSetting::getVariantValue() {
+_variant_t StringSetting::getVariantValue() const {
     return _variant_t(m_value);
 }
 
@@ -51,10 +51,10 @@ LocalNumericSetting::LocalNumericSetting(std::string name, double value):
 {}
 
 LocalNumericSetting::LocalNumericSetting(NumericSettingInitializer settingInitializer):
-    NumericSetting(settingInitializer.variableName), m_value(settingInitializer.defaultValue)
+    NumericSetting(settingInitializer.name), m_value(settingInitializer.defaultValue)
 {}
 
-double LocalNumericSetting::getValue() {
+double LocalNumericSetting::getValue() const {
     return m_value;
 }
 
@@ -68,7 +68,7 @@ std::string LocalNumericSetting::getExpression() const {
     return oss.str();
 }
 
-_variant_t LocalNumericSetting::getVariantValue() {
+_variant_t LocalNumericSetting::getVariantValue() const {
     return _variant_t(m_value);
 }
 
@@ -78,54 +78,42 @@ void LocalNumericSetting::setVariantValue(_variant_t variant) {
     }
 }
 
-VariableNumericSetting::VariableNumericSetting(ksPartPtr part, std::string name, double defaultValue, Range range, std::string note):
-    NumericSetting(name), m_part(part), m_variableCollection(nullptr), m_note(note), m_defaultValue(0.0), m_range()
+VariableNumericSetting::VariableNumericSetting(ksPartPtr part, std::string name, double defaultValue, Range range, _bstr_t note):
+    NumericSetting(name), m_variable(nullptr), m_range()
 {
     assert(range.first < range.second);
+    m_range = range;
     if (!isValidValue(defaultValue)) {
         throw std::runtime_error("Значение переменной " + getName() + " находится вне допустимого диапазона");
     }
-    m_range = range;
-    m_defaultValue = defaultValue;
-
-    ksFeaturePtr feature(part->GetFeature());
-    m_variableCollection = feature->VariableCollection;
-
-    getVariableOrCreateDefault(); // создаем переменную
+    loadOrCreateVariable(part, name, note, defaultValue);
 }
 
 VariableNumericSetting::VariableNumericSetting(ksPartPtr part, NumericSettingInitializer settingInitializer):
-    NumericSetting(settingInitializer.variableName), m_part(part), m_variableCollection(nullptr), m_note(settingInitializer.variableNote), m_defaultValue(0.0), m_range()
+    NumericSetting(settingInitializer.name), m_variable(nullptr), m_range()
 {
     assert(settingInitializer.range.first < settingInitializer.range.second);
     m_range = settingInitializer.range;
     assert(isValidValue(settingInitializer.defaultValue));
-    m_defaultValue = settingInitializer.defaultValue;
-
-    ksFeaturePtr feature(part->GetFeature());
-    m_variableCollection = feature->VariableCollection;
-
-    getVariableOrCreateDefault(); // создаем переменную
+    loadOrCreateVariable(part, settingInitializer.name, settingInitializer.note, settingInitializer.defaultValue);
 }
 
-double VariableNumericSetting::getValue() {
-    ksVariablePtr variable = getVariableOrCreateDefault();
-    return variable->value;
+double VariableNumericSetting::getValue() const {
+    return m_variable->value;
 }
 
 void VariableNumericSetting::setValue(double value) {
     if (!isValidValue(value)) {
         throw std::runtime_error("Значение переменной " + getName() + " находится вне допустимого диапазона");
     }
-    ksVariablePtr variable = getVariableOrCreateDefault();
-    variable->value = value;
+    m_variable->value = value;
 }
 
 std::string VariableNumericSetting::getExpression() const {
     return getVariableName();
 }
 
-_variant_t VariableNumericSetting::getVariantValue() {
+_variant_t VariableNumericSetting::getVariantValue() const {
     return _variant_t(getValue());
 }
 
@@ -139,16 +127,23 @@ std::string VariableNumericSetting::getVariableName() const {
     return VARIABLE_NAME_PREFIX + NumericSetting::getName();
 }
 
-ksVariablePtr VariableNumericSetting::getVariable() const {
-    return m_variableCollection->GetByName(getVariableName().c_str(), true, false);
+void VariableNumericSetting::loadOrCreateVariable(ksPartPtr part, std::string name, _bstr_t note, double defaultValue) {
+    ksFeaturePtr feature(part->GetFeature());
+    ksVariableCollectionPtr variableCollection = feature->VariableCollection;
+    m_variable = variableCollection->GetByName(_bstr_t(VARIABLE_NAME_PREFIX) + _bstr_t(name.c_str()), true, false);
+    if (!m_variable) {
+        m_variable = variableCollection->AddNewVariable(_bstr_t(VARIABLE_NAME_PREFIX) + _bstr_t(name.c_str()), defaultValue, note);
+    }
 }
 
-ksVariablePtr VariableNumericSetting::getVariableOrCreateDefault() {
-    ksVariablePtr variable = getVariable();
-    if (!variable) {
-        m_variableCollection->AddNewVariable(getVariableName().c_str(), m_defaultValue, m_note.c_str());
+void VariableNumericSetting::createIfNotExists(ksPartPtr part, _bstr_t note, double defaultValue) {
+    _bstr_t name = m_variable->name;
+    ksFeaturePtr feature(part->GetFeature());
+    ksVariableCollectionPtr variableCollection = feature->VariableCollection;
+    m_variable = variableCollection->GetByName(name, true, false);
+    if (!m_variable) {
+        m_variable = variableCollection->AddNewVariable(name, defaultValue, note);
     }
-    return variable;
 }
 
 bool VariableNumericSetting::isValidValue(double value) const {
@@ -157,4 +152,3 @@ bool VariableNumericSetting::isValidValue(double value) const {
     }
     return true;
 }
-

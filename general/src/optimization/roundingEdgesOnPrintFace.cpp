@@ -318,7 +318,7 @@ std::pair<size_t, ksEntityPtr> optimizeRoundingEdgesOnPrintFace(KompasObjectPtr 
         
         // Создаем эскиз
         Sketch sketch(kompas, part, sketchPlane);
-        drawSketch(sketch, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.variableName));
+        drawSketch(sketch, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.name));
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
         

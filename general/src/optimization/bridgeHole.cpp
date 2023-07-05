@@ -140,8 +140,8 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 	} else {
 		extrusionDef->directionType = dtReverse;
 	}
-	double depth = settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getValue() *
-		settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue() * multiplier;
+	double depth = settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.name)->getValue() *
+		settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getValue() * multiplier;
 	extrusionDef->SetSideParam(normalDirection, etBlind, depth, 0, false);
 	extrusionDef->SetSketch(sketchEntity);
 	extrusionEntity->Create();
@@ -153,8 +153,8 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 
 		std::ostringstream oss;
 		oss << multiplier << " * ("
-			<< settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getExpression() << " * "
-			<< settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression()
+			<< settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.name)->getExpression() << " * "
+			<< settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getExpression()
 			<< ")";
 		variable->Expression = oss.str().c_str();
 	}
@@ -220,7 +220,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 		}
 		sketch.endEdit();
 
-		double extrusionDepth = settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue();
+		double extrusionDepth = settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.name)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getValue();
 		ksEntityPtr extrusionEntity(part->NewEntity(o3d_bossExtrusion));
 		ksBossExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
 		extrusionDef->chooseType = ksChBodiesAndParts;
@@ -234,7 +234,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 			ksVariablePtr variable(variableCollection->GetByIndex(3)); // Индекс=3 - "Расстояние 2"
 
 			std::ostringstream oss;
-			oss << settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
+			oss << settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.name)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getExpression();
 			variable->Expression = oss.str().c_str();
 		}
 		macroElement.add(extrusionEntity);

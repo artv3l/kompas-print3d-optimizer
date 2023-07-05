@@ -18,7 +18,7 @@ public:
     virtual ~Setting() = default;
 
     std::string getName() const;
-    virtual _variant_t getVariantValue() = 0;
+    virtual _variant_t getVariantValue() const = 0;
     virtual void setVariantValue(_variant_t variant) = 0;
 
 private:
@@ -34,7 +34,8 @@ public:
 
     virtual ~StringSetting() = default;
 
-    _variant_t getVariantValue() override;
+    // Setting overrides
+    _variant_t getVariantValue() const override;
     void setVariantValue(_variant_t variant) override;
 
     _bstr_t getValue() const;
@@ -52,26 +53,30 @@ public:
 
     virtual ~NumericSetting() = default;
 
-    virtual double getValue() = 0;
+    virtual double getValue() const = 0;
     virtual void setValue(double value) = 0;
     virtual std::string getExpression() const = 0;
-
 };
 
 // Числовая настройка, которая не записывается в переменные документа
 class LocalNumericSetting : public NumericSetting {
 public:
+    using Ptr = std::shared_ptr<LocalNumericSetting>;
+
     LocalNumericSetting(std::string name, double value);
     LocalNumericSetting(NumericSettingInitializer settingInitializer);
 
     virtual ~LocalNumericSetting() = default;
 
-    double getValue() override;
-    void setValue(double value) override;
-    std::string getExpression() const override;
-    _variant_t getVariantValue() override;
+    // Setting overrides
+    _variant_t getVariantValue() const override;
     void setVariantValue(_variant_t variant) override;
 
+    // NumericSetting overrides
+    double getValue() const override;
+    void setValue(double value) override;
+    std::string getExpression() const override;
+    
 private:
     double m_value;
 };
@@ -79,32 +84,33 @@ private:
 // Числовая настройка со связанной переменной документа
 class VariableNumericSetting : public NumericSetting {
 public:
+    using Ptr = std::shared_ptr<VariableNumericSetting>;
     using Range = std::pair<double, double>;
 
-    const std::string VARIABLE_NAME_PREFIX = "kp3do_";
+    const char* VARIABLE_NAME_PREFIX = "kp3do_";
 
-    VariableNumericSetting(ksPartPtr part, std::string name, double defaultValue, Range range, std::string note);
+    VariableNumericSetting(ksPartPtr part, std::string name, double defaultValue, Range range, _bstr_t note);
     VariableNumericSetting(ksPartPtr part, NumericSettingInitializer settingInitializer);
 
     virtual ~VariableNumericSetting() = default;
 
-    double getValue() override;
-    void setValue(double value) override;
-    std::string getExpression() const override;
-    _variant_t getVariantValue() override;
+    // Setting overrides
+    _variant_t getVariantValue() const override;
     void setVariantValue(_variant_t variant) override;
 
+    // NumericSetting overrides
+    double getValue() const override;
+    void setValue(double value) override;
+    std::string getExpression() const override;
+    
     std::string getVariableName() const;
+    void loadOrCreateVariable(ksPartPtr part, std::string name, _bstr_t note, double defaultValue);
+    void createIfNotExists(ksPartPtr part, _bstr_t note, double defaultValue);
 
 private:
-    ksPartPtr m_part;
-    ksVariableCollectionPtr m_variableCollection;
-    std::string m_note;
-    double m_defaultValue;
+    ksVariablePtr m_variable;
     Range m_range;
 
-    ksVariablePtr getVariable() const;
-    ksVariablePtr getVariableOrCreateDefault();
     bool isValidValue(double value) const;
 };
 

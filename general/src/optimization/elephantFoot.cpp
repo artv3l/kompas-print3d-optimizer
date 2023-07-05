@@ -40,7 +40,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
 		ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
 
-		double width = settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getValue();
+		double width = settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.name)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getValue();
 		chamfer->SetChamferParam(true, width, width);
 		ksEntityCollectionPtr array(chamfer->array());
 
@@ -58,7 +58,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 				ksVariablePtr variable3(variableCollection->GetByIndex(3)); // Индекс=3 - "Длина 2"
 
 				std::ostringstream oss;
-				oss << settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
+				oss << settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.name)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getExpression();
 				variable2->Expression = oss.str().c_str();
 				variable3->Expression = oss.str().c_str();
 			}

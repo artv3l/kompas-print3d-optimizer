@@ -26,7 +26,7 @@ SettingsManager::SettingsManager(KompasObjectPtr kompas, DocumentsManager& docum
 
 void SettingsManager::show(DocumentData::Settings& settings) {
     m_shownSettings = &settings;
-    settings.refreshVariables();
+    settings.loadFromDocument();
     fillSettingsToEdits(settings);
     PropertyManagerObject::show();
 }
@@ -38,7 +38,7 @@ bool SettingsManager::buttonClick(long buttonId) {
             Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
             setting->setVariantValue(kv.second->Value);
         }
-        m_shownSettings->refreshVariables();
+        m_shownSettings->uploadToDocument();
         hide();
         break;
     case SpecPropertyButtonEnum::pbHelp:
@@ -52,7 +52,7 @@ bool SettingsManager::buttonClick(long buttonId) {
 
 void SettingsManager::createEdit(NumericSettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName) {
     IPropertyEditPtr edit = m_controls->Add(type);
-    m_editMap.insert(std::make_pair(settingInitializer.variableName, edit));
+    m_editMap.insert(std::make_pair(settingInitializer.name, edit));
     edit->Name = editName;
     edit->SetValueRange(settingInitializer.range.first, settingInitializer.range.second);
     edit->Step = settingInitializer.step;
@@ -61,7 +61,7 @@ void SettingsManager::createEdit(NumericSettingInitializer settingInitializer, C
 
 void SettingsManager::createEdit(StringSettingInitializer settingInitializer, _bstr_t editName) {
     IPropertyEditPtr edit = m_controls->Add(ControlTypeEnum::ksControlEditStr);
-    m_editMap.insert(std::make_pair(settingInitializer.variableName, edit));
+    m_editMap.insert(std::make_pair(settingInitializer.name, edit));
     edit->Name = editName;
     edit->Value = settingInitializer.defaultValue;
 }

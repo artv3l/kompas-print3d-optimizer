@@ -4,18 +4,18 @@
 #include <string>
 #include <utility>
 #include <comutil.h>
-#include <list>
+#include <unordered_map>
 
 struct NumericSettingInitializer {
-    const std::string variableName;
+    const std::string name;
     const double defaultValue;
     const std::pair<double, double> range;
     const double step;
-    _bstr_t variableNote;
+    _bstr_t note;
 };
 
 struct StringSettingInitializer {
-    const std::string variableName;
+    const std::string name;
     const _bstr_t defaultValue;
 };
 
@@ -29,8 +29,8 @@ extern const NumericSettingInitializer SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT;
 
 extern const StringSettingInitializer SI_EXPORT_STL_FOLDER;
 
-extern const std::list<NumericSettingInitializer> VARIABLE_SETTING_INITIALIZERS;
-extern const std::list<NumericSettingInitializer> LOCAL_SETTING_INITIALIZERS;
-extern const std::list<StringSettingInitializer> STRING_SETTING_INITIALIZERS;
+extern const std::unordered_map<std::string, NumericSettingInitializer> VARIABLE_SETTING_INITIALIZERS;
+extern const std::unordered_map<std::string, NumericSettingInitializer> LOCAL_SETTING_INITIALIZERS;
+extern const std::unordered_map<std::string, StringSettingInitializer> STRING_SETTING_INITIALIZERS;
 
 #endif /* SETTING_INITIALIZER_HPP */
