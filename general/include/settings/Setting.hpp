@@ -20,7 +20,6 @@ public:
     std::string getName() const;
     virtual _variant_t getVariantValue() = 0;
     virtual void setVariantValue(_variant_t variant) = 0;
-    virtual std::string getExpression() const = 0;
 
 private:
     std::string m_name;
@@ -37,7 +36,6 @@ public:
 
     _variant_t getVariantValue() override;
     void setVariantValue(_variant_t variant) override;
-    std::string getExpression() const override;
 
     _bstr_t getValue() const;
     void setValue(_bstr_t value);
@@ -56,6 +54,8 @@ public:
 
     virtual double getValue() = 0;
     virtual void setValue(double value) = 0;
+    virtual std::string getExpression() const = 0;
+
 };
 
 // Числовая настройка, которая не записывается в переменные документа

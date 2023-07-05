@@ -34,10 +34,6 @@ void StringSetting::setVariantValue(_variant_t variant) {
     }
 }
 
-std::string StringSetting::getExpression() const {
-    return std::string(m_value);
-}
-
 _bstr_t StringSetting::getValue() const {
     return m_value;
 }

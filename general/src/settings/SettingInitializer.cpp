@@ -11,7 +11,7 @@ const NumericSettingInitializer SI_ELEPHANT_FOOT_LAYERS_COUNT {"elephant_foot_la
 const NumericSettingInitializer SI_BRIDGE_HOLE_FILL_LAYERS_COUNT {"bridge_hole_fill_layers_count", 1.0, std::make_pair(1.0, 5.0), 1.0, ""};
 const NumericSettingInitializer SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT{"bridge_hole_build_layers_count", 1.0, std::make_pair(1.0, 5.0), 1.0, ""};
 
-const StringSettingInitializer SI_EXPORT_STL_FOLDER {"export_stl_folder", "stl/"};
+const StringSettingInitializer SI_EXPORT_STL_FOLDER {"export_stl_folder", "stl"};
 
 const std::list<NumericSettingInitializer> VARIABLE_SETTING_INITIALIZERS {
     SI_LAYER_HEIGHT, SI_OVERHANG_THRESHOLD,

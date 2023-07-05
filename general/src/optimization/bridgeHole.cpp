@@ -153,8 +153,8 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 
 		std::ostringstream oss;
 		oss << multiplier << " * ("
-			<< settings.getSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getExpression() << " * "
-			<< settings.getSetting(SI_LAYER_HEIGHT.variableName)->getExpression()
+			<< settings.getNumericSetting(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT.variableName)->getExpression() << " * "
+			<< settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression()
 			<< ")";
 		variable->Expression = oss.str().c_str();
 	}
@@ -234,7 +234,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 			ksVariablePtr variable(variableCollection->GetByIndex(3)); // Индекс=3 - "Расстояние 2"
 
 			std::ostringstream oss;
-			oss << settings.getSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
+			oss << settings.getNumericSetting(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
 			variable->Expression = oss.str().c_str();
 		}
 		macroElement.add(extrusionEntity);

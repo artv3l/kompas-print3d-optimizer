@@ -58,7 +58,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 				ksVariablePtr variable3(variableCollection->GetByIndex(3)); // Индекс=3 - "Длина 2"
 
 				std::ostringstream oss;
-				oss << settings.getSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
+				oss << settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.variableName)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.variableName)->getExpression();
 				variable2->Expression = oss.str().c_str();
 				variable3->Expression = oss.str().c_str();
 			}

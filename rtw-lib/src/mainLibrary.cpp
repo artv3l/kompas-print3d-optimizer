@@ -14,9 +14,10 @@
 #include "optimization/bridgeHole.hpp"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 #include "optimization/circleHorizontalHoles.hpp"
-
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
+#include "settings/SettingInitializer.hpp"
+#include "utils.hpp"
 
 KompasObjectPtr kompas = getKompasObjectPtr();
 DocumentsManager documentsManager;
@@ -27,6 +28,21 @@ void handleOptimizationResult(std::pair<size_t, ksEntityPtr> optimizationResult,
     if (optimizationResult.second) {
         rootMacro.add(optimizationResult.second);
     }
+}
+
+void fastExportStl(ksDocument3DPtr document3d, DocumentData::Settings& settings) {
+    ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
+    param->format = D3FormatConvType::format_STL;
+    param->formatBinary = true;
+
+    std::pair<std::string, std::string> pair = splitFileNameAndRemoveExtension(std::string(document3d->fileName));
+    std::string stlFolder = std::string(settings.getStringSetting(SI_EXPORT_STL_FOLDER.variableName)->getValue());
+    
+    std::string resultFolder = pair.first + "\\" + stlFolder;
+    CreateDirectoryA(resultFolder.c_str(), nullptr);
+
+    std::string result = resultFolder + "\\" + pair.second + ".stl";
+    document3d->SaveAsToAdditionFormat(result.c_str(), param);
 }
 
 unsigned int WINAPI LIBRARYID() {
@@ -58,6 +74,12 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
+    switch (comm) {
+    case 5:
+        fastExportStl(document3d, settings);
+        return;
+    }
+
     if (!settings.isPrintSurfaceSelected()) {
         kompas->ksMessage("Плоскость печати не выбрана!");
         return;
@@ -68,35 +90,29 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     size_t count = 0;
 
     switch (comm) {
-    case 3: {
-        ksChooseMngPtr chooseMng(document3d->GetChooseMng());
-        chooseMng->UnChooseAll();
-        chooseMng->Choose(settings.getPrintSurface().face);
-        return;
-    }
-    case 4:
+    case 10:
         handleOptimizationResult(optimizeRounding(part, settings), rootMacro, count);
         break;
-    case 5:
+    case 11:
         handleOptimizationResult(optimizeElephantFoot(part, settings), rootMacro, count);
         break;
-    case 6:
+    case 12:
         handleOptimizationResult(optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL), rootMacro, count);
         break;
-    case 7:
+    case 13:
         handleOptimizationResult(optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK), rootMacro, count);
         break;
-    case 8:
+    case 14:
         handleOptimizationResult(optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE), rootMacro, count);
         handleOptimizationResult(optimizeBridgeHoleBuild(kompas, document3d, part, settings), rootMacro, count);
         break;
-    case 9:
+    case 15:
         handleOptimizationResult(optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL), rootMacro, count);
         break;
-    case 10:
+    case 16:
         handleOptimizationResult(optimizeBridgeHoleBuild(kompas, document3d, part, settings), rootMacro, count);
         break;
-    case 11:
+    case 17:
         handleOptimizationResult(optimizeCircleHorizontalHoles(kompas, document3d, part, settings), rootMacro, count);
         break;
     }
