@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <sstream>
 #include <unordered_map>
 #include <stdexcept>
@@ -32,8 +34,11 @@ void handleOptimizationResult(std::pair<size_t, ksEntityPtr> optimizationResult,
 
 void fastExportStl(ksDocument3DPtr document3d, DocumentData::Settings& settings) {
     ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
+    param->Init();
     param->format = D3FormatConvType::format_STL;
     param->formatBinary = true;
+    param->angle = 2 * M_PI / 180.0;
+    param->stepType = ksStepTypeEnum::ksDeviationStep;
 
     std::pair<std::string, std::string> pair = splitFileNameAndRemoveExtension(std::string(document3d->fileName));
     std::string stlFolder = std::string(settings.getStringSetting(SI_EXPORT_STL_FOLDER.name)->getValue());
