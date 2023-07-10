@@ -5,7 +5,6 @@
 #include <math.h>
 #include <list>
 #include <sstream>
-#include <utility>
 
 #include "settings/DocumentData.hpp"
 #include "apiutil/Macro.hpp"
@@ -316,16 +315,16 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
     return targets;
 }
 
-std::pair<size_t, ksEntityPtr> optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
     PrintSurface printSurface = settings.getPrintSurface();
     std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
     if (targets.empty()) {
-        return std::make_pair(0, nullptr);
+        return nullptr;
     }
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
         macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.name)));
     }
-    return std::make_pair(targets.size(), macro.getEntity());
+    return macro.getEntity();
 }

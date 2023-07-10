@@ -13,31 +13,23 @@
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 
 DocumentData::DocumentData(ksDocument3DPtr document3d):
-    m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro(getOrCreateRootMacro(m_part))
+    m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro()
 {}
-
-void DocumentData::refresh() {
-    m_settings.loadFromDocument();
-    if (!m_rootMacro.isCreated() || (m_rootMacro.getName() != _bstr_t(ROOT_MACRO_NAME))) {
-        m_rootMacro = Macro(m_part, ROOT_MACRO_NAME, true);
-    }
-}
 
 DocumentData::Settings& DocumentData::getSettings() {
     return m_settings;
 }
 
-Macro DocumentData::getRootMacro() {
-    return m_rootMacro;
-}
-
-Macro DocumentData::getOrCreateRootMacro(ksPartPtr part) {
-    ksEntityPtr macroEntity = Macro::findMacro(part, ROOT_MACRO_NAME);
-    if (!macroEntity) {
-        return Macro(part, ROOT_MACRO_NAME, true);
-    } else {
-        return Macro(macroEntity);
+Macro DocumentData::getOrCreateRootMacro() {
+    if (!m_rootMacro || !m_rootMacro.value().isCreated() || (m_rootMacro.value().getName() != _bstr_t(ROOT_MACRO_NAME))) {
+        ksEntityPtr macroEntity = Macro::findMacro(m_part, ROOT_MACRO_NAME);
+        if (!macroEntity) {
+            m_rootMacro = Macro(m_part, ROOT_MACRO_NAME, true);
+        } else {
+            m_rootMacro = Macro(macroEntity);
+        }
     }
+    return m_rootMacro.value();
 }
 
 DocumentData::Settings::Settings(ksDocument3DPtr document3d) :
@@ -69,7 +61,6 @@ DocumentData::Settings::Settings(ksDocument3DPtr document3d) :
 
 void DocumentData::Settings::loadFromDocument() {
     m_variableCollection->refresh();
-    m_document3d->RebuildDocument();
     for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
         VariableNumericSetting::Ptr vns = std::dynamic_pointer_cast<VariableNumericSetting>(it->second);
         if (vns) {

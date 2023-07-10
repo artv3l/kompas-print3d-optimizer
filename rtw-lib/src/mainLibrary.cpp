@@ -21,15 +21,18 @@
 #include "settings/SettingInitializer.hpp"
 #include "utils.hpp"
 
+
 KompasObjectPtr kompas = getKompasObjectPtr();
 DocumentsManager documentsManager;
 SettingsManager settingsManager(kompas, documentsManager);
 
-void handleOptimizationResult(std::pair<size_t, ksEntityPtr> optimizationResult, Macro& rootMacro, size_t& outCount) {
-    outCount += optimizationResult.first;
-    if (optimizationResult.second) {
-        rootMacro.add(optimizationResult.second);
+
+bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {
+    if (entity) {
+        list.push_back(entity);
+        return true;
     }
+    return false;
 }
 
 void fastExportStl(ksDocument3DPtr document3d, DocumentData::Settings& settings) {
@@ -90,42 +93,49 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
-    Macro rootMacro = documentData.getRootMacro();
     ksPartPtr part = document3d->GetPart(pTop_Part);
-    size_t count = 0;
+    std::list<ksEntityPtr> optimizationResults;
+    size_t reworkCount = 0;
 
     switch (comm) {
     case 10:
-        handleOptimizationResult(optimizeRounding(part, settings), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeRounding(part, settings));
         break;
     case 11:
-        handleOptimizationResult(optimizeElephantFoot(part, settings), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeElephantFoot(part, settings));
         break;
     case 12:
-        handleOptimizationResult(optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL, reworkCount));
         break;
     case 13:
-        handleOptimizationResult(optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount));
         break;
     case 14:
-        handleOptimizationResult(optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE), rootMacro, count);
-        handleOptimizationResult(optimizeBridgeHoleBuild(kompas, document3d, part, settings), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE));
+        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleBuild(kompas, document3d, part, settings));
         break;
     case 15:
-        handleOptimizationResult(optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL));
         break;
     case 16:
-        handleOptimizationResult(optimizeBridgeHoleBuild(kompas, document3d, part, settings), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleBuild(kompas, document3d, part, settings));
         break;
     case 17:
-        handleOptimizationResult(optimizeCircleHorizontalHoles(kompas, document3d, part, settings), rootMacro, count);
+        pushBackIfNotNullptr(optimizationResults, optimizeCircleHorizontalHoles(kompas, document3d, part, settings));
         break;
     }
-    if (count == 0) {
+    if (optimizationResults.empty()) {
         kompas->ksMessage("Не найдено геометрии для оптимизации");
     } else {
+        Macro rootMacro = documentData.getOrCreateRootMacro();
+        for (ksEntityPtr entity : optimizationResults) {
+            rootMacro.add(entity);
+        }
         document3d->RebuildDocument();
-        rootMacro.update();
-        kompas->ksMessage("Оптимизация модели была выполнена!");
+        if (reworkCount != 0) {
+            kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));
+        } else {
+            kompas->ksMessage("Оптимизация модели была выполнена!");
+        }
     }
 }

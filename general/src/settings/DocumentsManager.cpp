@@ -8,7 +8,7 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksDocument3DPtr document
     if (it == m_documentDataMap.end()) {
         it = m_documentDataMap.insert(std::make_pair(document3d, DocumentData(document3d))).first;
     } else {
-        it->second.refresh();
+        it->second.getSettings().loadFromDocument();
     }
     return it->second;
 }

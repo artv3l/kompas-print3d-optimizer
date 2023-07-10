@@ -38,16 +38,13 @@ public:
 
     DocumentData(ksDocument3DPtr document3d);
 
-    void refresh();
     Settings& getSettings();
-    Macro getRootMacro();
+    Macro getOrCreateRootMacro();
 
 private:
     ksPartPtr m_part;
     Settings m_settings;
-    Macro m_rootMacro;
-
-    static Macro getOrCreateRootMacro(ksPartPtr part);
+    Optional<Macro> m_rootMacro;
 };
 
 #endif /* DOCUMENT_DATA_HPP */

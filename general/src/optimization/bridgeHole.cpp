@@ -2,7 +2,6 @@
 #include "optimization/bridgeHole.hpp"
 
 #include <list>
-#include <utility>
 #include <sstream>
 
 #define _USE_MATH_DEFINES
@@ -244,15 +243,12 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 	return macro.getEntity();
 }
 
-std::pair<size_t, ksEntityPtr> optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings, HoleType holeType) {
+ksEntityPtr optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings, HoleType holeType) {
 	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface().face, holeType);
 	if (targets.empty()) {
-		return std::make_pair(0, nullptr);
+		return nullptr;
 	}
-	return std::make_pair(
-		targets.size(),
-		fillBridgeHoles(kompas, part, targets, settings)
-	);
+	return fillBridgeHoles(kompas, part, targets, settings);
 }
 
 /* Достройка нависающих отверстий для печати мостами */
@@ -611,13 +607,10 @@ ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<B
 	return macro.getEntity();
 }
 
-std::pair<size_t, ksEntityPtr> optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
 	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface().face);
 	if (targets.empty()) {
-		return std::make_pair(0, nullptr);
+		return nullptr;
 	}
-	return std::make_pair(
-		targets.size(),
-		buildBridgeHoles(kompas, part, targets, settings)
-	);
+	return buildBridgeHoles(kompas, part, targets, settings);
 }

@@ -2,7 +2,6 @@
 #include "optimization/elephantFoot.hpp"
 
 #include <list>
-#include <utility>
 #include <sstream>
 
 #include "settings/PrintSurface.hpp"
@@ -69,13 +68,10 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 	return macro.getEntity();
 }
 
-std::pair<size_t, ksEntityPtr> optimizeElephantFoot(ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeElephantFoot(ksPartPtr part, DocumentData::Settings& settings) {
 	std::list<ksLoopPtr> targets = getElephantFootTargets(part, settings.getPrintSurface());
 	if (targets.empty()) {
-		return std::make_pair(0, nullptr);
+		return nullptr;
 	}
-	return std::make_pair(
-		targets.size(),
-		createElephantFootChamfers(part, targets, settings)
-	);
+	return createElephantFootChamfers(part, targets, settings);
 }
