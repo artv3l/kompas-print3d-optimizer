@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include <afxdllx.h>
+#include <consoleapi.h>
+#include <stdio.h>
 
 #include "settings/SettingsManager.hpp"
 
@@ -15,6 +17,15 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         AfxInitExtensionModule(dll, hInstance);
         new CDynLinkLibrary(dll);
+
+#ifdef DEBUG
+        AllocConsole();
+        SetConsoleTitle(L"kompas-print3d-optimizer debug console");
+        FILE* fileCout;
+        freopen_s(&fileCout, "CONOUT$", "w", stdout);
+        
+#endif // DEBUG
+
     } else if (dwReason == DLL_PROCESS_DETACH) {
         settingsManager.hide();
         AfxTermExtensionModule(dll);
