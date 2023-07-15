@@ -9,11 +9,14 @@
 
 class DocumentsManager {
 public:
+    DocumentsManager(KompasObjectPtr kompas);
+
     DocumentData& getOrCreateDocumentData(ksDocument3DPtr document3d);
 
 private:
     using DocumentDataMap = std::unordered_map<ksDocument3D*, DocumentData>;
 
+    KompasObjectPtr m_kompas;
     DocumentDataMap m_documentDataMap;
 };
 

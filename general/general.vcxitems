@@ -16,6 +16,7 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\AutomationBaseEvent.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\ConstraintsCreator.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\DocumentFrameEvent.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\Macro.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\PropertyManagerEvent.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\PropertyManagerObject.hpp" />
@@ -39,6 +40,7 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\AutomationBaseEvent.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\ConstraintsCreator.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\DocumentFrameEvent.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\Macro.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\PropertyManagerEvent.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\PropertyManagerObject.cpp" />

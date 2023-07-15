@@ -23,7 +23,7 @@
 
 
 KompasObjectPtr kompas = getKompasObjectPtr();
-DocumentsManager documentsManager;
+DocumentsManager documentsManager(kompas);
 SettingsManager settingsManager(kompas, documentsManager);
 
 

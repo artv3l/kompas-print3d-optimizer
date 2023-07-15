@@ -23,6 +23,7 @@ public:
 
 	Optional& operator=(const Optional& obj);
 	Optional& operator=(Optional&& obj) noexcept;
+	Optional& operator=(T*&& ptr) noexcept;
 
 	operator bool() const;
 
@@ -87,6 +88,20 @@ inline Optional<T>& Optional<T>::operator=(Optional&& obj) noexcept {
 	if (obj) {
 		m_value = obj.m_value;
 		obj.m_value = nullptr;
+	} else {
+		m_value = nullptr;
+	}
+	return *this;
+}
+
+template<typename T>
+inline Optional<T>& Optional<T>::operator=(T*&& ptr) noexcept {
+	if (m_value) {
+		delete m_value;
+	}
+	if (ptr) {
+		m_value = ptr;
+		ptr = nullptr;
 	} else {
 		m_value = nullptr;
 	}

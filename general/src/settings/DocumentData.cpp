@@ -9,12 +9,18 @@
 #include "settings/SettingInitializer.hpp"
 #include "apiutil/Macro.hpp"
 #include "Optional.hpp"
+#include "apiutil/DocumentFrameEvent.hpp"
 
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 
-DocumentData::DocumentData(ksDocument3DPtr document3d):
-    m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro()
-{}
+DocumentData::DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d):
+    m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro(), m_documentFrameEvent()
+{
+    IKompasDocumentPtr document7 = kompas->TransferInterface(document3d, ksAPITypeEnum::ksAPI7Dual, 0);
+    IDocumentFramesPtr documentFrames = document7->DocumentFrames;
+    IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
+    m_documentFrameEvent = new DocumentFrameEvent(documentFrame);
+}
 
 DocumentData::Settings& DocumentData::getSettings() {
     return m_settings;

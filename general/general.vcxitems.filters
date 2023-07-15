@@ -90,6 +90,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingInitializer.hpp">
       <Filter>include\settings</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\DocumentFrameEvent.hpp">
+      <Filter>include\apiutil</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\concaveAngle.cpp">
@@ -151,6 +154,9 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingInitializer.cpp">
       <Filter>src\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\DocumentFrameEvent.cpp">
+      <Filter>src\apiutil</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

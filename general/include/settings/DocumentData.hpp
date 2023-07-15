@@ -9,6 +9,7 @@
 #include "Setting.hpp"
 #include "Optional.hpp"
 #include "settings/Setting.hpp"
+#include "apiutil/DocumentFrameEvent.hpp"
 
 class DocumentData {
 public:
@@ -36,7 +37,7 @@ public:
 
     static const char* ROOT_MACRO_NAME;
 
-    DocumentData(ksDocument3DPtr document3d);
+    DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d);
 
     Settings& getSettings();
     Macro getOrCreateRootMacro();
@@ -45,6 +46,7 @@ private:
     ksPartPtr m_part;
     Settings m_settings;
     Optional<Macro> m_rootMacro;
+    Optional<DocumentFrameEvent> m_documentFrameEvent;
 };
 
 #endif /* DOCUMENT_DATA_HPP */

@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rtw-lib", "rtw-lib\rtw-lib.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "general", "general\general.vcxitems", "{10EF27FC-AC09-4394-B8BE-AE92C3AF1D74}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glad", "external\glad\glad.vcxitems", "{9DB93F3D-BDD6-4D51-85F9-FEEFB0EB9F99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -42,7 +44,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		general\general.vcxitems*{10ef27fc-ac09-4394-b8be-ae92c3af1d74}*SharedItemsImports = 9
+		external\glad\glad.vcxitems*{7ef5f72b-5860-401b-adaa-80e3c55799cb}*SharedItemsImports = 4
 		general\general.vcxitems*{7ef5f72b-5860-401b-adaa-80e3c55799cb}*SharedItemsImports = 4
-		general\general.vcxitems*{e8ad208a-82f2-4f05-b259-88ea418bce0f}*SharedItemsImports = 4
+		external\glad\glad.vcxitems*{9db93f3d-bdd6-4d51-85f9-feefb0eb9f99}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
