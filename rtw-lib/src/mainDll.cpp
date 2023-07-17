@@ -4,15 +4,18 @@
 #include <consoleapi.h>
 #include <stdio.h>
 #include <iostream>
+#include <stdexcept>
 
 #include "glad/glad.h"
 
+#include "glutil/Shader.hpp"
+#include "shaders.hpp"
+
 #include "settings/SettingsManager.hpp"
 
-extern SettingsManager settingsManager;
+static AFX_EXTENSION_MODULE dll = {NULL, NULL};
 
-static AFX_EXTENSION_MODULE dll = { NULL, NULL };
-HINSTANCE g_hInstance = NULL;
+extern SettingsManager settingsManager;
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -23,12 +26,22 @@ void* GetAnyGLFuncAddress(const char* name) {
     return p;
 }
 
-extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
-    g_hInstance = hInstance;
-    if (dwReason == DLL_PROCESS_ATTACH) {
-        AfxInitExtensionModule(dll, hInstance);
-        new CDynLinkLibrary(dll);
+ShaderProgram::Ptr shaderProgram = nullptr;
 
+bool initShaders() {
+    try {
+        Shader vertexShader(VERTEX_SHADER_CODE, GL_VERTEX_SHADER);
+        Shader fragmentShader(FRAGMENT_SHADER_CODE, GL_FRAGMENT_SHADER);
+        shaderProgram = ShaderProgram::link({&vertexShader, &fragmentShader});
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << "\n";
+        return false;
+    }
+    return true;
+}
+
+extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
+    if (dwReason == DLL_PROCESS_ATTACH) {
 #ifdef DEBUG
         AllocConsole();
         SetConsoleTitle(L"kompas-print3d-optimizer debug console");
@@ -37,9 +50,15 @@ extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
         freopen_s(&fileCout, "CONOUT$", "w", stderr);
 #endif // DEBUG
 
+        AfxInitExtensionModule(dll, hInstance);
+        new CDynLinkLibrary(dll);
+
         if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
             std::cerr << "Failed to initialize GLAD" << "\n";
-            return 2;
+            return 0;
+        }
+        if (!initShaders()) {
+            return 0;
         }
 
     } else if (dwReason == DLL_PROCESS_DETACH) {

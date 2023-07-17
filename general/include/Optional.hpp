@@ -1,12 +1,6 @@
 #ifndef OPTIONAL_HPP
 #define OPTIONAL_HPP
 
-/*
-* Решил сделать свой Optional, вместо использования std::optional, так как:
-*   1. Не хочу пока переводить проект на c++17
-*   2. Интересно реализовать свою версию!
-*/
-
 #include <stdexcept>
 
 template <typename T>

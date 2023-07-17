@@ -8,7 +8,6 @@ public:
     DocumentFrameEvent(IDocumentFramePtr documentFrame);
     virtual ~DocumentFrameEvent() = default;
 
-    afx_msg bool mouseDown(short nButton, short nShiftState, long x, long y);
     afx_msg bool closePaintGL(ksGLObject* glObject, long drawMode);
 
     DECLARE_EVENTSINK_MAP();
