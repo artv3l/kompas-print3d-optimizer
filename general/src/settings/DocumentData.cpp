@@ -19,7 +19,7 @@ DocumentData::DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d):
     IKompasDocumentPtr document7 = kompas->TransferInterface(document3d, ksAPITypeEnum::ksAPI7Dual, 0);
     IDocumentFramesPtr documentFrames = document7->DocumentFrames;
     IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
-    m_frameEvent = new FrameEventImpl(documentFrame);
+    m_frameEvent = new FrameEventImpl(documentFrame, m_part);
 }
 
 DocumentData::Settings& DocumentData::getSettings() {

@@ -5,7 +5,6 @@ inline const char* VERTEX_SHADER_CODE = R"glsl(
 #version 330
 
 layout (location = 0) in vec3 a_pos;
-layout (location = 1) in vec3 a_color;
 
 uniform mat4 u_modelview;
 uniform mat4 u_projection;
@@ -22,7 +21,7 @@ inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    FragColor = vec4(0.0f, 0.0f, 1.0f, 0.3f);
 }
 
 )glsl";

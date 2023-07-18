@@ -8,7 +8,7 @@
 
 class FrameEventImpl : public DocumentFrameEvent {
 public:
-    FrameEventImpl(IDocumentFramePtr documentFrame);
+    FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part);
     virtual ~FrameEventImpl() = default;
 
     bool activate() override;
@@ -16,9 +16,9 @@ public:
 private:
     static ShaderProgram::Ptr s_shaderProgram;
 
+    ksPartPtr m_part;
+
     static void initShaders();
-
-
 };
 
 #endif /* FRAME_EVENT_IMPL_HPP */

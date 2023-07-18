@@ -25,8 +25,8 @@ void* GetAnyGLFuncAddress(const char* name) {
 
 ShaderProgram::Ptr FrameEventImpl::s_shaderProgram = nullptr;
 
-FrameEventImpl::FrameEventImpl(IDocumentFramePtr documentFrame) :
-    DocumentFrameEvent(documentFrame)
+FrameEventImpl::FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part) :
+    DocumentFrameEvent(documentFrame), m_part(part)
 {
     if (!s_shaderProgram) {
         if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
@@ -53,13 +53,58 @@ bool FrameEventImpl::activate() {
 bool FrameEventImpl::closePaintGL(ksGLObject* glObject, long drawMode) {
     std::cout << "closePaintGL" << "\n";
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
     float matrix4[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, matrix4);
-    //glm::mat4 modelview(glm::make_mat4(matrix4));
+    glm::mat4 modelview(glm::make_mat4(matrix4));
     glGetFloatv(GL_PROJECTION_MATRIX, matrix4);
-    //glm::mat4 projection(glm::make_mat4(matrix4));
+    glm::mat4 projection(glm::make_mat4(matrix4));
 
-    return false;
+    s_shaderProgram->use();
+    s_shaderProgram->setUniform("u_modelview", modelview);
+    s_shaderProgram->setUniform("u_projection", projection);
+
+    ksBodyPtr body = m_part->GetMainBody();
+    ksFaceCollectionPtr faceCollection = body->FaceCollection();
+    long nFaces = faceCollection->GetCount();
+
+    GLuint vertexArrayObject; glGenVertexArrays(1, &vertexArrayObject);
+    GLuint vertexBufferObject; glGenBuffers(1, &vertexBufferObject);
+    GLuint elementBufferObject; glGenBuffers(1, &elementBufferObject);
+    for (long iFace = 0; iFace < nFaces; iFace++) {
+        ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
+        ksTessellationPtr tesselation = face->GetTessellation();
+
+        _variant_t points, indexes; tesselation->GetFacetPoints(&points, &indexes);
+        int HUGEP* pIndexes = NULL; SafeArrayAccessData(indexes.parray, (void HUGEP * FAR*) & pIndexes);
+        double HUGEP* pPoints = NULL; SafeArrayAccessData(points.parray, (void HUGEP * FAR*) & pPoints);
+
+        GLuint nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
+        GLuint nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
+
+        glBindVertexArray(vertexArrayObject);
+            glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+            glBufferData(GL_ARRAY_BUFFER, nPoints * sizeof(double), pPoints, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, nIndexes * sizeof(int), pIndexes, GL_DYNAMIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 3 * sizeof(double), (void*)0);
+            glEnableVertexAttribArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        glBindVertexArray(vertexArrayObject);
+        glDrawElements(GL_TRIANGLES, nIndexes, GL_UNSIGNED_INT, 0);
+
+        SafeArrayUnaccessData(indexes.parray);
+        SafeArrayUnaccessData(points.parray);
+    }
+
+    glUseProgram(0);
+    glBindVertexArray(0);
+
+    return true;
 }
 
 void FrameEventImpl::initShaders() {
