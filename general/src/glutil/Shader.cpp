@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <array>
 #include <vector>
+#include <memory>
 
 #include "glad/glad.h"
 

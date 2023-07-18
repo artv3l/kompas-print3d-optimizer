@@ -9,7 +9,7 @@
 #include "Setting.hpp"
 #include "Optional.hpp"
 #include "settings/Setting.hpp"
-#include "apiutil/DocumentFrameEvent.hpp"
+#include "FrameEventImpl.hpp"
 
 class DocumentData {
 public:
@@ -46,7 +46,7 @@ private:
     ksPartPtr m_part;
     Settings m_settings;
     Optional<Macro> m_rootMacro;
-    Optional<DocumentFrameEvent> m_documentFrameEvent;
+    Optional<FrameEventImpl> m_frameEvent;
 };
 
 #endif /* DOCUMENT_DATA_HPP */

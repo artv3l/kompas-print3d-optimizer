@@ -22,6 +22,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\PropertyManagerObject.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\apiutil\Sketch.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\concaveAngle.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\FrameEventImpl.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\glutil\Shader.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\LinAlg.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\optimization\bridgeHole.hpp" />
@@ -40,6 +41,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)include\src\FrameEventImpl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\AutomationBaseEvent.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\ConstraintsCreator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\DocumentFrameEvent.cpp" />

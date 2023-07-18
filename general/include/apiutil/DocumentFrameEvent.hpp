@@ -8,8 +8,10 @@ public:
     DocumentFrameEvent(IDocumentFramePtr documentFrame);
     virtual ~DocumentFrameEvent() = default;
 
-    afx_msg bool closePaintGL(ksGLObject* glObject, long drawMode);
+    virtual afx_msg bool activate() = 0;
+    virtual afx_msg bool closePaintGL(ksGLObject* glObject, long drawMode) = 0;
 
+private:
     DECLARE_EVENTSINK_MAP();
 };
 
