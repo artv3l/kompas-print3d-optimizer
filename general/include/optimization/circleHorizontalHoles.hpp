@@ -18,6 +18,6 @@ void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalP
 Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, NumericSetting::Ptr overhangThreshold);
 
 std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace);
-ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings);
+ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings);
 
 #endif /* CIRCLE_HORIZONTAL_HOLES_HPP */

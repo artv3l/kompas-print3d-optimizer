@@ -294,7 +294,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     constrCreator.equalRadius(roundingArc);
 }
 
-ksEntityPtr optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, DocumentData::Settings& settings, ReworkType reworkType, size_t& reworkCount) {
+ksEntityPtr optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr part, Settings& settings, ReworkType reworkType, size_t& reworkCount) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.getPrintSurface(), reworkType);
     if (targets.empty()) {
         return nullptr;

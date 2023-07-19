@@ -1,8 +1,6 @@
 #ifndef BASE_EVENT_HPP
 #define BASE_EVENT_HPP
 
-#include "stdafx.h"
-
 #include <afxwin.h>
 
 class AutomationBaseEvent : public CCmdTarget {

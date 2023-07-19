@@ -62,7 +62,7 @@ ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTa
 	return filletEntity;
 }
 
-ksEntityPtr optimizeRounding(ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeRounding(ksPartPtr part, Settings& settings) {
 	std::list<ksEdgeDefinitionPtr> targets =
 		getRoundingTargets(part, settings.getPrintSurface().face, settings.getNumericSetting(SI_ROUNDING_DEFLECTION_ANGLE.name)->getValue());
 	if (targets.empty()) {

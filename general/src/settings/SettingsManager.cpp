@@ -24,7 +24,7 @@ SettingsManager::SettingsManager(KompasObjectPtr kompas, DocumentsManager& docum
     initControls();
 }
 
-void SettingsManager::show(DocumentData::Settings& settings) {
+void SettingsManager::show(Settings& settings) {
     m_shownSettings = &settings;
     settings.loadFromDocument();
     fillSettingsToEdits(settings);
@@ -125,7 +125,7 @@ void SettingsManager::initControls() {
     }
 }
 
-void SettingsManager::fillSettingsToEdits(DocumentData::Settings& settings) {
+void SettingsManager::fillSettingsToEdits(Settings& settings) {
     for (std::pair<std::string, IPropertyEditPtr> kv : m_editMap) {
         Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
         kv.second->Value = setting->getVariantValue();

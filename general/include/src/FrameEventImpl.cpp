@@ -12,6 +12,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "apiutil/DocumentFrameEvent.hpp"
+#include "settings/DocumentData.hpp"
+#include "settings/PrintSurface.hpp"
 #include "shaders.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
@@ -25,8 +27,8 @@ void* GetAnyGLFuncAddress(const char* name) {
 
 ShaderProgram::Ptr FrameEventImpl::s_shaderProgram = nullptr;
 
-FrameEventImpl::FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part) :
-    DocumentFrameEvent(documentFrame), m_part(part)
+FrameEventImpl::FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part, Settings* settings) :
+    DocumentFrameEvent(documentFrame), m_part(part), m_settings(settings)
 {
     if (!s_shaderProgram) {
         if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
@@ -62,9 +64,14 @@ bool FrameEventImpl::closePaintGL(ksGLObject* glObject, long drawMode) {
     glGetFloatv(GL_PROJECTION_MATRIX, matrix4);
     glm::mat4 projection(glm::make_mat4(matrix4));
 
+    PlaneEq printSurfaceEq(m_settings->getPrintSurface().eq);
+    glm::vec3 printSurfaceNormal(printSurfaceEq.a, printSurfaceEq.b, printSurfaceEq.c);
+
     s_shaderProgram->use();
     s_shaderProgram->setUniform("u_modelview", modelview);
     s_shaderProgram->setUniform("u_projection", projection);
+    s_shaderProgram->setUniform("u_printSurfaceNormal", printSurfaceNormal);
+    s_shaderProgram->setUniform("u_printSurfaceD", static_cast<float>(printSurfaceEq.d));
 
     ksBodyPtr body = m_part->GetMainBody();
     ksFaceCollectionPtr faceCollection = body->FaceCollection();

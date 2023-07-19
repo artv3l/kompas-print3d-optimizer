@@ -33,7 +33,7 @@ std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSu
 	return elephantFootTargets;
 }
 
-ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, DocumentData::Settings& settings) {
+ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, Settings& settings) {
 	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
 	for (ksLoopPtr loopTarget : elephantFootTargets) {
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
@@ -68,7 +68,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 	return macro.getEntity();
 }
 
-ksEntityPtr optimizeElephantFoot(ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeElephantFoot(ksPartPtr part, Settings& settings) {
 	std::list<ksLoopPtr> targets = getElephantFootTargets(part, settings.getPrintSurface());
 	if (targets.empty()) {
 		return nullptr;

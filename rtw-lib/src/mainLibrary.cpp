@@ -35,7 +35,7 @@ bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {
     return false;
 }
 
-void fastExportStl(ksDocument3DPtr document3d, DocumentData::Settings& settings) {
+void fastExportStl(ksDocument3DPtr document3d, Settings& settings) {
     ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
     param->Init();
     param->format = D3FormatConvType::format_STL;
@@ -65,7 +65,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     DocumentData& documentData = documentsManager.getOrCreateDocumentData(document3d);
-    DocumentData::Settings& settings = documentData.getSettings();
+    Settings& settings = documentData.getSettings();
 
     switch (comm) {
     case 1:

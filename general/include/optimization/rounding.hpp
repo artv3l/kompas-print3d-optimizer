@@ -10,6 +10,6 @@ bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitio
 std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
 
-ksEntityPtr optimizeRounding(ksPartPtr part, DocumentData::Settings& settings);
+ksEntityPtr optimizeRounding(ksPartPtr part, Settings& settings);
 
 #endif /* ROUNDING_HPP */

@@ -315,7 +315,7 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
     return targets;
 }
 
-ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, DocumentData::Settings& settings) {
+ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings) {
     PrintSurface printSurface = settings.getPrintSurface();
     std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
     if (targets.empty()) {

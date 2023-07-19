@@ -19,7 +19,7 @@ public:
     SettingsManager(KompasObjectPtr kompas, DocumentsManager& documentsManager);
     virtual ~SettingsManager() = default;
 
-    void show(DocumentData::Settings& settings);
+    void show(Settings& settings);
 
 private:
     using EditMap = std::unordered_map<std::string, IPropertyEditPtr>;
@@ -28,7 +28,7 @@ private:
     IPropertyTabPtr m_mainTab;
     IPropertyControlsPtr m_controls;
     EditMap m_editMap;
-    DocumentData::Settings* m_shownSettings;
+    Settings* m_shownSettings;
     
     virtual bool buttonClick(long buttonId) override;
 
@@ -36,7 +36,7 @@ private:
     void createEdit(StringSettingInitializer settingInitializer, _bstr_t editName);
 
     void initControls();
-    void fillSettingsToEdits(DocumentData::Settings& settings);
+    void fillSettingsToEdits(Settings& settings);
 };
 
 #endif /* SETTINGS_MANAGER_HPP */

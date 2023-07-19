@@ -6,9 +6,11 @@
 #include "apiutil/DocumentFrameEvent.hpp"
 #include "glutil/Shader.hpp"
 
+class Settings;
+
 class FrameEventImpl : public DocumentFrameEvent {
 public:
-    FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part);
+    FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part, Settings* settings);
     virtual ~FrameEventImpl() = default;
 
     bool activate() override;
@@ -17,6 +19,7 @@ private:
     static ShaderProgram::Ptr s_shaderProgram;
 
     ksPartPtr m_part;
+    Settings* m_settings;
 
     static void initShaders();
 };
