@@ -168,11 +168,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\connection.hpp" />
+    <ClInclude Include="include\global.hpp" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="resource\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\connection.cpp" />
+    <ClCompile Include="src\global.cpp" />
     <ClCompile Include="src\mainDll.cpp" />
     <ClCompile Include="src\mainLibrary.cpp" />
     <ClCompile Include="src\stdafx.cpp">

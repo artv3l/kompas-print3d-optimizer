@@ -17,12 +17,7 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 #include "utils.hpp"
-
-
-KompasObjectPtr kompas = getKompasObjectPtr();
-DocumentsManager documentsManager(kompas);
-SettingsManager settingsManager(kompas);
-
+#include "global.hpp"
 
 bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {
     if (entity) {
@@ -55,6 +50,8 @@ unsigned int WINAPI LIBRARYID() {
 }
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
+    using namespace global;
+
     ksDocument3DPtr document3d = kompas->ActiveDocument3D();
     if (!document3d) {
         kompas->ksMessage("Необходимо открыть документ-модель");

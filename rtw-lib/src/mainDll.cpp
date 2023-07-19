@@ -5,11 +5,9 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "settings/SettingsManager.hpp"
+#include "global.hpp"
 
 static AFX_EXTENSION_MODULE dll = {NULL, NULL};
-
-extern SettingsManager settingsManager;
 
 void createDebugConsole() {
     AllocConsole();
@@ -29,7 +27,7 @@ extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
         new CDynLinkLibrary(dll);
 
     } else if (dwReason == DLL_PROCESS_DETACH) {
-        settingsManager.hide();
+        global::settingsManager.hide();
         AfxTermExtensionModule(dll);
     }
     return 1;

@@ -16,6 +16,7 @@
 #include "settings/PrintSurface.hpp"
 #include "shaders.hpp"
 #include "settings/SettingInitializer.hpp"
+#include "global.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -51,6 +52,11 @@ FrameEventImpl::FrameEventImpl(KompasObjectPtr kompas, ksDocument3DPtr document3
 
 bool FrameEventImpl::activate() {
     return true;
+}
+
+bool FrameEventImpl::closeFrame() {
+    global::documentsManager.remove(m_document3d);
+    return false;
 }
 
 bool FrameEventImpl::closePaintGL(ksGLObject* glObject, long drawMode) {

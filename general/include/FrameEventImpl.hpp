@@ -14,7 +14,9 @@ public:
     virtual ~FrameEventImpl() = default;
 
     bool activate() override;
+    bool closeFrame() override;
     bool closePaintGL(ksGLObject* glObject, long drawMode) override;
+
 private:
     static ShaderProgram::Ptr s_shaderProgram;
 
