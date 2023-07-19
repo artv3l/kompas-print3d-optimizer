@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "FrameEventImpl.hpp"
 
-#include <iostream>
 #include <memory>
-
+#include <iostream>
 #include <libloaderapi.h>
 #include <wingdi.h>
 
@@ -28,26 +27,30 @@ void* GetAnyGLFuncAddress(const char* name) {
 }
 
 ShaderProgram::Ptr FrameEventImpl::s_shaderProgram = nullptr;
+bool FrameEventImpl::s_isGladInited = false;
+short FrameEventImpl::s_framesCount = 0;
 
 FrameEventImpl::FrameEventImpl(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings) :
     DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings)
 {
-    if (!s_shaderProgram) {
+    // GLAD нужно инициализировать когда открыт документ
+    if (!s_isGladInited) {
         if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
-            std::cerr << "Failed to initialize GLAD" << "\n";
-            // todo: fatal error
+            global::kompas->ksMessage("Ошибка инициализации GLAD");
         }
-        std::cout << "GLAD init: ok\n";
+    }
+    /*
+      После закрытия всех документов состояние OpenGL сбрасывается.
+      Поэтому, когда после этого открывается новый документ, нужно заново скомпилировать шейдеры
+    */
+    if (s_framesCount == 0) {
         try {
             initShaders();
-        } catch (const std::runtime_error& e) {
-            std::cerr << e.what() << "\n";
-            // todo: fatal error
+        } catch (const std::runtime_error&) {
+            global::kompas->ksMessage("Ошибка компиляции шейдеров");
         }
-        std::cout << "Shader compile: ok\n";
-    } else {
-        std::cout << "GLAD already inited\n";
     }
+    s_framesCount++;
 }
 
 bool FrameEventImpl::activate() {
@@ -55,8 +58,12 @@ bool FrameEventImpl::activate() {
 }
 
 bool FrameEventImpl::closeFrame() {
+    s_framesCount--;
+    if (s_framesCount == 0) {
+        s_shaderProgram = nullptr;
+    }
     global::documentsManager.remove(m_document3d);
-    return false;
+    return true;
 }
 
 bool FrameEventImpl::closePaintGL(ksGLObject* glObject, long drawMode) {
@@ -134,6 +141,15 @@ bool FrameEventImpl::closePaintGL(ksGLObject* glObject, long drawMode) {
     glUseProgram(0);
     glBindVertexArray(0);
 
+    return true;
+}
+
+bool FrameEventImpl::deactivate() {
+    global::settingsManager.hide();
+    return true;
+}
+
+bool FrameEventImpl::mouseDown(short nButton, short nShiftState, long x, long y) {
     return true;
 }
 

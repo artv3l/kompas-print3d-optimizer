@@ -13,6 +13,8 @@ public:
     virtual afx_msg bool activate() = 0;
     virtual afx_msg bool closeFrame() = 0;
     virtual afx_msg bool closePaintGL(ksGLObject* glObject, long drawMode) = 0;
+    virtual afx_msg bool deactivate() = 0;
+    virtual afx_msg bool mouseDown(short nButton, short nShiftState, long x, long y) = 0;
 
 private:
     DECLARE_EVENTSINK_MAP();

@@ -16,9 +16,13 @@ public:
     bool activate() override;
     bool closeFrame() override;
     bool closePaintGL(ksGLObject* glObject, long drawMode) override;
+    bool deactivate() override;
+    bool mouseDown(short nButton, short nShiftState, long x, long y) override;
 
 private:
     static ShaderProgram::Ptr s_shaderProgram;
+    static bool s_isGladInited;
+    static short s_framesCount;
 
     ksDocument3DPtr m_document3d;
     Settings* m_settings;
