@@ -8,16 +8,9 @@
 
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 
-IDocumentFramePtr getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d) {
-    IKompasDocumentPtr document7 = kompas->TransferInterface(document3d, ksAPITypeEnum::ksAPI7Dual, 0);
-    IDocumentFramesPtr documentFrames = document7->DocumentFrames;
-    IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
-    return documentFrame;
-}
-
 DocumentData::DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d):
-    m_part(document3d->GetPart(pTop_Part)), m_settings(document3d), m_rootMacro(),
-    m_frameEvent(getDocumentFrame(kompas, document3d), m_part, &m_settings)
+    m_document3d(document3d), m_settings(document3d), m_rootMacro(),
+    m_frameEvent(kompas, document3d, &m_settings)
 {}
 
 Settings& DocumentData::getSettings() {
@@ -25,10 +18,11 @@ Settings& DocumentData::getSettings() {
 }
 
 Macro DocumentData::getOrCreateRootMacro() {
+    ksPartPtr part = m_document3d->GetPart(Part_Type::pTop_Part);
     if (!m_rootMacro || !m_rootMacro.value().isCreated() || (m_rootMacro.value().getName() != _bstr_t(ROOT_MACRO_NAME))) {
-        ksEntityPtr macroEntity = Macro::findMacro(m_part, ROOT_MACRO_NAME);
+        ksEntityPtr macroEntity = Macro::findMacro(part, ROOT_MACRO_NAME);
         if (!macroEntity) {
-            m_rootMacro = Macro(m_part, ROOT_MACRO_NAME, true);
+            m_rootMacro = Macro(part, ROOT_MACRO_NAME, true);
         } else {
             m_rootMacro = Macro(macroEntity);
         }

@@ -10,7 +10,7 @@ class Settings;
 
 class FrameEventImpl : public DocumentFrameEvent {
 public:
-    FrameEventImpl(IDocumentFramePtr documentFrame, ksPartPtr part, Settings* settings);
+    FrameEventImpl(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings);
     virtual ~FrameEventImpl() = default;
 
     bool activate() override;
@@ -18,10 +18,11 @@ public:
 private:
     static ShaderProgram::Ptr s_shaderProgram;
 
-    ksPartPtr m_part;
+    ksDocument3DPtr m_document3d;
     Settings* m_settings;
 
     static void initShaders();
+    static IDocumentFramePtr getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d);
 };
 
 #endif /* FRAME_EVENT_IMPL_HPP */

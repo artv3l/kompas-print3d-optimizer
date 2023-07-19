@@ -18,7 +18,7 @@ public:
     Macro getOrCreateRootMacro();
 
 private:
-    ksPartPtr m_part;
+    ksDocument3DPtr m_document3d;
     Settings m_settings;
     Optional<Macro> m_rootMacro;
     FrameEventImpl m_frameEvent;

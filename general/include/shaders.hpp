@@ -9,7 +9,10 @@ layout (location = 0) in vec3 a_pos;
 uniform mat4 u_modelview;
 uniform mat4 u_projection;
 
+out vec3 globalPosition;
+
 void main() {
+    globalPosition = a_pos;
    gl_Position = u_projection * u_modelview * vec4(a_pos, 1.0f);
 }
 
@@ -18,13 +21,23 @@ void main() {
 inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 #version 330
 
+in vec3 globalPosition;
+
 uniform vec3 u_printSurfaceNormal;
 uniform float u_printSurfaceD;
+uniform float u_layerHeight;
 
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(u_printSurfaceNormal, 0.3f);
+    float epsilon = 0.01f;
+
+    float dist = (dot(u_printSurfaceNormal, globalPosition) + u_printSurfaceD) / length(u_printSurfaceNormal);
+    vec3 color = vec3(0.0f, 0.0f, 0.0f);
+    if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < epsilon) {
+        color.x = 1.0f;
+    }
+    FragColor = vec4(color, 0.3f);
 }
 
 )glsl";
