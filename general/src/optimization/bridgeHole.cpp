@@ -12,7 +12,7 @@
 #include "apiutil/Macro.hpp"
 #include "apiutil/ConstraintsCreator.hpp"
 #include "apiutil/Sketch.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";

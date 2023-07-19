@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "settings/DocumentData.hpp"
+class Settings;
 
 bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
 

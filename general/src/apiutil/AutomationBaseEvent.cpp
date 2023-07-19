@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include "apiutil/AutomationBaseEvent.hpp"
 
 #include <Unknwn.h>

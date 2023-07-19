@@ -6,7 +6,7 @@
 PropertyManagerObject::PropertyManagerObject(KompasObjectPtr kompas) :
         m_kompas(kompas), m_application(kompas->ksGetApplication7()),
         m_propertyManager(m_application->CreatePropertyManager(true)),
-        m_event(new PropertyManagerEvent(this)) {
+        m_event(this) {
 }
 
 IPropertyManagerPtr PropertyManagerObject::getPropertyManager() {

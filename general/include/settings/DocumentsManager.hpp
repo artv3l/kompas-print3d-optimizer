@@ -3,8 +3,6 @@
 
 #include <unordered_map>
 
-#include "apiutil/Macro.hpp"
-#include "Optional.hpp"
 #include "DocumentData.hpp"
 
 class DocumentsManager {

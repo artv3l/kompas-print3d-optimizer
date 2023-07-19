@@ -6,7 +6,7 @@
 
 #include "settings/PrintSurface.hpp"
 #include "apiutil/Macro.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";

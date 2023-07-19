@@ -1,9 +1,7 @@
 #ifndef PROPERTY_MANAGER_OBJECT_HPP
 #define PROPERTY_MANAGER_OBJECT_HPP
 
-#include "stdafx.h"
-
-class PropertyManagerEvent;
+#include "apiutil/PropertyManagerEvent.hpp"
 
 class PropertyManagerObject {
 public:
@@ -22,7 +20,7 @@ protected:
     IPropertyManagerPtr m_propertyManager;
 
 private:
-    PropertyManagerEvent *m_event;
+    PropertyManagerEvent m_event;
 
 };
 

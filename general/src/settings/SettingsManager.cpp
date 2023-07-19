@@ -3,16 +3,13 @@
 
 #include <utility>
 #include <unordered_map>
-#include <stdexcept>
 #include <memory>
 
 #include "apiutil/PropertyManagerObject.hpp"
-#include "settings/DocumentsManager.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 
-SettingsManager::SettingsManager(KompasObjectPtr kompas, DocumentsManager& documentsManager):
+SettingsManager::SettingsManager(KompasObjectPtr kompas):
     PropertyManagerObject(kompas),
-    m_documentsManager(documentsManager),
     m_mainTab(m_propertyManager->PropertyTabs->Add("MainTab")), m_controls(m_mainTab->PropertyControls),
     m_editMap(),
     m_shownSettings(nullptr)

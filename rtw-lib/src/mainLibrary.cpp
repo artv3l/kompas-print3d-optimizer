@@ -2,8 +2,6 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <sstream>
-#include <unordered_map>
 #include <stdexcept>
 #include <utility>
 
@@ -18,13 +16,12 @@
 #include "optimization/circleHorizontalHoles.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
-#include "settings/SettingInitializer.hpp"
 #include "utils.hpp"
 
 
 KompasObjectPtr kompas = getKompasObjectPtr();
 DocumentsManager documentsManager(kompas);
-SettingsManager settingsManager(kompas, documentsManager);
+SettingsManager settingsManager(kompas);
 
 
 bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {

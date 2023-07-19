@@ -1,8 +1,6 @@
-#ifndef KOMPAS_UTILS_HPP
-#define KOMPAS_UTILS_HPP
-
-#include "stdafx.h"
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 KompasObjectPtr getKompasObjectPtr();
 
-#endif /* KOMPAS_UTILS_HPP */
+#endif /* CONNECTION_HPP */

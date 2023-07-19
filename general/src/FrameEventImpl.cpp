@@ -7,12 +7,12 @@
 #include <libloaderapi.h>
 #include <wingdi.h>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "apiutil/DocumentFrameEvent.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "settings/PrintSurface.hpp"
 #include "shaders.hpp"
 

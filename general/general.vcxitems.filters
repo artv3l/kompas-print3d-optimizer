@@ -108,6 +108,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\FrameEventImpl.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Settings.hpp">
+      <Filter>include\settings</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\concaveAngle.cpp">
@@ -176,8 +179,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\glutil\Shader.cpp">
       <Filter>src\glutil</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)include\src\FrameEventImpl.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\FrameEventImpl.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\Settings.cpp">
+      <Filter>src\settings</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

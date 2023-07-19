@@ -4,7 +4,8 @@
 #include <list>
 
 #include "apiutil/Sketch.hpp"
-#include "settings/DocumentData.hpp"
+
+class Settings;
 
 struct BridgeHoleFillTarget {
     ksLoopPtr loop;

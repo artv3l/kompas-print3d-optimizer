@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "apiutil/DocumentFrameEvent.hpp"
 
+#include <afxdisp.h>
+
 #include "apiutil/AutomationBaseEvent.hpp"
 
 DocumentFrameEvent::DocumentFrameEvent(IDocumentFramePtr documentFrame) :

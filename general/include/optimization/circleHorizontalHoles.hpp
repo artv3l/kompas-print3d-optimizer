@@ -3,8 +3,10 @@
 
 #include <list>
 
-#include "settings/PrintSurface.hpp"
-#include "settings/DocumentData.hpp"
+#include "apiutil/Macro.hpp"
+#include "settings/Setting.hpp"
+
+class Settings;
 
 ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, bool hidden = true);
 ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityPtr point, bool hidden = true);

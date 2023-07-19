@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "apiutil/DocumentFrameEvent.hpp"
 #include "glutil/Shader.hpp"
+#include "apiutil/DocumentFrameEvent.hpp"
 
 class Settings;
 

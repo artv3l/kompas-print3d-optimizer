@@ -36,12 +36,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Setting.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\PrintSurface.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingInitializer.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Settings.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\SettingsManager.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\shaders.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)include\src\FrameEventImpl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\AutomationBaseEvent.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\ConstraintsCreator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\DocumentFrameEvent.cpp" />
@@ -50,6 +50,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\PropertyManagerObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\apiutil\Sketch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\concaveAngle.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\FrameEventImpl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\glutil\Shader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -71,6 +72,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\Settings.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\SettingsManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\utils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

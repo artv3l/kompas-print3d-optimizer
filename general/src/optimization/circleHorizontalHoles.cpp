@@ -4,9 +4,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <list>
-#include <sstream>
 
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "apiutil/Macro.hpp"
 #include "apiutil/Sketch.hpp"
 #include "apiutil/ConstraintsCreator.hpp"

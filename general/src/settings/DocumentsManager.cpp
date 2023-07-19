@@ -1,7 +1,10 @@
 #include "stdafx.h"
 #include "settings/DocumentsManager.hpp"
 
+#include <unordered_map>
+
 #include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 
 DocumentsManager::DocumentsManager(KompasObjectPtr kompas):
     m_kompas(kompas)

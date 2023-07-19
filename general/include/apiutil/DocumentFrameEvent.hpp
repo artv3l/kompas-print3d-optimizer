@@ -1,6 +1,8 @@
 #ifndef DOCUMENT_FRAME_EVENT_HPP
 #define DOCUMENT_FRAME_EVENT_HPP
 
+#include <afxwin.h>
+
 #include "apiutil/AutomationBaseEvent.hpp"
 
 class DocumentFrameEvent : public AutomationBaseEvent {

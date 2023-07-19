@@ -6,10 +6,10 @@
 #include <vector>
 #include <memory>
 
-#include "glad/glad.h"
-
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 
 const GLsizei INFO_LOG_SIZE = 512;
 

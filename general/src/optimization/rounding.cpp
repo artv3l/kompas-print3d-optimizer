@@ -2,10 +2,9 @@
 #include "optimization/rounding.hpp"
 
 #include <list>
-#define _USE_MATH_DEFINES \ #include <cmath>
 
 #include "utils.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 
 const char* NAME_ROUNDING = "Скругления для выпирающих углов";

@@ -4,8 +4,9 @@
 #include <list>
 
 #include "settings/PrintSurface.hpp"
-#include "utils.hpp"
-#include "settings/DocumentData.hpp"
+#include "settings/Setting.hpp"
+
+class Settings;
 
 enum class ReworkType {
     ALL,
