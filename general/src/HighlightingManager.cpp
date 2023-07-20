@@ -77,7 +77,7 @@ IDocumentFramePtr HighlightingManager::getDocumentFrame(KompasObjectPtr kompas, 
     return documentFrame;
 }
 
-void HighlightingManager::drawTriangulation(ksPartPtr part) {
+void HighlightingManager::drawTriangulation(ksPartPtr part, ksFaceDefinitionPtr printFace) {
     ksBodyPtr body = part->GetMainBody();
     ksFaceCollectionPtr faceCollection = body->FaceCollection();
     long nFaces = faceCollection->GetCount();
@@ -87,6 +87,8 @@ void HighlightingManager::drawTriangulation(ksPartPtr part) {
     GLuint elementBufferObject; glGenBuffers(1, &elementBufferObject);
     for (long iFace = 0; iFace < nFaces; iFace++) {
         ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
+
+        s_shaderProgram->setUniform("u_isPrintSurface", face == printFace);
 
         ksTessellationPtr tesselation = face->GetTessellation();
         tesselation->refresh(); // Нужно обязательно вызывать после перестроения модели
@@ -98,11 +100,11 @@ void HighlightingManager::drawTriangulation(ksPartPtr part) {
             (normals.vt != (VT_ARRAY | VT_R8)) || !normals.parray) {
             break;
         }
-        GLsizeiptr nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
+        GLsizei nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
         if ((points.parray->cDims != 1) || (nPoints == 0) || (nPoints % 3 != 0)) {
             break;
         }
-        GLsizeiptr nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
+        GLsizei nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
         if ((indexes.parray->cDims != 1) || (nIndexes == 0) || (nIndexes % 3 != 0)) {
             break;
         }
@@ -114,7 +116,7 @@ void HighlightingManager::drawTriangulation(ksPartPtr part) {
         }
 
         std::vector<double> arrayBuffer(static_cast<size_t>(nPoints) * 2); // точки + нормали
-        for (size_t i = 0; i < nPoints / 3; i++) {
+        for (size_t i = 0; i < static_cast<size_t>(nPoints / 3); i++) {
             for (size_t j = 0; j < 3; j++) {
                 arrayBuffer[(i * 6) + j] = pPoints[(i * 3) + j];
                 arrayBuffer[(i * 6) + 3 + j] = pNormals[(i * 3) + j];
@@ -182,31 +184,31 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
 
     /*
       В справке написано, что метод GetZoomScale работает только для графических документов, но для модели scale считается корректно.
-      Поэтому его и будем использовать для расчета epsilon в шейдере (какая область вокруг точной границы слоев будет отрисовываться).
+      Поэтому его и будем использовать для расчета толщины линии в шейдере (какая область вокруг точной границы слоев будет отрисовываться).
       Чем ближе моделька, тем меньше толщина рисуемой линии.
-      (scale, epsilon): (15.407, 0.01), (164.845, 0.002)
-      уравнение прямой: epsilon = -(4 / 74719) * scale + (404409 / 37359500)
+      (scale, lineWidth): (15.407, 0.01), (164.845, 0.002)
+      уравнение прямой: lineWidth = -(4 / 74719) * scale + (404409 / 37359500)
     */
     // Расчет пока не идеален, надо дорабатывать
     double unused, scale; m_documentFrame->GetZoomScale(&unused, &unused, &scale);
-    float epsilon = -(4.0f / 74719.0f) * scale + (404409.0f / 37359500.0f);
-    if (epsilon < 0.002) { epsilon = 0.002; }
+    float lineWidth = -(4.0f / 74719.0f) * scale + (404409.0f / 37359500.0f);
+    if (lineWidth < 0.002) { lineWidth = 0.002; }
 
-    PlaneEq printSurfaceEq(m_settings->getPrintSurface().eq);
-    glm::vec3 printSurfaceNormal(printSurfaceEq.a, printSurfaceEq.b, printSurfaceEq.c);
+    PrintSurface printSurface = m_settings->getPrintSurface();
+    glm::vec3 printSurfaceNormal(printSurface.eq.a, printSurface.eq.b, printSurface.eq.c);
 
     s_shaderProgram->use();
     s_shaderProgram->setUniform("u_modelview", modelview);
     s_shaderProgram->setUniform("u_projection", projection);
     s_shaderProgram->setUniform("u_printSurfaceNormal", printSurfaceNormal);
-    s_shaderProgram->setUniform("u_printSurfaceD", static_cast<float>(printSurfaceEq.d));
+    s_shaderProgram->setUniform("u_printSurfaceD", static_cast<float>(printSurface.eq.d));
     s_shaderProgram->setUniform("u_layerHeight", static_cast<float>(m_settings->getNumericSetting(SI_LAYER_HEIGHT.name)->getValue()));
-    s_shaderProgram->setUniform("u_epsilon", epsilon);
+    s_shaderProgram->setUniform("u_lineWidth", lineWidth);
     s_shaderProgram->setUniform("u_mode", static_cast<int>(m_mode.to_ulong()));
     s_shaderProgram->setUniform("u_overhangThreshold",
                                 static_cast<float>(degreeToRadian(m_settings->getNumericSetting(SI_OVERHANG_THRESHOLD.name)->getValue())));
 
-    drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part));
+    drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part), printSurface.face);
 
     return true;
 }

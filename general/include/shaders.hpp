@@ -24,6 +24,8 @@ void main() {
 inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 #version 330
 
+#define PI 3.1415926538
+
 in vec3 position;
 in vec3 normal;
 
@@ -32,28 +34,34 @@ uniform vec3 u_printSurfaceNormal;
 uniform float u_printSurfaceD;
 uniform float u_layerHeight;
 uniform float u_overhangThreshold;
-uniform float u_epsilon;
+uniform float u_lineWidth;
+uniform bool u_isPrintSurface;
 
 out vec4 FragColor;
 
 void main() {
-    vec3 color = vec3(0.0f, 0.0f, 0.0f);
-    if (bool(u_mode & 0x04)) { // Нависания
-        float angle = acos(dot(u_printSurfaceNormal, normal) / (length(u_printSurfaceNormal) * length(normal)));
-        if (angle < u_overhangThreshold) {
-            color.r = 1.0f;
+    float epsilon = 0.001;
+    vec4 color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    float angle = acos(dot(u_printSurfaceNormal, normal) / length(u_printSurfaceNormal) / length(normal));
+    if (bool(u_mode & 0x04)) { // нависания
+        if ((angle < u_overhangThreshold) && !(abs(angle - u_overhangThreshold) < epsilon) && !u_isPrintSurface) {
+            color.ra = vec2(1.0f, 0.3f);
         }
     }
-    float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
-    if (bool(u_mode & 0x01)) { // Слои везде
-        if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_epsilon) {
-            color.r = 0.0f;
-            color.g = 1.0f;
+    if (bool(u_mode & 0x03) && !(abs(angle) < epsilon) && !(abs(angle - PI) < epsilon)) { // слои
+        float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
+
+        if (bool(u_mode & 0x01)) { // везде
+            if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth) {
+                color.rba = vec3(0.0f, 1.0f, 0.6f);
+            }
+        } else if (bool(u_mode & 0x02)) { // у курсора
+            // todo
         }
-    } else if (bool(u_mode & 0x02)) { // Слои у курсора
-        // todo
     }
-    FragColor = vec4(color, 0.3f);
+    
+    FragColor = color;
 }
 
 )glsl";

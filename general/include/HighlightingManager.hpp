@@ -32,7 +32,7 @@ private: /* static */
     
     static void initShaders();
     static IDocumentFramePtr getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d);
-    static void drawTriangulation(ksPartPtr part);
+    static void drawTriangulation(ksPartPtr part, ksFaceDefinitionPtr printFace);
     
 private: /* events */
     bool activate() override;
