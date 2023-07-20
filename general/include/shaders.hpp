@@ -4,16 +4,19 @@
 inline const char* VERTEX_SHADER_CODE = R"glsl(
 #version 330
 
-layout (location = 0) in vec3 a_pos;
+layout (location = 0) in vec3 a_position;
+layout (location = 1) in vec3 a_normal;
 
 uniform mat4 u_modelview;
 uniform mat4 u_projection;
 
-out vec3 globalPosition;
+out vec3 position;
+out vec3 normal;
 
 void main() {
-    globalPosition = a_pos;
-   gl_Position = u_projection * u_modelview * vec4(a_pos, 1.0f);
+    position = a_position;
+    normal = a_normal;
+    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
 }
 
 )glsl";
@@ -21,12 +24,14 @@ void main() {
 inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 #version 330
 
-in vec3 globalPosition;
+in vec3 position;
+in vec3 normal;
 
 uniform int u_mode;
 uniform vec3 u_printSurfaceNormal;
 uniform float u_printSurfaceD;
 uniform float u_layerHeight;
+uniform float u_overhangThreshold;
 uniform float u_epsilon;
 
 out vec4 FragColor;
@@ -34,9 +39,12 @@ out vec4 FragColor;
 void main() {
     vec3 color = vec3(0.0f, 0.0f, 0.0f);
     if (bool(u_mode & 0x04)) { // Нависания
-        color.r = 1.0f;
+        float angle = acos(dot(u_printSurfaceNormal, normal) / (length(u_printSurfaceNormal) * length(normal)));
+        if (angle < u_overhangThreshold) {
+            color.r = 1.0f;
+        }
     }
-    float dist = (dot(u_printSurfaceNormal, globalPosition) + u_printSurfaceD) / length(u_printSurfaceNormal);
+    float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
     if (bool(u_mode & 0x01)) { // Слои везде
         if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_epsilon) {
             color.r = 0.0f;

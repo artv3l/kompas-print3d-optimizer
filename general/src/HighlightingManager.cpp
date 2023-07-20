@@ -16,6 +16,7 @@
 #include "shaders.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "global.hpp"
+#include "utils.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -86,34 +87,54 @@ void HighlightingManager::drawTriangulation(ksPartPtr part) {
     GLuint elementBufferObject; glGenBuffers(1, &elementBufferObject);
     for (long iFace = 0; iFace < nFaces; iFace++) {
         ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
+
         ksTessellationPtr tesselation = face->GetTessellation();
         tesselation->refresh(); // Нужно обязательно вызывать после перестроения модели
-
+        
         _variant_t points, indexes; tesselation->GetFacetPoints(&points, &indexes);
-        if ((points.vt != (VT_ARRAY | VT_R8)) || !points.parray || (indexes.vt != (VT_ARRAY | VT_I4)) || !indexes.parray) {
+        _variant_t normals; tesselation->GetFacetNormals(&normals);
+        if ((points.vt != (VT_ARRAY | VT_R8)) || !points.parray ||
+            (indexes.vt != (VT_ARRAY | VT_I4)) || !indexes.parray ||
+            (normals.vt != (VT_ARRAY | VT_R8)) || !normals.parray) {
             break;
         }
-        GLuint nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
+        GLsizeiptr nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
         if ((points.parray->cDims != 1) || (nPoints == 0) || (nPoints % 3 != 0)) {
             break;
         }
-        GLuint nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
+        GLsizeiptr nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
         if ((indexes.parray->cDims != 1) || (nIndexes == 0) || (nIndexes % 3 != 0)) {
             break;
         }
         double HUGEP* pPoints = NULL; SafeArrayAccessData(points.parray, (void HUGEP * FAR*) & pPoints);
         int HUGEP* pIndexes = NULL; SafeArrayAccessData(indexes.parray, (void HUGEP * FAR*) & pIndexes);
-        if (!pPoints || !pIndexes) {
+        double HUGEP* pNormals = NULL; SafeArrayAccessData(normals.parray, (void HUGEP * FAR*) & pNormals);
+        if (!pPoints || !pIndexes || !pNormals) {
             break;
         }
 
+        std::vector<double> arrayBuffer(static_cast<size_t>(nPoints) * 2); // точки + нормали
+        for (size_t i = 0; i < nPoints / 3; i++) {
+            for (size_t j = 0; j < 3; j++) {
+                arrayBuffer[(i * 6) + j] = pPoints[(i * 3) + j];
+                arrayBuffer[(i * 6) + 3 + j] = pNormals[(i * 3) + j];
+            }
+        }
+
         glBindVertexArray(vertexArrayObject);
+
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-        glBufferData(GL_ARRAY_BUFFER, nPoints * sizeof(double), pPoints, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, nPoints * 2 * sizeof(double), arrayBuffer.data(), GL_DYNAMIC_DRAW);
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, nIndexes * sizeof(int), pIndexes, GL_DYNAMIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 3 * sizeof(double), (void*)0);
+
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)0);
         glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)(3 * sizeof(double)));
+        glEnableVertexAttribArray(1);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
@@ -182,6 +203,8 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
     s_shaderProgram->setUniform("u_layerHeight", static_cast<float>(m_settings->getNumericSetting(SI_LAYER_HEIGHT.name)->getValue()));
     s_shaderProgram->setUniform("u_epsilon", epsilon);
     s_shaderProgram->setUniform("u_mode", static_cast<int>(m_mode.to_ulong()));
+    s_shaderProgram->setUniform("u_overhangThreshold",
+                                static_cast<float>(degreeToRadian(m_settings->getNumericSetting(SI_OVERHANG_THRESHOLD.name)->getValue())));
 
     drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part));
 
