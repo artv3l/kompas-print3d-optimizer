@@ -105,7 +105,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\shaders.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\FrameEventImpl.hpp">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\HighlightingManager.hpp">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\settings\Settings.hpp">
@@ -179,7 +179,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\glutil\Shader.cpp">
       <Filter>src\glutil</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\FrameEventImpl.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\HighlightingManager.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\settings\Settings.cpp">

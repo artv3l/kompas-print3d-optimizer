@@ -23,19 +23,27 @@ inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 
 in vec3 globalPosition;
 
+uniform int u_mode;
 uniform vec3 u_printSurfaceNormal;
 uniform float u_printSurfaceD;
 uniform float u_layerHeight;
+uniform float u_epsilon;
 
 out vec4 FragColor;
 
 void main() {
-    float epsilon = 0.01f;
-
-    float dist = (dot(u_printSurfaceNormal, globalPosition) + u_printSurfaceD) / length(u_printSurfaceNormal);
     vec3 color = vec3(0.0f, 0.0f, 0.0f);
-    if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < epsilon) {
-        color.x = 1.0f;
+    if (bool(u_mode & 0x04)) { // Нависания
+        color.r = 1.0f;
+    }
+    float dist = (dot(u_printSurfaceNormal, globalPosition) + u_printSurfaceD) / length(u_printSurfaceNormal);
+    if (bool(u_mode & 0x01)) { // Слои везде
+        if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_epsilon) {
+            color.r = 0.0f;
+            color.g = 1.0f;
+        }
+    } else if (bool(u_mode & 0x02)) { // Слои у курсора
+        // todo
     }
     FragColor = vec4(color, 0.3f);
 }

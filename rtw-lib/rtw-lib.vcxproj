@@ -134,7 +134,8 @@
       <AdditionalIncludeDirectories>$(KOMPAS_SDK)\Include;</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>$(KOMPAS_DEVUTIL)\add-lib.exe $(SolutionDir)\$(Platform)\$(Configuration)\$(TargetFileName)</Command>
+      <Command>copy /Y $(ProjectDir)\kompas-print3d-optimizer.xml $(SolutionDir)\$(Platform)\$(Configuration)\$(TargetName).xml
+$(KOMPAS_DEVUTIL)\add-lib.exe $(SolutionDir)\$(Platform)\$(Configuration)\$(TargetFileName)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>$(KOMPAS_DEVUTIL)\delete-lib.exe "Подготовка к FDM 3D печати"</Command>
@@ -187,6 +188,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="kompas-print3d-optimizer.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

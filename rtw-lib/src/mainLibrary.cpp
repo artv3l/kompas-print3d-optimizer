@@ -19,6 +19,7 @@
 #include "utils.hpp"
 #include "global.hpp"
 
+
 bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {
     if (entity) {
         list.push_back(entity);
@@ -84,6 +85,22 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
 
     if (!settings.isPrintSurfaceSelected()) {
         kompas->ksMessage("Плоскость печати не выбрана!");
+        return;
+    }
+
+    if (comm >= 30) {
+        HighlightingManager& highlightingManager = documentData.getHighlightingManager();
+        switch (comm) {
+        case 30:
+            highlightingManager.toggleMode(HighlightingManager::Mode::layersEverywhere);
+            break;
+        case 31:
+            highlightingManager.toggleMode(HighlightingManager::Mode::layersAtCursor);
+            break;
+        case 32:
+            highlightingManager.toggleMode(HighlightingManager::Mode::overhangs);
+            break;
+        }
         return;
     }
 

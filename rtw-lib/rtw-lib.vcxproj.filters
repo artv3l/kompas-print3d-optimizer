@@ -50,4 +50,7 @@
   <ItemGroup>
     <None Include="rtw-lib.def" />
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="kompas-print3d-optimizer.xml" />
+  </ItemGroup>
 </Project>

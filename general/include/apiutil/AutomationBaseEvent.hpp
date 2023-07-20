@@ -3,11 +3,12 @@
 
 #include <afxwin.h>
 
-class AutomationBaseEvent : public CCmdTarget {
+class AutomationBaseEvent : protected CCmdTarget {
 public:
     AutomationBaseEvent(IUnknown *object, IID iidEvent);
     virtual ~AutomationBaseEvent();
 
+protected:
     static void terminateEvents(); // Отписать все события
     static void terminateEvents(IID iid);
     static void terminateEvents(IID iid, IUnknown *object);
@@ -20,7 +21,6 @@ public:
 
     virtual void clear();
 
-protected:
     static CObList m_eventList; // Список обработчиков событий
     DWORD m_dwCookie; // Идентификатор соединения
     IID m_iidEvent; // IID интерфейса событий

@@ -6,7 +6,8 @@
 #include "apiutil/AutomationBaseEvent.hpp"
 
 DocumentFrameEvent::DocumentFrameEvent(IDocumentFramePtr documentFrame) :
-    AutomationBaseEvent(static_cast<IUnknown*>(documentFrame), DIID_ksDocumentFrameNotify)
+    AutomationBaseEvent(static_cast<IUnknown*>(documentFrame), DIID_ksDocumentFrameNotify),
+    m_documentFrame(documentFrame)
 {
     advise();
 }

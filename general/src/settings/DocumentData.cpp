@@ -3,18 +3,22 @@
 
 #include "apiutil/Macro.hpp"
 #include "Optional.hpp"
-#include "FrameEventImpl.hpp"
+#include "HighlightingManager.hpp"
 #include "settings/Settings.hpp"
 
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 
 DocumentData::DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d):
     m_document3d(document3d), m_settings(document3d), m_rootMacro(),
-    m_frameEvent(kompas, document3d, &m_settings)
+    m_highlightingManager(kompas, document3d, &m_settings)
 {}
 
 Settings& DocumentData::getSettings() {
     return m_settings;
+}
+
+HighlightingManager& DocumentData::getHighlightingManager() {
+    return m_highlightingManager;
 }
 
 Macro DocumentData::getOrCreateRootMacro() {

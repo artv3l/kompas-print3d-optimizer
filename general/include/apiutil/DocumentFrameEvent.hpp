@@ -10,6 +10,9 @@ public:
     DocumentFrameEvent(IDocumentFramePtr documentFrame);
     virtual ~DocumentFrameEvent() = default;
 
+protected:
+    IDocumentFramePtr m_documentFrame;
+
     virtual afx_msg bool activate() = 0;
     virtual afx_msg bool closeFrame() = 0;
     virtual afx_msg bool closePaintGL(ksGLObject* glObject, long drawMode) = 0;

@@ -4,7 +4,7 @@
 #include "apiutil/Macro.hpp"
 #include "Optional.hpp"
 #include "Settings.hpp"
-#include "FrameEventImpl.hpp"
+#include "HighlightingManager.hpp"
 
 class DocumentData {
 public:
@@ -15,13 +15,14 @@ public:
     DocumentData(DocumentData&& other) noexcept = delete;
 
     Settings& getSettings();
+    HighlightingManager& getHighlightingManager();
     Macro getOrCreateRootMacro();
 
 private:
     ksDocument3DPtr m_document3d;
     Settings m_settings;
     Optional<Macro> m_rootMacro;
-    FrameEventImpl m_frameEvent;
+    HighlightingManager m_highlightingManager;
 };
 
 #endif /* DOCUMENT_DATA_HPP */
