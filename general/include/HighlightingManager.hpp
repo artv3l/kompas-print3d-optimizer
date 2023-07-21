@@ -2,7 +2,6 @@
 #define HIGHLIGHTING_MANAGER_HPP
 
 #include <memory>
-#include <bitset>
 
 #include "glutil/Shader.hpp"
 #include "apiutil/DocumentFrameEvent.hpp"
@@ -11,19 +10,21 @@ class Settings;
 
 class HighlightingManager : public DocumentFrameEvent {
 public:
-    enum class Mode {
-        layersEverywhere, layersAtCursor, overhangs,
+    enum Mode : uint8_t {
+        layersEverywhere = 0x01, layersAtCursor = 0x02, overhangs = 0x04,
     };
 
     HighlightingManager(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings);
     virtual ~HighlightingManager() = default;
 
     void toggleMode(Mode mode);
+    void refreshWindow() const;
 
 private:
     ksDocument3DPtr m_document3d;
     Settings* m_settings;
-    std::bitset<3> m_mode;
+    uint8_t m_mode;
+    glm::vec2 m_mouseCoord;
 
 private: /* static */
     static ShaderProgram::Ptr s_shaderProgram;
@@ -40,6 +41,7 @@ private: /* events */
     bool closePaintGL(ksGLObject* glObject, long drawMode) override;
     bool deactivate() override;
     bool mouseDown(short nButton, short nShiftState, long x, long y) override;
+    bool mouseMove(short nShiftState, long x, long y) override;
 
 };
 

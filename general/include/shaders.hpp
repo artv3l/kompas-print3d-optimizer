@@ -26,6 +26,8 @@ inline const char* FRAGMENT_SHADER_CODE = R"glsl(
 
 #define PI 3.1415926538
 
+layout(origin_upper_left) in vec4 gl_FragCoord;
+
 in vec3 position;
 in vec3 normal;
 
@@ -36,6 +38,7 @@ uniform float u_layerHeight;
 uniform float u_overhangThreshold;
 uniform float u_lineWidth;
 uniform bool u_isPrintSurface;
+uniform vec2 u_mouseCoord;
 
 out vec4 FragColor;
 
@@ -51,16 +54,16 @@ void main() {
     }
     if (bool(u_mode & 0x03) && !(abs(angle) < epsilon) && !(abs(angle - PI) < epsilon)) { // слои
         float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
-
-        if (bool(u_mode & 0x01)) { // везде
-            if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth) {
+        if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth) {
+            if (bool(u_mode & 0x01)) { // везде
                 color.rba = vec3(0.0f, 1.0f, 0.6f);
+            } else { // у курсора
+                if (length(u_mouseCoord - gl_FragCoord.xy) < 50) {
+                    color.rba = vec3(0.0f, 1.0f, 0.6f);
+                }
             }
-        } else if (bool(u_mode & 0x02)) { // у курсора
-            // todo
         }
     }
-    
     FragColor = color;
 }
 

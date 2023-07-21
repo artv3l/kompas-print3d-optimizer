@@ -101,6 +101,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             highlightingManager.toggleMode(HighlightingManager::Mode::overhangs);
             break;
         }
+        highlightingManager.refreshWindow();
         return;
     }
 

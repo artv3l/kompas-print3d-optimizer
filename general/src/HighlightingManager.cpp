@@ -32,7 +32,8 @@ bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
 HighlightingManager::HighlightingManager(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings) :
-    DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings)
+    DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings),
+    m_mode(0x00), m_mouseCoord(0, 0)
 {
     // GLAD нужно инициализировать когда открыт документ
     if (!s_isGladInited) {
@@ -56,12 +57,16 @@ HighlightingManager::HighlightingManager(KompasObjectPtr kompas, ksDocument3DPtr
 }
 
 void HighlightingManager::toggleMode(Mode mode) {
-    m_mode.flip(static_cast<size_t>(mode));
-    if (mode == Mode::layersEverywhere) {
-        m_mode.reset(static_cast<size_t>(Mode::layersAtCursor));
-    } else if (mode == Mode::layersAtCursor) {
-        m_mode.reset(static_cast<size_t>(Mode::layersEverywhere));
+    m_mode ^= mode;
+    if (mode & Mode::layersEverywhere) {
+        m_mode &= ~Mode::layersAtCursor;
+    } else if (mode & Mode::layersAtCursor) {
+        m_mode &= ~Mode::layersEverywhere;
     }
+}
+
+void HighlightingManager::refreshWindow() const {
+    m_documentFrame->RefreshWindow();
 }
 
 void HighlightingManager::initShaders() {
@@ -169,7 +174,7 @@ bool HighlightingManager::closeFrame() {
 }
 
 bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
-    if (!m_mode.any()) {
+    if (m_mode == 0x00) {
         return false;
     }
 
@@ -204,9 +209,10 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
     s_shaderProgram->setUniform("u_printSurfaceD", static_cast<float>(printSurface.eq.d));
     s_shaderProgram->setUniform("u_layerHeight", static_cast<float>(m_settings->getNumericSetting(SI_LAYER_HEIGHT.name)->getValue()));
     s_shaderProgram->setUniform("u_lineWidth", lineWidth);
-    s_shaderProgram->setUniform("u_mode", static_cast<int>(m_mode.to_ulong()));
+    s_shaderProgram->setUniform("u_mode", m_mode);
     s_shaderProgram->setUniform("u_overhangThreshold",
                                 static_cast<float>(degreeToRadian(m_settings->getNumericSetting(SI_OVERHANG_THRESHOLD.name)->getValue())));
+    s_shaderProgram->setUniform("u_mouseCoord", m_mouseCoord);
 
     drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part), printSurface.face);
 
@@ -219,5 +225,11 @@ bool HighlightingManager::deactivate() {
 }
 
 bool HighlightingManager::mouseDown(short nButton, short nShiftState, long x, long y) {
+    return true;
+}
+
+bool HighlightingManager::mouseMove(short nShiftState, long x, long y) {
+    m_mouseCoord = glm::vec2(x, y);
+    m_documentFrame->RefreshWindow();
     return true;
 }
