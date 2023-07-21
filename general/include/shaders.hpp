@@ -39,6 +39,7 @@ uniform float u_overhangThreshold;
 uniform float u_lineWidth;
 uniform bool u_isPrintSurface;
 uniform vec2 u_mouseCoord;
+uniform int u_mouseRadius;
 
 out vec4 FragColor;
 
@@ -58,7 +59,7 @@ void main() {
             if (bool(u_mode & 0x01)) { // везде
                 color.rba = vec3(0.0f, 1.0f, 0.6f);
             } else { // у курсора
-                if (length(u_mouseCoord - gl_FragCoord.xy) < 50) {
+                if (length(u_mouseCoord - gl_FragCoord.xy) < u_mouseRadius) {
                     color.rba = vec3(0.0f, 1.0f, 0.6f);
                 }
             }

@@ -194,9 +194,15 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
 
       (scale, lineWidth): (410.2, 0.001), (137.4, 0.003), (31.9, 0.0085), (8.9, 0.025), (4.3, 0.033)
       аппроксимируем степенной функцией: lineWidth = 0.1192 * scale^(-0.7731)
+
+      Также рассчитаем радиус окружности, в пределах которой будут отрисовываться слои в режиме отрисовки у курсора
+
+      (scale, mouseRadius): (341.8, 450), (137.4, 220), (46.6, 110), (26.6, 90), (15.4, 60), (10.7, 70), (5.2, 40), (3.0, 20)
+      аппроксимируем степенной функцией: mouseRadius = 12.8668 * scale^(0.5943)
     */
     double unused, scale; m_documentFrame->GetZoomScale(&unused, &unused, &scale);
-    float lineWidth = 0.1192 * std::pow(scale, -0.7731);
+    float lineWidth = static_cast<float>(0.1192 * std::pow(scale, -0.7731));
+    int mouseRadius = static_cast<int>(12.8668 * std::pow(scale, 0.5943));
 
     PrintSurface printSurface = m_settings->getPrintSurface();
     glm::vec3 printSurfaceNormal(printSurface.eq.a, printSurface.eq.b, printSurface.eq.c);
@@ -212,6 +218,7 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
     s_shaderProgram->setUniform("u_overhangThreshold",
                                 static_cast<float>(degreeToRadian(m_settings->getNumericSetting(SI_OVERHANG_THRESHOLD.name)->getValue())));
     s_shaderProgram->setUniform("u_mouseCoord", m_mouseCoord);
+    s_shaderProgram->setUniform("u_mouseRadius", mouseRadius);
 
     drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part), printSurface.face);
 
@@ -223,7 +230,7 @@ bool HighlightingManager::deactivate() {
     return true;
 }
 
-bool HighlightingManager::mouseDown(short nButton, short nShiftState, long x, long y) {    
+bool HighlightingManager::mouseDown(short nButton, short nShiftState, long x, long y) {
     return true;
 }
 
