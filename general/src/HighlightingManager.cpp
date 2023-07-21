@@ -191,13 +191,12 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
       В справке написано, что метод GetZoomScale работает только для графических документов, но для модели scale считается корректно.
       Поэтому его и будем использовать для расчета толщины линии в шейдере (какая область вокруг точной границы слоев будет отрисовываться).
       Чем ближе моделька, тем меньше толщина рисуемой линии.
-      (scale, lineWidth): (15.407, 0.01), (164.845, 0.002)
-      уравнение прямой: lineWidth = -(4 / 74719) * scale + (404409 / 37359500)
+
+      (scale, lineWidth): (410.2, 0.001), (137.4, 0.003), (31.9, 0.0085), (8.9, 0.025), (4.3, 0.033)
+      аппроксимируем степенной функцией: lineWidth = 0.1192 * scale^(-0.7731)
     */
-    // Расчет пока не идеален, надо дорабатывать
     double unused, scale; m_documentFrame->GetZoomScale(&unused, &unused, &scale);
-    float lineWidth = -(4.0f / 74719.0f) * scale + (404409.0f / 37359500.0f);
-    if (lineWidth < 0.002) { lineWidth = 0.002; }
+    float lineWidth = 0.1192 * std::pow(scale, -0.7731);
 
     PrintSurface printSurface = m_settings->getPrintSurface();
     glm::vec3 printSurfaceNormal(printSurface.eq.a, printSurface.eq.b, printSurface.eq.c);
@@ -224,7 +223,7 @@ bool HighlightingManager::deactivate() {
     return true;
 }
 
-bool HighlightingManager::mouseDown(short nButton, short nShiftState, long x, long y) {
+bool HighlightingManager::mouseDown(short nButton, short nShiftState, long x, long y) {    
     return true;
 }
 

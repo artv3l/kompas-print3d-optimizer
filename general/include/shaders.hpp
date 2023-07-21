@@ -45,7 +45,7 @@ out vec4 FragColor;
 void main() {
     float epsilon = 0.001;
     vec4 color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-
+    
     float angle = acos(dot(u_printSurfaceNormal, normal) / length(u_printSurfaceNormal) / length(normal));
     if (bool(u_mode & 0x04)) { // нависания
         if ((angle < u_overhangThreshold) && !(abs(angle - u_overhangThreshold) < epsilon) && !u_isPrintSurface) {
@@ -54,7 +54,7 @@ void main() {
     }
     if (bool(u_mode & 0x03) && !(abs(angle) < epsilon) && !(abs(angle - PI) < epsilon)) { // слои
         float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
-        if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth) {
+        if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth * abs(sin(angle))) {
             if (bool(u_mode & 0x01)) { // везде
                 color.rba = vec3(0.0f, 1.0f, 0.6f);
             } else { // у курсора
