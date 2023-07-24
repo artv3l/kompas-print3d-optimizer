@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include <WinUser.h>
+
 #include "resource.h"
 #include "connection.hpp"
 
@@ -78,10 +80,12 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     switch (comm) {
-    case 5:
+    case 5: {
+        IApplicationPtr application = kompas->ksGetApplication7();
         fastExportStl(document3d, settings);
+        application->IMessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
         return;
-    }
+    }}
 
     if (!settings.isPrintSurfaceSelected()) {
         kompas->ksMessage("Плоскость печати не выбрана!");
