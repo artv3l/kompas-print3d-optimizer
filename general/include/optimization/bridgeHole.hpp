@@ -24,6 +24,18 @@ enum class HoleType {
     ALL,
 };
 
+struct MergePointInfo {
+    double x, y;
+    IDrawingObjectPtr drawingObject;
+    int drawingObjectIndex;
+};
+
+struct Sketch1NotCircleInfo {
+    Sketch sketch;
+    ILinePtr line1, line2;
+    std::list<MergePointInfo>& points1, & points2;
+};
+
 bool loopIsCircle(ksLoopPtr loop);
 bool checkFaceWithHole(ksFaceDefinitionPtr face, ksFaceDefinitionPtr printFace, ksMeasurerPtr measurer);
 bool isHoleDirect(ksFaceDefinitionPtr face, ksLoopPtr loop, ksFaceDefinitionPtr printFace, ksMeasurerPtr measurer);

@@ -23,6 +23,7 @@ bool isConcaveAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
     }
 
     massInertiaParam = part->CalcMassInertiaProperties(0x1 | 0x10); // mm kg
+    double endVolume = massInertiaParam->v;
     document3d->DeleteObject(chamferEntity);
-    return massInertiaParam->v > startVolume;
+    return endVolume > startVolume;
 }

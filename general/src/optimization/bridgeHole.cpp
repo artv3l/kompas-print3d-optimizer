@@ -14,6 +14,7 @@
 #include "apiutil/Sketch.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
+#include "global.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
@@ -100,7 +101,6 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 		measurer->SetObject2(holeEdge);
 		measurer->Calc();
 		double distanceToHoleEdge = measurer->distance;
-		bool isHoleEdgeLower = true;
 
 		ksEdgeCollectionPtr edges2(holeFace->EdgeCollection());
 		for (int edge2Index = 0; edge2Index < edges2->GetCount(); edge2Index++) {
@@ -120,13 +120,11 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 			}
 			double distanceToEdge2 = measurer->distance;
 			if (distanceToEdge2 < distanceToHoleEdge) {
-				isHoleEdgeLower = false;
-				break;
+				return false;
 			}
 		}
-		return isHoleEdgeLower;
 	}
-	return false;
+	return true;
 }
 
 ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDirection, Settings& settings, int multiplier) {
@@ -410,111 +408,119 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 	}
 }
 
-void closeContour(ILineSegmentsPtr lineSegments, std::list<std::pair<double, ILineSegmentPtr>> points, double y, long partnerIndex) {
-	points.sort();
+void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points) {
+	size_t nPoints = points.size();
+	if ((nPoints < 2) || (nPoints % 2 != 0)) {
+		return;
+	}
+	points.sort([](const MergePointInfo& lhs, const MergePointInfo& rhs) {
+		if (doubleEqual(lhs.y, rhs.y)) {
+			return lhs.x < rhs.x;
+		}
+		return lhs.y < rhs.y;
+	});
 
 	// Размеры всегда будут четными
-	for (std::list<std::pair<double, ILineSegmentPtr>>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
+	for (std::list<MergePointInfo>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
 		ILineSegmentPtr lineSegment(lineSegments->Add());
-		lineSegment->X1 = it->first; lineSegment->Y1 = y;
-		ILineSegmentPtr partner1 = it->second;
+		lineSegment->X1 = it->x; lineSegment->Y1 = it->y;
+		IDrawingObjectPtr drawingObject1 = it->drawingObject; int drawingObjectIndex1 = it->drawingObjectIndex;
 		it++;
-		lineSegment->X2 = it->first; lineSegment->Y2 = y;
+		lineSegment->X2 = it->x; lineSegment->Y2 = it->y;
 		lineSegment->Update();
 		ConstraintsCreator c(lineSegment);
-		c.mergePoints(0, partner1, partnerIndex);
-		c.mergePoints(1, it->second, partnerIndex);
+		c.mergePoints(0, drawingObject1, drawingObjectIndex1);
+		c.mergePoints(1, it->drawingObject, it->drawingObjectIndex);
 	}
 }
 
-void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
-	drawLoopProjection(sketch.definition, target.outerLoop);
+std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle) {
+	double y1 = innerCircle->Yc - innerCircle->Radius;
+	double y2 = innerCircle->Yc + innerCircle->Radius;
 
-	double yMin = innerCircle->Yc - innerCircle->Radius;
-	double yMax = innerCircle->Yc + innerCircle->Radius;
-
-	// Строим вспомогательные линии
 	ILinesPtr lines(sketch.drawingContainer->Lines);
 
 	ILinePtr line1(lines->Add());
-	line1->X1 = innerCircle->Xc + 1; line1->Y1 = yMin;
-	line1->X2 = innerCircle->Xc - 1; line1->Y2 = yMin;
+	line1->X1 = innerCircle->Xc + 1; line1->Y1 = y1;
+	line1->X2 = innerCircle->Xc - 1; line1->Y2 = y1;
 	line1->Update();
 	ConstraintsCreator constrCreator(line1);
-	constrCreator.horizontal();
+	//constrCreator.horizontal();
 	constrCreator.tangentTwoCurves(innerCircle);
 
 	ILinePtr line2(lines->Add());
-	line2->X1 = innerCircle->Xc + 1; line2->Y1 = yMax;
-	line2->X2 = innerCircle->Xc - 1; line2->Y2 = yMax;
+	line2->X1 = innerCircle->Xc + 1; line2->Y1 = y2;
+	line2->X2 = innerCircle->Xc - 1; line2->Y2 = y2;
 	line2->Update();
 	constrCreator = ConstraintsCreator(line2);
-	constrCreator.horizontal();
+	constrCreator.parallel(line1);
 	constrCreator.tangentTwoCurves(innerCircle);
 
-	ksMathematic2DPtr math2d = kompas->GetMathematic2D();
+	return std::make_pair(line1, line2);
+}
 
-	// Точки для замыкания контура
-	std::list<std::pair<double, ILineSegmentPtr>> pointsMin;
-	std::list<std::pair<double, ILineSegmentPtr>> pointsMax;
+bool pointInsideInterval(ksMathematic2DPtr math2d, double x, double y, ILinePtr line1, ILinePtr line2) {
+	double distance1 = math2d->ksDistancePntLineForPoint(x, y, line1->X1, line1->Y1, line1->X2, line1->Y2);
+	double distance2 = math2d->ksDistancePntLineForPoint(x, y, line2->X1, line2->Y1, line2->X2, line2->Y2);
+	double intervalLength = math2d->ksDistancePntLineForPoint(line1->X1, line1->Y1, line2->X1, line2->Y1, line2->X2, line2->Y2);
+	return doubleEqual(distance1 + distance2, intervalLength);
+}
 
-	ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
-	int lineSegmentsСount = lineSegments->Count;
-	for (int lineSegmentIndex = 0; lineSegmentIndex < lineSegmentsСount; lineSegmentIndex++) {
-		ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(lineSegmentIndex));
+void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) {
+	ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+	
+	ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
+	ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	int res1 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line1->Reference, dynArr1);
+	int res2 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line2->Reference, dynArr2);
 
-		// Отрезок полностью вне промежутка
-		if (((lineSegment->Y1 <= yMin) && (lineSegment->Y2 <= yMin)) ||
-			((lineSegment->Y1 >= yMax) && (lineSegment->Y2 >= yMax))) {
-			lineSegment->Style = ksCurveStyleEnum::ksCSThin;
-			lineSegment->Update();
-			continue;
-		}
+	// Отрезок полностью вне промежутка
+	if (!pointInsideInterval(math2d, lineSegment->X1, lineSegment->Y1, info.line1, info.line2) &&
+		!pointInsideInterval(math2d, lineSegment->X2, lineSegment->Y2, info.line1, info.line2) &&
+		(res1 == 0) && (res2 == 0))
+	{
+		lineSegment->Style = ksCurveStyleEnum::ksCSThin;
+		lineSegment->Update();
+		return;
+	}
 
-		ksDynamicArrayPtr dynArr1(kompas->GetDynamicArray(2));
-		ksDynamicArrayPtr dynArr2(kompas->GetDynamicArray(2));
-		int res1 = math2d->ksIntersectCurvCurv(lineSegment->GetReference(), line1->GetReference(), dynArr1);
-		int res2 = math2d->ksIntersectCurvCurv(lineSegment->GetReference(), line2->GetReference(), dynArr2);
+	// Отрезок полностью внутри промежутка
+	if ((res1 != 1) && (res2 != 1)) {
+		return;
+	}
 
-		if ((res1 == 1) || (res2 == 1)) {
-			lineSegment->Style = ksCurveStyleEnum::ksCSThin;
-			lineSegment->Update();
-		} else {
-			// Отрезок полностью внутри промежутка
-			continue;
-		}
+	lineSegment->Style = ksCurveStyleEnum::ksCSThin;
+	lineSegment->Update();
 
-		/*
-		  Для всех отрезков(newLineSegment), которые построены на основе отрезков(lineSegment), пересекающих line1(yMin) и line2(yMax):
-		  - Первая точка (index в ограничениях равен 0, координаты при создании: X1 и Y1) лежит на line1,
-		  - Вторая точка лежит на line2.
-		*/
+	/*
+	  Для всех отрезков(newLineSegment), которые построены на основе отрезков(lineSegment), пересекающих line1(y1) и line2(y2):
+	  - Первая точка (index в ограничениях равен 0, координаты при создании: X1 и Y1) лежит на line1,
+	  - Вторая точка лежит на line2.
+	*/
 
-		if ((res1 == 1) && (res2 == 1)) {
-			ksMathPointParamPtr point1 = kompas->GetParamStruct(ko_MathPointParam);
-			dynArr1->ksGetArrayItem(0, point1);
-			ksMathPointParamPtr point2 = kompas->GetParamStruct(ko_MathPointParam);
-			dynArr2->ksGetArrayItem(0, point2);
+	ILineSegmentsPtr lineSegments(info.sketch.drawingContainer->LineSegments);
+	if ((res1 == 1) && (res2 == 1)) { // найдено 2 пересечения
+		ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam);
+		dynArr1->ksGetArrayItem(0, point1);
+		ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam);
+		dynArr2->ksGetArrayItem(0, point2);
 
-			ILineSegmentPtr newLineSegment(lineSegments->Add());
-			newLineSegment->X1 = point1->x; newLineSegment->Y1 = point1->y;
-			newLineSegment->X2 = point2->x; newLineSegment->Y2 = point2->y;
-			newLineSegment->Update();
-			constrCreator = ConstraintsCreator(newLineSegment);
-			constrCreator.pointOnCurve(0, lineSegment);
-			constrCreator.pointOnCurve(1, lineSegment);
-			constrCreator.pointOnCurve(0, line1);
-			constrCreator.pointOnCurve(1, line2);
+		ILineSegmentPtr newLineSegment(lineSegments->Add());
+		newLineSegment->X1 = point1->x; newLineSegment->Y1 = point1->y;
+		newLineSegment->X2 = point2->x; newLineSegment->Y2 = point2->y;
+		newLineSegment->Update();
+		ConstraintsCreator constrCreator = ConstraintsCreator(newLineSegment);
+		constrCreator.pointOnCurve(0, lineSegment);
+		constrCreator.pointOnCurve(1, lineSegment);
+		constrCreator.pointOnCurve(0, info.line1);
+		constrCreator.pointOnCurve(1, info.line2);
 
-			pointsMin.push_back(std::make_pair(point1->x, newLineSegment));
-			pointsMax.push_back(std::make_pair(point2->x, newLineSegment));
-
-			continue;
-		}
-
-		long partnerIndex = 0;
+		info.points1.push_back(MergePointInfo{point1->x, point1->y, newLineSegment, 0});
+		info.points2.push_back(MergePointInfo{point2->x, point2->y, newLineSegment, 1});
+	} else { // найдено одно пересечение
+		long partnerIndex = 0; // индекс на опорном отрезке
 		double x = 0.0, y = 0.0;
-		if ((lineSegment->Y1 > yMin) && (lineSegment->Y1 < yMax)) {
+		if ((lineSegment->Y1 > info.line1->Y1) && (lineSegment->Y1 < info.line2->Y1)) {
 			x = lineSegment->X1; y = lineSegment->Y1;
 			partnerIndex = 0;
 		} else {
@@ -522,35 +528,59 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
 			partnerIndex = 1;
 		}
 
-		ILineSegmentPtr newLineSegment(lineSegments->Add());
-		ksMathPointParamPtr point = kompas->GetParamStruct(ko_MathPointParam);
+		ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam);
 		if (res1 == 1) {
 			dynArr1->ksGetArrayItem(0, point);
-			newLineSegment->X1 = point->x; newLineSegment->Y1 = point->y;
-			newLineSegment->X2 = x; newLineSegment->Y2 = y;
 		} else {
 			dynArr2->ksGetArrayItem(0, point);
-			newLineSegment->X1 = x; newLineSegment->Y1 = y;
-			newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
 		}
 
+		ILineSegmentPtr newLineSegment(lineSegments->Add());
+		newLineSegment->X1 = x; newLineSegment->Y1 = y;
+		newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
 		newLineSegment->Update();
-		constrCreator = ConstraintsCreator(newLineSegment);
+
+		ConstraintsCreator constrCreator = ConstraintsCreator(newLineSegment);
+		constrCreator.mergePoints(0, lineSegment, partnerIndex);
+		constrCreator.pointOnCurve(1, lineSegment);
 		if (res1 == 1) {
-			constrCreator.mergePoints(1, lineSegment, partnerIndex);
-			constrCreator.pointOnCurve(0, lineSegment);
-			constrCreator.pointOnCurve(0, line1);
-			pointsMin.push_back(std::make_pair(point->x, newLineSegment));
+			constrCreator.pointOnCurve(1, info.line1);
+			info.points1.push_back(MergePointInfo{point->x, point->y, newLineSegment, 1});
 		} else {
-			constrCreator.mergePoints(0, lineSegment, partnerIndex);
-			constrCreator.pointOnCurve(1, lineSegment);
-			constrCreator.pointOnCurve(1, line2);
-			pointsMax.push_back(std::make_pair(point->x, newLineSegment));
+			constrCreator.pointOnCurve(1, info.line2);
+			info.points2.push_back(MergePointInfo{point->x, point->y, newLineSegment, 1});
 		}
 	}
+}
 
-	closeContour(lineSegments, pointsMin, yMin, 0);
-	closeContour(lineSegments, pointsMax, yMax, 1);
+void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
+	drawLoopProjection(sketch.definition, target.outerLoop);
+
+	double y1 = innerCircle->Yc - innerCircle->Radius;
+	double y2 = innerCircle->Yc + innerCircle->Radius;
+
+	// todo: определить оптимальный угол наклона вспомогательных прямых
+
+	// Строим вспомогательные линии
+	std::pair<ILinePtr, ILinePtr> basicLines = drawBasicLines(sketch, innerCircle);
+
+	ksMathematic2DPtr math2d = kompas->GetMathematic2D();
+
+	// Точки для замыкания контура
+	std::list<MergePointInfo> points1;
+	std::list<MergePointInfo> points2;
+
+	Sketch1NotCircleInfo info{sketch, basicLines.first, basicLines.second, points1, points2};
+
+	ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+	int nLineSegments = lineSegments->Count;
+	for (int iLineSegment = 0; iLineSegment < nLineSegments; iLineSegment++) {
+		ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(iLineSegment));
+		processLineSegment(info, lineSegment);
+	}
+
+    closeContour(lineSegments, points1);
+    closeContour(lineSegments, points2);
 }
 
 void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
@@ -599,9 +629,9 @@ ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<B
 		sketch3.endEdit();
 		macroElement.add(sketch3.entity);
 
-		macroElement.add(cutExtrusion(part, sketch.entity, true, settings, 1));
-		macroElement.add(cutExtrusion(part, sketch2.entity, true, settings, 2));
-		macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
+		//macroElement.add(cutExtrusion(part, sketch.entity, true, settings, 1));
+		//macroElement.add(cutExtrusion(part, sketch2.entity, true, settings, 2));
+		//macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
 		macro.add(macroElement);
 	}
 	return macro.getEntity();
