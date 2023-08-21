@@ -3,6 +3,7 @@
 
 #include <list>
 #include <sstream>
+#include <algorithm>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -258,7 +259,7 @@ bool isOuterLoopForBuild(ksLoopPtr loop) {
 	ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	for (int edgeIndex = 0; edgeIndex < edges->GetCount(); edgeIndex++) {
 		ksEdgeDefinitionPtr edge(edges->GetByIndex(edgeIndex));
-		if (!edge->IsStraight()) {
+		if (!edge->IsStraight() && !edge->IsArc()) {
 			return false;
 		}
 	}
@@ -553,6 +554,269 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 	}
 }
 
+void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
+	// todo: в куче мест код можно переиспользовать и сделать лучше
+	ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+
+	ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
+	ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	int res1 = math2d->ksIntersectCurvCurv(arc->Reference, info.line1->Reference, dynArr1);
+	int res2 = math2d->ksIntersectCurvCurv(arc->Reference, info.line2->Reference, dynArr2);
+
+	bool arcPoint1InsideInterval = pointInsideInterval(math2d, arc->X1, arc->Y1, info.line1, info.line2);
+	bool arcPoint2InsideInterval = pointInsideInterval(math2d, arc->X2, arc->Y2, info.line1, info.line2);
+
+	if (arcPoint1InsideInterval && arcPoint2InsideInterval) { // обе точки внутри промежутка
+		if (res1 + res2 == 0) { // нет пересечений
+			return;
+		}
+		if (res1 + res2 == 1) {
+			// одно пересечение с одной осью
+			if (res1 == 1 && dynArr1->ksGetArrayCount() == 1) {
+				return;
+			}
+			if (res2 == 1 && dynArr2->ksGetArrayCount() == 1) {
+				return;
+			}
+		}
+	}
+
+	arc->Style = ksCurveStyleEnum::ksCSThin;
+	arc->Update();
+
+	IArcsPtr arcs(info.sketch.drawingContainer->Arcs);
+
+	if ((res1 + res2 == 1)) { // пересечени(е)/(я) только с одной осью
+		ksDynamicArrayPtr dynArr;
+		
+		if (dynArr1->ksGetArrayCount() != 0) { dynArr = dynArr1; } else { dynArr = dynArr2; }
+
+		if (dynArr->ksGetArrayCount() == 1) { // всего одно пересечение с одной из осей
+			ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(0, point);
+
+			IArcPtr newArc(arcs->Add());
+			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+			newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
+			newArc->X2 = point->x; newArc->Y2 = point->y;
+			newArc->Update();
+
+			ConstraintsCreator c(newArc);
+			c.mergePoints(0, arc, 0);
+			c.mergePoints(1, arc, 1);
+			if (res1 == 1) {
+				c.pointOnCurve(2, info.line1);
+				info.points1.push_back(MergePointInfo{point->x, point->y, newArc, 2});
+			} else {
+				c.pointOnCurve(2, info.line2);
+				info.points2.push_back(MergePointInfo{point->x, point->y, newArc, 2});
+			}
+		} else { // два пересечения с одной осью
+			ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(0, point1);
+			ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(1, point2);
+
+			double distance1 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point1->x, point1->y);
+			double distance2 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point2->x, point2->y);
+			if (distance2 < distance1) {
+				std::swap(point1, point2);
+			}
+
+			if (arcPoint1InsideInterval) { // обе точки внутри промежутка
+				// оставляем 2 крайние части дуги
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
+					newArc->X2 = point1->x; newArc->Y2 = point1->y;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.mergePoints(1, arc, 1);
+					if (res1 == 1) {
+						c.pointOnCurve(2, info.line1);
+						info.points1.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+					} else {
+						c.pointOnCurve(2, info.line2);
+						info.points2.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+					}
+				}
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = point2->x; newArc->Y1 = point2->y;
+					newArc->X2 = arc->X2; newArc->Y2 = arc->Y2;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.mergePoints(2, arc, 2);
+					if (res1 == 1) {
+						c.pointOnCurve(1, info.line1);
+						info.points1.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+					} else {
+						c.pointOnCurve(1, info.line2);
+						info.points2.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+					}
+				}
+			} else { // обе точки вне промежутка
+				// оставляем центральную часть дуги
+				IArcPtr newArc(arcs->Add());
+				newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+				newArc->X1 = point1->x; newArc->Y1 = point1->y;
+				newArc->X2 = point2->x; newArc->Y2 = point2->y;
+				newArc->Update();
+
+				ConstraintsCreator c(newArc);
+				c.mergePoints(0, arc, 0);
+				c.equalRadius(arc);
+				if (res1 == 1) {
+					c.pointOnCurve(1, info.line1);
+					c.pointOnCurve(2, info.line1);
+					info.points1.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+					info.points1.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+				} else {
+					c.pointOnCurve(1, info.line2);
+					c.pointOnCurve(2, info.line2);
+					info.points2.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+					info.points2.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+				}
+			}
+		}
+	} else { // пересечения с обеими осями
+		if ((dynArr1->ksGetArrayCount() == 1) && (dynArr2->ksGetArrayCount() == 1)) { // одно пересечение с каждой осью
+			ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr1->ksGetArrayItem(0, point1);
+			ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr2->ksGetArrayItem(0, point2);
+
+			IArcPtr newArc(arcs->Add());
+			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+
+			double distance1 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point1->x, point1->y);
+			double distance2 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point2->x, point2->y);
+			if (distance2 < distance1) {
+				std::swap(point1, point2);
+			}
+
+			newArc->X1 = point1->x; newArc->Y1 = point1->y;
+			newArc->X2 = point2->x; newArc->Y2 = point2->y;
+			newArc->Update();
+
+			ConstraintsCreator c(newArc);
+			c.mergePoints(0, arc, 0);
+			c.equalRadius(arc);
+			if (distance2 < distance1) {
+				c.pointOnCurve(1, info.line2);
+				c.pointOnCurve(2, info.line1);
+				info.points1.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+				info.points2.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+			} else {
+				c.pointOnCurve(1, info.line1);
+				c.pointOnCurve(2, info.line2);
+				info.points1.push_back(MergePointInfo{point1->x, point1->y, newArc, 1});
+				info.points2.push_back(MergePointInfo{point2->x, point2->y, newArc, 2});
+			}
+		} else if ((dynArr1->ksGetArrayCount() == 2) && (dynArr2->ksGetArrayCount() == 1) ||
+				   (dynArr1->ksGetArrayCount() == 1) && (dynArr2->ksGetArrayCount() == 2))
+		{
+			std::vector<std::pair<double, ksMathPointParamPtr>> points;
+			for (int i = 0; i < dynArr1->ksGetArrayCount(); i++) {
+				ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr1->ksGetArrayItem(i, point);
+				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
+				points.push_back(std::make_pair(distance, point));
+			}
+			for (int i = 0; i < dynArr2->ksGetArrayCount(); i++) {
+				ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr2->ksGetArrayItem(i, point);
+				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
+				points.push_back(std::make_pair(distance, point));
+			}
+			std::sort(points.begin(), points.end());
+
+			if (arcPoint1InsideInterval) {
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
+					newArc->X2 = points[0].second->x; newArc->Y2 = points[0].second->y;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.mergePoints(1, arc, 1);
+					if (dynArr1->ksGetArrayCount() == 2) {
+						c.pointOnCurve(2, info.line1);
+						info.points1.push_back(MergePointInfo{points[0].second->x, points[0].second->y, newArc, 2});
+					} else {
+						c.pointOnCurve(2, info.line2);
+						info.points2.push_back(MergePointInfo{points[0].second->x, points[0].second->y, newArc, 2});
+					}
+				}
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = points[1].second->x; newArc->Y1 = points[1].second->y;
+					newArc->X2 = points[2].second->x; newArc->Y2 = points[2].second->y;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.equalRadius(arc);
+					if (dynArr1->ksGetArrayCount() == 2) {
+						c.pointOnCurve(1, info.line1);
+						c.pointOnCurve(2, info.line2);
+						info.points1.push_back(MergePointInfo{points[1].second->x, points[1].second->y, newArc, 1});
+						info.points2.push_back(MergePointInfo{points[2].second->x, points[2].second->y, newArc, 2});
+					} else {
+						c.pointOnCurve(1, info.line2);
+						c.pointOnCurve(2, info.line1);
+						info.points2.push_back(MergePointInfo{points[1].second->x, points[1].second->y, newArc, 1});
+						info.points1.push_back(MergePointInfo{points[2].second->x, points[2].second->y, newArc, 2});
+					}
+				}
+			} else {
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = points[0].second->x; newArc->Y1 = points[0].second->y;
+					newArc->X2 = points[1].second->x; newArc->Y2 = points[1].second->y;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.equalRadius(arc);
+					if (dynArr1->ksGetArrayCount() == 2) {
+						c.pointOnCurve(1, info.line2);
+						c.pointOnCurve(2, info.line1);
+						info.points2.push_back(MergePointInfo{points[0].second->x, points[0].second->y, newArc, 1});
+						info.points1.push_back(MergePointInfo{points[1].second->x, points[1].second->y, newArc, 2});
+					} else {
+						c.pointOnCurve(1, info.line1);
+						c.pointOnCurve(2, info.line2);
+						info.points1.push_back(MergePointInfo{points[0].second->x, points[0].second->y, newArc, 1});
+						info.points2.push_back(MergePointInfo{points[1].second->x, points[1].second->y, newArc, 2});
+					}
+				}
+				{
+					IArcPtr newArc(arcs->Add());
+					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
+					newArc->X1 = points[2].second->x; newArc->Y1 = points[2].second->y;
+					newArc->X2 = arc->X2; newArc->Y2 = arc->Y2;
+					newArc->Update();
+
+					ConstraintsCreator c(newArc);
+					c.mergePoints(0, arc, 0);
+					c.mergePoints(2, arc, 2);
+					if (dynArr1->ksGetArrayCount() == 2) {
+						c.pointOnCurve(1, info.line1);
+						info.points1.push_back(MergePointInfo{points[2].second->x, points[2].second->y, newArc, 1});
+					} else {
+						c.pointOnCurve(1, info.line2);
+						info.points2.push_back(MergePointInfo{points[2].second->x, points[2].second->y, newArc, 1});
+					}
+				}
+			}
+		}
+	}
+}
+
 void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
 	drawLoopProjection(sketch.definition, target.outerLoop);
 
@@ -577,6 +841,13 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
 	for (int iLineSegment = 0; iLineSegment < nLineSegments; iLineSegment++) {
 		ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(iLineSegment));
 		processLineSegment(info, lineSegment);
+	}
+
+	IArcsPtr arcs(sketch.drawingContainer->Arcs);
+	int nArcs = arcs->Count;
+	for (int iArc = 0; iArc < nArcs; iArc++) {
+		IArcPtr arc(arcs->GetArc(iArc));
+		processArc(info, arc);
 	}
 
     closeContour(lineSegments, points1);
@@ -629,9 +900,9 @@ ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<B
 		sketch3.endEdit();
 		macroElement.add(sketch3.entity);
 
-		//macroElement.add(cutExtrusion(part, sketch.entity, true, settings, 1));
-		//macroElement.add(cutExtrusion(part, sketch2.entity, true, settings, 2));
-		//macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
+		macroElement.add(cutExtrusion(part, sketch.entity, true, settings, 1));
+		macroElement.add(cutExtrusion(part, sketch2.entity, true, settings, 2));
+		macroElement.add(cutExtrusion(part, sketch3.entity, true, settings, 3));
 		macro.add(macroElement);
 	}
 	return macro.getEntity();

@@ -2,6 +2,7 @@
 #define BRIDGE_HOLE_HPP
 
 #include <list>
+#include <utility>
 
 #include "apiutil/Sketch.hpp"
 
@@ -48,11 +49,15 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 ksEntityPtr optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings, HoleType holeType);
 
 bool isOuterLoopForBuild(ksLoopPtr loop);
-void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop);
 std::list<BridgeHoleBuildTarget> getBridgeHoleBuildTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace);
+void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop);
 ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target);
 void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target);
-void closeContour(ILineSegmentsPtr lineSegments, std::list<std::pair<double, ILineSegmentPtr>> points, double y, long partnerIndex);
+void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points);
+std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle);
+bool pointInsideInterval(ksMathematic2DPtr math2d, double x, double y, ILinePtr line1, ILinePtr line2);
+void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment);
+void processArc(Sketch1NotCircleInfo info, IArcPtr arc);
 void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target);
 void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount);
 ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleTargets, Settings& settings);
