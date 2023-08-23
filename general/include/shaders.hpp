@@ -16,7 +16,9 @@ out vec3 normal;
 void main() {
     position = a_position;
     normal = a_normal;
-    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
+    /* Смещаем полигоны в направлении нормали, чтобы не появлялись артефакты при вращении.
+       Они появляются, потому что мы рисуем полигоны поверх уже нарисованных, но нет никаких гарантий, что наши полигоны отрисуются сверху. */
+    gl_Position = u_projection * u_modelview * vec4(a_position + (a_normal * 0.03f), 1.0f);
 }
 
 )glsl";
