@@ -218,8 +218,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
         arc->Update();
     }
     
-    double angle = M_PI_2 - std::atan2(std::abs(roundingArc->Yc - startPoint->Y), std::abs(roundingArc->Xc - startPoint->X));
-    
+    double angle = std::atan2(roundingArc->Yc - startPoint->Y, roundingArc->Xc - startPoint->X) - M_PI_2;
     // Задаем локальную систему координат. Центр - стартовая точка (startPoint). Ось Y направлена к центру окружности
 
     // Получаем координаты не стартовой точки дуги в локальной системе координат. Важен знак координаты по X 
