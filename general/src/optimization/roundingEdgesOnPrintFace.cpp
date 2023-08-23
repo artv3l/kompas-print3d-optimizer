@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <string>
 #include <atlbase.h>
 
@@ -11,6 +13,7 @@
 #include "settings/PrintSurface.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
+#include "LinAlg.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -191,6 +194,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPa
 void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSetting::Ptr overhangThreshold) {
     std::string temp = "180 - " + overhangThreshold->getExpression();
     _bstr_t expression(temp.c_str());
+    double dimAngle = 180.0 - overhangThreshold->getValue();
     
     // Добавляем проекции
     sketch.definition->AddProjectionOf(target.trajectory.front()->GetVertex(true));
@@ -214,21 +218,31 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
         arc->Update();
     }
     
+    double angle = M_PI_2 - std::atan2(std::abs(roundingArc->Yc - startPoint->Y), std::abs(roundingArc->Xc - startPoint->X));
+    
+    // Задаем локальную систему координат. Центр - стартовая точка (startPoint). Ось Y направлена к центру окружности
+
+    // Получаем координаты не стартовой точки дуги в локальной системе координат. Важен знак координаты по X 
+    TransformationMatrix2d testMatrix(-angle, -startPoint->X, -startPoint->Y);
+    Vec2d testPoint = testMatrix * Vec2d(startPointIs1 ? roundingArc->X2, roundingArc->Y2 : roundingArc->X1, roundingArc->Y1);
+    
+    TransformationMatrix2d matrix(angle, startPoint->X, startPoint->Y);
+    // Смещение по X точки, где соединятся 2 отрезка - mergePoint
+    double xOffset = roundingArc->Radius * std::tan(degreeToRadian(90.0 - (dimAngle / 2.0)));
+    Vec2d mergePoint = matrix * Vec2d((testPoint.x > 0) ? xOffset : -xOffset, 0.0);
+    
+    // Рассчитываем координаты точки для второго отрезка. Эта точка булет находиться на дуге
+    double xOffset2 = std::cos(degreeToRadian(dimAngle - 90.0)) * roundingArc->Radius;
+    Vec2d pointOnArc = matrix * Vec2d(
+        (testPoint.x > 0) ? xOffset2 : -xOffset2,
+        roundingArc->Radius - (std::sin(degreeToRadian(dimAngle - 90.0)) * roundingArc->Radius));
+
     ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
-    for (int i = 0; i < lineSegments->GetCount(); i++) {
-        ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(i));
-        lineSegment->Style = ksCurveStyleEnum::ksCSThin;
-        lineSegment->Update();
-    }
 
     // Строим два отрезка
     ILineSegmentPtr lineSeg1(lineSegments->Add());
     lineSeg1->X1 = startPoint->X; lineSeg1->Y1 = startPoint->Y;
-    if (startPointIs1) {
-        lineSeg1->X2 = roundingArc->X2; lineSeg1->Y2 = roundingArc->Y2;
-    } else {
-        lineSeg1->X2 = roundingArc->X1; lineSeg1->Y2 = roundingArc->Y1;
-    }
+    lineSeg1->X2 = mergePoint.x; lineSeg1->Y2 = mergePoint.y;
     lineSeg1->Update();
     ConstraintsCreator constrCreator(lineSeg1);
     constrCreator.mergePoints(0, roundingArc, startPointIs1 ? 1 : 2);
@@ -236,12 +250,8 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     constrCreator.mergePoints(0, startPoint, 0);
 
     ILineSegmentPtr lineSeg2(lineSegments->Add());
-    lineSeg2->X1 = lineSeg1->X2; lineSeg2->Y1 = lineSeg1->Y2;
-    if (startPointIs1) {
-        lineSeg2->X2 = roundingArc->X2; lineSeg2->Y2 = roundingArc->Y2;
-    } else {
-        lineSeg2->X2 = roundingArc->X1; lineSeg2->Y2 = roundingArc->Y1;
-    }
+    lineSeg2->X1 = mergePoint.x; lineSeg2->Y1 = mergePoint.y;
+    lineSeg2->X2 = pointOnArc.x; lineSeg2->Y2 = pointOnArc.y;
     lineSeg2->Update();
     constrCreator = ConstraintsCreator(lineSeg2);
     constrCreator.mergePoints(0, lineSeg1, 1);
@@ -256,36 +266,28 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
     
     IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
-    angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
     angleDim->BaseObject1 = lineSeg1DrawingObject;
     angleDim->BaseObject2 = lineSeg2DrawingObject;
     angleDim->Radius = 0;
     angleDim->X3 = (lineSeg1->X1 + lineSeg2->X2) / 2;
     angleDim->Y3 = (lineSeg1->Y1 + lineSeg2->Y2) / 2;
+    angleDim->DimensionType = ksAngleDimTypeEnum::ksADMaxAngle;
     angleDim->Update();
     IDrawingObject1Ptr angleDimDrawingObject1(angleDim);
-    {
-        IParametriticConstraintPtr constraint(angleDimDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCFixedDim;
-        constraint->Create();
-    }
-    {
-        IParametriticConstraintPtr constraint(angleDimDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCDimWithVariable;
-        constraint->Expression = expression;
-        constraint->Create();
-    }
+    constrCreator = ConstraintsCreator(angleDimDrawingObject1);
+    constrCreator.fixedDim();
+    constrCreator.dimWithVariable(expression);
 
     // Достраиваем эскиз дугой
     IArcPtr arc(arcs->Add());
     arc->Xc = roundingArc->Xc; arc->Yc = roundingArc->Yc;
     arc->X1 = startPoint->X; arc->Y1 = startPoint->Y;
-    arc->X2 = lineSeg2->X2; arc->Y2 = lineSeg2->Y2;
+    arc->X2 = pointOnArc.x; arc->Y2 = pointOnArc.y;
     arc->Radius = roundingArc->Radius;
     if (startPointIs1) {
         arc->Direction = roundingArc->Direction;
     } else {
-        arc->Direction = ~roundingArc->Direction;
+        arc->Direction = !roundingArc->Direction;
     }
     arc->Update();
     constrCreator = ConstraintsCreator(arc);
