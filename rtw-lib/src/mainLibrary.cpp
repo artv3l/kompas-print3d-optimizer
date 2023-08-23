@@ -22,14 +22,6 @@
 #include "global.hpp"
 
 
-bool pushBackIfNotNullptr(std::list<ksEntityPtr>& list, ksEntityPtr entity) {
-    if (entity) {
-        list.push_back(entity);
-        return true;
-    }
-    return false;
-}
-
 void fastExportStl(ksDocument3DPtr document3d, Settings& settings) {
     ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
     param->Init();
@@ -64,7 +56,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     DocumentData& documentData = documentsManager.getOrCreateDocumentData(document3d);
     Settings& settings = documentData.getSettings();
 
-    switch (comm) {
+    switch (comm) { // Настройки
     case 1:
         settingsManager.show(settings);
         return;
@@ -79,7 +71,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
-    switch (comm) {
+    switch (comm) { // Быстрый экспорт
     case 5: {
         IApplicationPtr application = kompas->ksGetApplication7();
         fastExportStl(document3d, settings);
@@ -92,7 +84,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
-    if (comm >= 30) {
+    if (comm >= 30) { // Подсветка элементов
         HighlightingManager& highlightingManager = documentData.getHighlightingManager();
         switch (comm) {
         case 30:
@@ -109,44 +101,42 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
+    // Оптимизации
     ksPartPtr part = document3d->GetPart(pTop_Part);
-    std::list<ksEntityPtr> optimizationResults;
+    ksEntityPtr optimizationResult = nullptr;
     size_t reworkCount = 0;
-
     switch (comm) {
     case 10:
-        pushBackIfNotNullptr(optimizationResults, optimizeRounding(part, settings));
+        optimizationResult = optimizeRounding(part, settings);
         break;
     case 11:
-        pushBackIfNotNullptr(optimizationResults, optimizeElephantFoot(part, settings));
+        optimizationResult = optimizeElephantFoot(part, settings);
         break;
     case 12:
-        pushBackIfNotNullptr(optimizationResults, optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL, reworkCount));
+        optimizationResult = optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL, reworkCount);
         break;
     case 13:
-        pushBackIfNotNullptr(optimizationResults, optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount));
+        optimizationResult = optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
         break;
     case 14:
-        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE));
-        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleBuild(kompas, document3d, part, settings));
+        optimizationResult = optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE);
+        optimizationResult = optimizeBridgeHoleBuild(kompas, document3d, part, settings);
         break;
     case 15:
-        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL));
+        optimizationResult = optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL);
         break;
     case 16:
-        pushBackIfNotNullptr(optimizationResults, optimizeBridgeHoleBuild(kompas, document3d, part, settings));
+        optimizationResult = optimizeBridgeHoleBuild(kompas, document3d, part, settings);
         break;
     case 17:
-        pushBackIfNotNullptr(optimizationResults, optimizeCircleHorizontalHoles(kompas, document3d, part, settings));
+        optimizationResult = optimizeCircleHorizontalHoles(kompas, document3d, part, settings);
         break;
     }
-    if (optimizationResults.empty()) {
+    if (!optimizationResult) {
         kompas->ksMessage("Не найдено геометрии для оптимизации");
     } else {
         Macro rootMacro = documentData.getOrCreateRootMacro();
-        for (ksEntityPtr entity : optimizationResults) {
-            rootMacro.add(entity);
-        }
+        rootMacro.add(optimizationResult);
         document3d->RebuildDocument();
         if (reworkCount != 0) {
             kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));

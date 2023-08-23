@@ -46,7 +46,7 @@ uniform int u_mouseRadius;
 out vec4 FragColor;
 
 void main() {
-    float epsilon = 0.001;
+    float epsilon = 0.01;
     vec4 color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
     
     float angle = acos(dot(u_printSurfaceNormal, normal) / length(u_printSurfaceNormal) / length(normal));
