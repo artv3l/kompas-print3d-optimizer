@@ -83,14 +83,15 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     ksEdgeCollectionPtr edges = target->EdgeCollection();
     ksEdgeDefinitionPtr edge = edges->GetByIndex(0);
     sketch.definition->AddProjectionOf(edge);
-    ICirclesPtr circles = sketch.drawingContainer->Circles;
-    ICirclePtr baseCircle = nullptr;
-    if (circles->Count != 0) {
-        baseCircle = circles->GetCircle(0); 
-    } else {
-        baseCircle = circles->Add();
 
-        IArcsPtr arcs = sketch.drawingContainer->Arcs;
+    ICirclesPtr circles = sketch.drawingContainer->Circles;
+    IArcsPtr arcs = sketch.drawingContainer->Arcs;
+
+    ICirclePtr baseCircle = nullptr;
+    if (circles->Count == 1) {
+        baseCircle = circles->GetCircle(0);
+    } else if (arcs->Count > 0) {
+        baseCircle = circles->Add();
         IArcPtr baseArc = arcs->GetArc(0);
         baseArc->Style = ksCurveStyleEnum::ksCSThin;
         baseArc->Update();
@@ -118,7 +119,7 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
         constraint->Create();
         out_radiusVariable = constraint->Variable;
     }
-
+    
     return baseCircle;
 }
 
@@ -290,6 +291,9 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
         * Если эти 2 вектора указывают в одном направлении (скалярное произведение больше нуля), то поверхность является отверстием
         */
         ksSurfacePtr surface = face->GetSurface();
+        if (!surface->IsClosedU()) {
+            continue;
+        }
         double uMin = surface->GetParamUMin(), uMax = surface->GetParamUMax();
         double vMin = surface->GetParamVMin(), vMax = surface->GetParamVMax();
 
