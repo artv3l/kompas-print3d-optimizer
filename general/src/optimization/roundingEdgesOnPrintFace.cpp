@@ -353,6 +353,10 @@ ksEntityPtr optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr p
         evolutionEntity->Create();
         macroElement.add(evolutionEntity);
         macro.add(macroElement);
+
+        if (target.needRework) {
+            reworkCount++;
+        }
     }
     return macro.getEntity();
 }
