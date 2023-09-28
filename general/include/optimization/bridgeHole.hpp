@@ -54,7 +54,7 @@ void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop);
 ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target);
 void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target);
 void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points);
-std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle);
+std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle, double angle);
 bool pointInsideInterval(ksMathematic2DPtr math2d, double x, double y, ILinePtr line1, ILinePtr line2);
 void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment);
 void processArc(Sketch1NotCircleInfo info, IArcPtr arc);

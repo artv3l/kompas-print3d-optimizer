@@ -435,20 +435,60 @@ void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> point
 	}
 }
 
-std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle) {
+std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle, double angle) {
 	double y1 = innerCircle->Yc - innerCircle->Radius;
 	double y2 = innerCircle->Yc + innerCircle->Radius;
 
 	ILinesPtr lines(sketch.drawingContainer->Lines);
+
+	/*
+	ILinePtr horizontalLine(lines->Add());
+	horizontalLine->X1 = innerCircle->Xc + 1; horizontalLine->Y1 = y1;
+	horizontalLine->X2 = innerCircle->Xc - 1; horizontalLine->Y2 = y1;
+	horizontalLine->Update();
+	ConstraintsCreator constrCreator(horizontalLine);
+	constrCreator.horizontal();
+	constrCreator = ConstraintsCreator(innerCircle);
+	constrCreator.pointOnCurve(0, horizontalLine);
+
+	ILinePtr baseLine(lines->Add());
+	baseLine->X1 = innerCircle->Xc + 1; baseLine->Y1 = y1;
+	baseLine->X2 = innerCircle->Xc - 1; baseLine->Y2 = y1;
+	baseLine->Update();
+	constrCreator = ConstraintsCreator(baseLine);
+	constrCreator = ConstraintsCreator(innerCircle);
+	constrCreator.pointOnCurve(0, baseLine);
+
+	ISymbols2DContainerPtr symbols2dContainer(sketch.view);
+	ILineDimensionsPtr lineDimensions(symbols2dContainer->LineDimensions);
+	IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
+	IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
+	angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+	angleDim->BaseObject1 = horizontalLine;
+	angleDim->BaseObject2 = baseLine;
+	angleDim->Radius = 0;
+	angleDim->X3 = 0; angleDim->Y3 = 0;
+	if (angle > 90.0) {
+		angleDim->DimensionType = ksAngleDimTypeEnum::ksADMaxAngle;
+	} else {
+		angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+	}
+	angleDim->Update();
+	constrCreator = ConstraintsCreator(angleDim);
+	constrCreator.fixedDim();
+	std::ostringstream oss;
+	oss << angle;
+	constrCreator.dimWithVariable(oss.str().c_str());
+	*/
 
 	ILinePtr line1(lines->Add());
 	line1->X1 = innerCircle->Xc + 1; line1->Y1 = y1;
 	line1->X2 = innerCircle->Xc - 1; line1->Y2 = y1;
 	line1->Update();
 	ConstraintsCreator constrCreator(line1);
-	//constrCreator.horizontal();
+	constrCreator.horizontal();
 	constrCreator.tangentTwoCurves(innerCircle);
-
+	
 	ILinePtr line2(lines->Add());
 	line2->X1 = innerCircle->Xc + 1; line2->Y1 = y2;
 	line2->X2 = innerCircle->Xc - 1; line2->Y2 = y2;
@@ -521,7 +561,7 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 	} else { // найдено одно пересечение
 		long partnerIndex = 0; // индекс на опорном отрезке
 		double x = 0.0, y = 0.0;
-		if ((lineSegment->Y1 > info.line1->Y1) && (lineSegment->Y1 < info.line2->Y1)) {
+		if (pointInsideInterval(math2d, lineSegment->X1, lineSegment->Y1, info.line1, info.line2)) {
 			x = lineSegment->X1; y = lineSegment->Y1;
 			partnerIndex = 0;
 		} else {
@@ -555,7 +595,6 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 }
 
 void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
-	// todo: в куче мест код можно переиспользовать и сделать лучше
 	ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
 
 	ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
@@ -824,9 +863,11 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
 	double y2 = innerCircle->Yc + innerCircle->Radius;
 
 	// todo: определить оптимальный угол наклона вспомогательных прямых
+	ksSurfacePtr sketchSurface = sketch.definition->GetSurface();
+	
 
 	// Строим вспомогательные линии
-	std::pair<ILinePtr, ILinePtr> basicLines = drawBasicLines(sketch, innerCircle);
+	std::pair<ILinePtr, ILinePtr> basicLines = drawBasicLines(sketch, innerCircle, 40.0);
 
 	ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
@@ -881,7 +922,7 @@ ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<B
 		Sketch sketch(kompas, part, target.face);
 		ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
 		double centerX = innerCircle->Xc, centerY = innerCircle->Yc, radius = innerCircle->Radius;
-
+		
 		if (loopIsCircle(target.outerLoop)) {
 			bridgeHoleBuildCircleDrawSketch1(sketch, innerCircle, target);
 		} else {
