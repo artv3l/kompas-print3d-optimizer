@@ -231,17 +231,9 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     double angle = std::atan2(roundingArc->Yc - startPoint->Y, roundingArc->Xc - startPoint->X) - M_PI_2;
     // Задаем локальную систему координат. Центр - стартовая точка (startPoint). Ось Y направлена к центру окружности
 
-    // Получаем координаты не стартовой точки дуги в локальной системе координат. Важен знак координаты по X 
+    // Получаем координаты средней точки дуги в локальной системе координат. Важен знак координаты по X 
     TransformationMatrix2d testMatrix(-angle, -startPoint->X, -startPoint->Y);
-    Vec2d testPoint(0.0, 0.0);
-    if (startPointIs1) {
-        testPoint = testMatrix * Vec2d(roundingArc->X2, roundingArc->Y2);
-    } else {
-        testPoint = testMatrix * Vec2d(roundingArc->X1, roundingArc->Y1);
-    }
-    if (doubleEqual(testPoint.x, 0.0)) {
-        testPoint = testMatrix * Vec2d(roundingArc->X3, roundingArc->Y3);
-    }
+    Vec2d testPoint = testMatrix* Vec2d(roundingArc->X3, roundingArc->Y3);
 
     TransformationMatrix2d matrix(angle, startPoint->X, startPoint->Y);
     // Смещение по X точки, где соединятся 2 отрезка - mergePoint
