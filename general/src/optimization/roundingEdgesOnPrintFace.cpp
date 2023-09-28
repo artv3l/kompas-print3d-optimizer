@@ -200,17 +200,27 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     sketch.definition->AddProjectionOf(target.trajectory.front()->GetVertex(true));
     IPointsPtr points(sketch.drawingContainer->Points);
     IPointPtr startPoint(points->GetPoint(0));
-
+    
     sketch.definition->AddProjectionOf(target.roundingFace);
+
+    // Могут быть проекции-окружности, их просто скрываем
+    ICirclesPtr circles(sketch.drawingContainer->Circles);
+    for (int i = 0; i < circles->GetCount(); i++) {
+        ICirclePtr circle(circles->GetCircle(i));
+        circle->Style = ksCurveStyleEnum::ksCSThin;
+        circle->Update();
+    }
+
     IArcsPtr arcs(sketch.drawingContainer->Arcs);
     IArcPtr roundingArc = nullptr;
     bool startPointIs1 = false;
     for (int i = 0; i < arcs->GetCount(); i++) {
         IArcPtr arc(arcs->GetArc(i));
         if (!roundingArc && ((doubleEqual(startPoint->X, arc->X1) && doubleEqual(startPoint->Y, arc->Y1)) ||
-                (doubleEqual(startPoint->X, arc->X2) && doubleEqual(startPoint->Y, arc->Y2)))) {
+                             (doubleEqual(startPoint->X, arc->X2) && doubleEqual(startPoint->Y, arc->Y2))
+                            )) {
             roundingArc = arc;
-            if (doubleEqual(startPoint->X, arc->X1)) {
+            if (doubleEqual(startPoint->X, arc->X1) && doubleEqual(startPoint->Y, arc->Y1)) {
                 startPointIs1 = true;
             }
         }
@@ -223,8 +233,16 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
 
     // Получаем координаты не стартовой точки дуги в локальной системе координат. Важен знак координаты по X 
     TransformationMatrix2d testMatrix(-angle, -startPoint->X, -startPoint->Y);
-    Vec2d testPoint = testMatrix * Vec2d(startPointIs1 ? roundingArc->X2, roundingArc->Y2 : roundingArc->X1, roundingArc->Y1);
-    
+    Vec2d testPoint(0.0, 0.0);
+    if (startPointIs1) {
+        testPoint = testMatrix * Vec2d(roundingArc->X2, roundingArc->Y2);
+    } else {
+        testPoint = testMatrix * Vec2d(roundingArc->X1, roundingArc->Y1);
+    }
+    if (doubleEqual(testPoint.x, 0.0)) {
+        testPoint = testMatrix * Vec2d(roundingArc->X3, roundingArc->Y3);
+    }
+
     TransformationMatrix2d matrix(angle, startPoint->X, startPoint->Y);
     // Смещение по X точки, где соединятся 2 отрезка - mergePoint
     double xOffset = roundingArc->Radius * std::tan(degreeToRadian(90.0 - (dimAngle / 2.0)));
@@ -256,7 +274,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSett
     constrCreator.mergePoints(0, lineSeg1, 1);
     constrCreator.tangentTwoCurves(roundingArc);
     constrCreator.pointOnCurve(1, roundingArc);
-
+    
     IDrawingObjectPtr lineSeg1DrawingObject(lineSeg1);
     IDrawingObjectPtr lineSeg2DrawingObject(lineSeg2);
 
