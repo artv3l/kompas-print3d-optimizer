@@ -1,10 +1,14 @@
-*.user
-
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
+**/bin/
+**/obj/
 
 .vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.vcxitems
+**.vcxitems.filters
+
+vcpkg_installed/
 
 *.rtw

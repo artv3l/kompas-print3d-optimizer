@@ -1,0 +1,7 @@
+{
+    "name": "kompas-print3d-optimizer",
+    "dependencies": [
+        "glm",
+        {"name": "glad", "features": ["gl-api-33"]}
+    ]
+}
