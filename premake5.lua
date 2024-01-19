@@ -14,6 +14,8 @@ localDependencies = {
     },
 }
 
+KOMPAS_DEVUTIL = os.getenv("KOMPAS_DEVUTIL")
+
 workspace "kompas-print3d-optimizer"
     architecture "x86_64"
     configurations { "Debug", "Release" }

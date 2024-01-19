@@ -35,6 +35,15 @@ project "kompas-print3d-optimizer"
         "opengl32.lib"
     }
 
+    prebuildcommands {
+        "%{KOMPAS_DEVUTIL}/delete-lib.exe \"Подготовка к FDM 3D печати\""
+    }
+
+    postbuildcommands {
+        "{COPYFILE} %{prj.location}/%{prj.name}.xml %{cfg.buildtarget.directory}",
+        "%{KOMPAS_DEVUTIL}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
+    }
+
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
