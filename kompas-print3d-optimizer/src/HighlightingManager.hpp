@@ -27,7 +27,7 @@ private:
     glm::vec2 m_mouseCoord;
 
 private: /* static */
-    static ShaderProgram::Ptr s_shaderProgram;
+    static std::unique_ptr<ShaderProgram> s_shaderProgram;
     static bool s_isGladInited;
     static short s_framesCount;
     

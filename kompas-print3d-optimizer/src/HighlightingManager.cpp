@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "oglwrap/Shader.hpp"
 #include "kapiwrap/DocumentFrameEvent.hpp"
 #include "settings/Settings.hpp"
 #include "settings/PrintSurface.hpp"
@@ -28,7 +29,7 @@ void* GetAnyGLFuncAddress(const char* name) {
     return p;
 }
 
-ShaderProgram::Ptr HighlightingManager::s_shaderProgram = nullptr;
+std::unique_ptr<ShaderProgram> HighlightingManager::s_shaderProgram = nullptr;
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
@@ -71,9 +72,7 @@ void HighlightingManager::refreshWindow() const {
 }
 
 void HighlightingManager::initShaders() {
-    Shader vertexShader(VERTEX_SHADER_CODE, GL_VERTEX_SHADER);
-    Shader fragmentShader(FRAGMENT_SHADER_CODE, GL_FRAGMENT_SHADER);
-    s_shaderProgram = ShaderProgram::link({&vertexShader, &fragmentShader});
+    s_shaderProgram = std::make_unique<ShaderProgram>(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
 }
 
 IDocumentFramePtr HighlightingManager::getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d) {

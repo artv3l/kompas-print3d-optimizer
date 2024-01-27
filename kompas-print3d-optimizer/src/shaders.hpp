@@ -1,7 +1,9 @@
 #ifndef SHADERS_HPP
 #define SHADERS_HPP
 
-inline const char* VERTEX_SHADER_CODE = R"glsl(
+#include <string>
+
+inline const std::string VERTEX_SHADER_CODE = R"glsl(
 #version 330
 
 layout (location = 0) in vec3 a_position;
@@ -23,7 +25,7 @@ void main() {
 
 )glsl";
 
-inline const char* FRAGMENT_SHADER_CODE = R"glsl(
+inline const std::string FRAGMENT_SHADER_CODE = R"glsl(
 #version 330
 
 #define PI 3.1415926538
