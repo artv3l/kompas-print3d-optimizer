@@ -12,6 +12,7 @@
 #include "settings/PrintSurface.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
+#include "settings/SettingInitializer.hpp"
 #include "LinAlg.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
@@ -190,7 +191,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(ksPa
     return targets;
 }
 
-void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, NumericSetting::Ptr overhangThreshold) {
+void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, DoubleSetting::Ptr overhangThreshold) {
     std::string temp = "180 - " + overhangThreshold->getExpression();
     _bstr_t expression(temp.c_str());
     double dimAngle = 180.0 - overhangThreshold->getValue();
@@ -327,7 +328,7 @@ ksEntityPtr optimizeRoundingEdgesOnPrintFace(KompasObjectPtr kompas, ksPartPtr p
         
         // Создаем эскиз
         Sketch sketch(kompas, part, sketchPlane);
-        drawSketch(sketch, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.name));
+        drawSketch(sketch, target, settings.getDoubleSetting(si::overhangThreshold.name));
         sketch.definition->EndEdit();
         macroElement.add(sketch.entity);
         

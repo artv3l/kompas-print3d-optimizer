@@ -11,6 +11,7 @@
 #include "utils.hpp"
 #include "LinAlg.hpp"
 #include "settings/Setting.hpp"
+#include "settings/SettingInitializer.hpp"
 
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
@@ -122,7 +123,7 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     return baseCircle;
 }
 
-void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, NumericSetting::Ptr overhangThreshold, double rotationOffset) {
+void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, DoubleSetting::Ptr overhangThreshold, double rotationOffset) {
     double radius = baseCircle->Radius;
     ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 
@@ -205,7 +206,7 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     constrCreator.dimWithVariable(expression.c_str());
 }
 
-void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, NumericSetting::Ptr overhangThreshold) {
+void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, DoubleSetting::Ptr overhangThreshold) {
     _bstr_t radiusVariable;
     ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
     
@@ -217,7 +218,7 @@ void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalP
     drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, M_PI_2);
 }
 
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, NumericSetting::Ptr overhangThreshold) {
+Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, DoubleSetting::Ptr overhangThreshold) {
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
 
     // ось по цилиндрической поверхности
@@ -326,7 +327,7 @@ ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPt
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
     for (ksFaceDefinitionPtr target : targets) {
-        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getNumericSetting(SI_OVERHANG_THRESHOLD.name)));
+        macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getDoubleSetting(si::overhangThreshold.name)));
     }
     return macro.getEntity();
 }

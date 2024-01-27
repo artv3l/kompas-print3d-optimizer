@@ -29,7 +29,7 @@ void fastExportStl(ksDocument3DPtr document3d, Settings& settings) {
     param->stepType = ksStepTypeEnum::ksDeviationStep;
 
     std::pair<std::string, std::string> pair = splitFileNameAndRemoveExtension(std::string(document3d->fileName));
-    std::string stlFolder = std::string(settings.getStringSetting(SI_EXPORT_STL_FOLDER.name)->getValue());
+    std::string stlFolder = std::string(settings.getStringSetting(si::exportStlFolder.name)->getValue());
     
     std::string resultFolder = pair.first + "\\" + stlFolder;
     CreateDirectoryA(resultFolder.c_str(), nullptr);
@@ -43,59 +43,58 @@ unsigned int WINAPI LIBRARYID() {
 }
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
-    using namespace global;
 
-    ksDocument3DPtr document3d = kompas->ActiveDocument3D();
+    ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
     if (!document3d) {
-        kompas->ksMessage("Необходимо открыть документ-модель");
+        global::kompas->ksMessage("Необходимо открыть документ-модель");
         return;
     }
 
-    DocumentData& documentData = documentsManager.getOrCreateDocumentData(document3d);
-    Settings& settings = documentData.getSettings();
+    DocumentData& documentData = global::documentsManager->getOrCreateDocumentData(document3d);
+    Settings* settings = documentData.getSettings();
 
     switch (comm) { // Настройки
     case 1:
-        settingsManager.show(settings);
+        global::settingsManager->show(settings);
         return;
     case 2:
         try {
             PrintSurface printSurface = getSelectedPrintSurface(document3d);
-            settings.setPrintSurface(printSurface);
-            kompas->ksMessage("Плоскость печати успешно выбрана!");
+            settings->setPrintSurface(printSurface);
+            global::kompas->ksMessage("Плоскость печати успешно выбрана!");
         } catch (const std::runtime_error& e) {
-            kompas->ksMessage(e.what());
+            global::kompas->ksMessage(e.what());
         }
         return;
     }
 
     switch (comm) { // Быстрый экспорт
     case 5: {
-        IApplicationPtr application = kompas->ksGetApplication7();
-        fastExportStl(document3d, settings);
+        IApplicationPtr application = global::kompas->ksGetApplication7();
+        fastExportStl(document3d, *settings);
         application->IMessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
         return;
     }}
 
-    if (!settings.isPrintSurfaceSelected()) {
-        kompas->ksMessage("Плоскость печати не выбрана!");
+    if (!settings->isPrintSurfaceSelected()) {
+        global::kompas->ksMessage("Плоскость печати не выбрана!");
         return;
     }
 
     if (comm >= 30) { // Подсветка элементов
-        HighlightingManager& highlightingManager = documentData.getHighlightingManager();
+        HighlightingManager* highlightingManager = documentData.getHighlightingManager();
         switch (comm) {
         case 30:
-            highlightingManager.toggleMode(HighlightingManager::Mode::layersEverywhere);
+            highlightingManager->toggleMode(HighlightingManager::Mode::layersEverywhere);
             break;
         case 31:
-            highlightingManager.toggleMode(HighlightingManager::Mode::layersAtCursor);
+            highlightingManager->toggleMode(HighlightingManager::Mode::layersAtCursor);
             break;
         case 32:
-            highlightingManager.toggleMode(HighlightingManager::Mode::overhangs);
+            highlightingManager->toggleMode(HighlightingManager::Mode::overhangs);
             break;
         }
-        highlightingManager.refreshWindow();
+        highlightingManager->refreshWindow();
         return;
     }
 
@@ -105,41 +104,41 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     size_t reworkCount = 0;
     switch (comm) {
     case 10:
-        optimizationResult = optimizeRounding(part, settings);
+        optimizationResult = optimizeRounding(part, *settings);
         break;
     case 11:
-        optimizationResult = optimizeElephantFoot(part, settings);
+        optimizationResult = optimizeElephantFoot(part, *settings);
         break;
     case 12:
-        optimizationResult = optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ALL, reworkCount);
+        optimizationResult = optimizeRoundingEdgesOnPrintFace(global::kompas, part, *settings, ReworkType::ALL, reworkCount);
         break;
     case 13:
-        optimizationResult = optimizeRoundingEdgesOnPrintFace(kompas, part, settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
+        optimizationResult = optimizeRoundingEdgesOnPrintFace(global::kompas, part, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
         break;
     case 14:
-        optimizationResult = optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::NOT_CIRCLE);
-        optimizationResult = optimizeBridgeHoleBuild(kompas, document3d, part, settings);
+        optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
+        optimizationResult = optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
         break;
     case 15:
-        optimizationResult = optimizeBridgeHoleFill(kompas, document3d, part, settings, HoleType::ALL);
+        optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::ALL);
         break;
     case 16:
-        optimizationResult = optimizeBridgeHoleBuild(kompas, document3d, part, settings);
+        optimizationResult = optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
         break;
     case 17:
-        optimizationResult = optimizeCircleHorizontalHoles(kompas, document3d, part, settings);
+        optimizationResult = optimizeCircleHorizontalHoles(global::kompas, document3d, part, *settings);
         break;
     }
     if (!optimizationResult) {
-        kompas->ksMessage("Не найдено геометрии для оптимизации");
+        global::kompas->ksMessage("Не найдено геометрии для оптимизации");
     } else {
         Macro rootMacro = documentData.getOrCreateRootMacro();
         rootMacro.add(optimizationResult);
         document3d->RebuildDocument();
         if (reworkCount != 0) {
-            kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));
+            global::kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));
         } else {
-            kompas->ksMessage("Оптимизация модели была выполнена!");
+            global::kompas->ksMessage("Оптимизация модели была выполнена!");
         }
     }
 }

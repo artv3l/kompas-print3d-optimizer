@@ -16,6 +16,8 @@
 #include "settings/SettingInitializer.hpp"
 #include "global.hpp"
 #include "utils.hpp"
+#include "settings/DocumentsManager.hpp"
+#include "settings/SettingsManager.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -168,7 +170,7 @@ bool HighlightingManager::closeFrame() {
     if (s_framesCount == 0) {
         s_shaderProgram = nullptr;
     }
-    global::documentsManager.remove(m_document3d);
+    global::documentsManager->remove(m_document3d);
     return true;
 }
 
@@ -211,11 +213,11 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
     s_shaderProgram->setUniform("u_projection", projection);
     s_shaderProgram->setUniform("u_printSurfaceNormal", printSurfaceNormal);
     s_shaderProgram->setUniform("u_printSurfaceD", static_cast<float>(printSurface.eq.d));
-    s_shaderProgram->setUniform("u_layerHeight", static_cast<float>(m_settings->getNumericSetting(SI_LAYER_HEIGHT.name)->getValue()));
+    s_shaderProgram->setUniform("u_layerHeight", static_cast<float>(m_settings->getDoubleSetting(si::layerHeight.name)->getValue()));
     s_shaderProgram->setUniform("u_lineWidth", lineWidth);
     s_shaderProgram->setUniform("u_mode", m_mode);
     s_shaderProgram->setUniform("u_overhangThreshold",
-                                static_cast<float>(degreeToRadian(m_settings->getNumericSetting(SI_OVERHANG_THRESHOLD.name)->getValue())));
+                                static_cast<float>(degreeToRadian(m_settings->getDoubleSetting(si::overhangThreshold.name)->getValue())));
     s_shaderProgram->setUniform("u_mouseCoord", m_mouseCoord);
     s_shaderProgram->setUniform("u_mouseRadius", mouseRadius);
 
@@ -225,7 +227,7 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
 }
 
 bool HighlightingManager::deactivate() {
-    global::settingsManager.hide();
+    global::settingsManager->hide();
     return true;
 }
 

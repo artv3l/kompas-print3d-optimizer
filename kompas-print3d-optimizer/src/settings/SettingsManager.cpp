@@ -6,6 +6,7 @@
 
 #include "kapiwrap/PropertyManagerObject.hpp"
 #include "settings/Settings.hpp"
+#include "global.hpp"
 
 SettingsManager::SettingsManager(KompasObjectPtr kompas):
     PropertyManagerObject(kompas),
@@ -20,10 +21,9 @@ SettingsManager::SettingsManager(KompasObjectPtr kompas):
     initControls();
 }
 
-void SettingsManager::show(Settings& settings) {
-    m_shownSettings = &settings;
-    settings.loadFromDocument();
-    fillSettingsToEdits(settings);
+void SettingsManager::show(Settings* settings) {
+    m_shownSettings = settings;
+    fillSettingsToEdits();
     PropertyManagerObject::show();
 }
 
@@ -34,7 +34,7 @@ bool SettingsManager::buttonClick(long buttonId) {
             Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
             setting->setVariantValue(kv.second->Value);
         }
-        m_shownSettings->uploadToDocument();
+        m_shownSettings->uploadToDocument(global::kompas->ActiveDocument3D());
         hide();
         break;
     case SpecPropertyButtonEnum::pbHelp:
@@ -46,7 +46,7 @@ bool SettingsManager::buttonClick(long buttonId) {
     return true;
 }
 
-void SettingsManager::createEdit(NumericSettingInitializer settingInitializer, ControlTypeEnum type, _bstr_t editName) {
+void SettingsManager::createEdit(const DoubleSettingInitializer& settingInitializer, ControlTypeEnum type, _bstr_t editName) {
     IPropertyEditPtr edit = m_controls->Add(type);
     m_editMap.insert(std::make_pair(settingInitializer.name, edit));
     edit->Name = editName;
@@ -55,7 +55,7 @@ void SettingsManager::createEdit(NumericSettingInitializer settingInitializer, C
     edit->Value = settingInitializer.defaultValue;
 }
 
-void SettingsManager::createEdit(StringSettingInitializer settingInitializer, _bstr_t editName) {
+void SettingsManager::createEdit(const StringSettingInitializer& settingInitializer, _bstr_t editName) {
     IPropertyEditPtr edit = m_controls->Add(ControlTypeEnum::ksControlEditStr);
     m_editMap.insert(std::make_pair(settingInitializer.name, edit));
     edit->Name = editName;
@@ -68,8 +68,8 @@ void SettingsManager::initControls() {
         printSettingsGroupBegin->Name = "Параметры печати";
         printSettingsGroupBegin->Expanding = true;
 
-        createEdit(SI_LAYER_HEIGHT, ControlTypeEnum::ksControlEditReal, "Высота слоя");
-        createEdit(SI_OVERHANG_THRESHOLD, ControlTypeEnum::ksControlEditInt, "Максимальный угол нависаний");
+        createEdit(si::layerHeight, ControlTypeEnum::ksControlEditReal, "Высота слоя");
+        createEdit(si::overhangThreshold, ControlTypeEnum::ksControlEditInt, "Максимальный угол нависаний");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* printSettings */
     }
@@ -78,8 +78,8 @@ void SettingsManager::initControls() {
         roundingGroupBegin->Name = "Выпирающие углы";
         roundingGroupBegin->Expanding = true;
 
-        createEdit(SI_ROUNDING_RADIUS, ControlTypeEnum::ksControlEditReal, "Радиус");
-        createEdit(SI_ROUNDING_DEFLECTION_ANGLE, ControlTypeEnum::ksControlEditInt, "Угол отклонения");
+        createEdit(si::roundingRadius, ControlTypeEnum::ksControlEditReal, "Радиус");
+        createEdit(si::roundingDeflectionAngle, ControlTypeEnum::ksControlEditInt, "Угол отклонения");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* rounding */
     }
@@ -88,7 +88,7 @@ void SettingsManager::initControls() {
         elephantFootGroupBegin->Name = "Слоновья нога";
         elephantFootGroupBegin->Expanding = true;
 
-        createEdit(SI_ELEPHANT_FOOT_LAYERS_COUNT, ControlTypeEnum::ksControlEditInt, "Кол-во слоев");
+        createEdit(si::elephantFootLayersCount, ControlTypeEnum::ksControlEditInt, "Кол-во слоев");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* elephantFoot */
     }
@@ -97,7 +97,7 @@ void SettingsManager::initControls() {
         bridgeHoleFillGroupBegin->Name = "Нависающие отверстия: закрытие диафрагмой";
         bridgeHoleFillGroupBegin->Expanding = true;
 
-        createEdit(SI_BRIDGE_HOLE_FILL_LAYERS_COUNT, ControlTypeEnum::ksControlEditInt, "Слоев в диафрагме");
+        createEdit(si::bridgeHoleFillLayersCount, ControlTypeEnum::ksControlEditInt, "Слоев в диафрагме");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleFill */
     }
@@ -106,7 +106,7 @@ void SettingsManager::initControls() {
         bridgeHoleBuildGroupBegin->Name = "Нависающие отверстия: достройка до набора мостов";
         bridgeHoleBuildGroupBegin->Expanding = true;
 
-        createEdit(SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT, ControlTypeEnum::ksControlEditInt, "Слоев в мосте");
+        createEdit(si::bridgeHoleBuildLayersCount, ControlTypeEnum::ksControlEditInt, "Слоев в мосте");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* bridgeHoleBuild */
     }
@@ -115,13 +115,13 @@ void SettingsManager::initControls() {
         exportGroupBegin->Name = "Экспорт";
         exportGroupBegin->Expanding = true;
 
-        createEdit(SI_EXPORT_STL_FOLDER, "Папка для stl");
+        createEdit(si::exportStlFolder, "Папка для stl");
 
         m_controls->Add(ControlTypeEnum::ksControlGroupEnd); /* export */
     }
 }
 
-void SettingsManager::fillSettingsToEdits(Settings& settings) {
+void SettingsManager::fillSettingsToEdits() {
     for (std::pair<std::string, IPropertyEditPtr> kv : m_editMap) {
         Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
         kv.second->Value = setting->getVariantValue();

@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
+#include "settings/SettingInitializer.hpp"
 
 const char* NAME_ROUNDING = "Скругления для выпирающих углов";
 
@@ -62,11 +63,11 @@ ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTa
 
 ksEntityPtr optimizeRounding(ksPartPtr part, Settings& settings) {
 	std::list<ksEdgeDefinitionPtr> targets =
-		getRoundingTargets(part, settings.getPrintSurface().face, settings.getNumericSetting(SI_ROUNDING_DEFLECTION_ANGLE.name)->getValue());
+		getRoundingTargets(part, settings.getPrintSurface().face, settings.getDoubleSetting(si::roundingDeflectionAngle.name)->getValue());
 	if (targets.empty()) {
 		return nullptr;
 	}
 	
-	ksEntityPtr filletEntity = roundEdges(part, targets, settings.getNumericSetting(SI_ROUNDING_RADIUS.name)->getValue());
+	ksEntityPtr filletEntity = roundEdges(part, targets, settings.getDoubleSetting(si::roundingRadius.name)->getValue());
 	return filletEntity;
 }

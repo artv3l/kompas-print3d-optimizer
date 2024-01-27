@@ -21,7 +21,7 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksDocument3DPtr document
                                        std::forward_as_tuple(m_kompas, document3d)
                                       ).first;
     } else {
-        it->second.getSettings().loadFromDocument();
+        it->second.getSettings()->loadFromDocument(document3d);
     }
     return it->second;
 }

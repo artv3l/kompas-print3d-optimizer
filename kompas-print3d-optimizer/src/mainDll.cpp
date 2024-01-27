@@ -19,8 +19,11 @@ extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
     if (dwReason == DLL_PROCESS_ATTACH) {
         AfxInitExtensionModule(dll, hInstance);
         new CDynLinkLibrary(dll);
+
+        global::init();
+
     } else if (dwReason == DLL_PROCESS_DETACH) {
-        global::settingsManager.hide();
+        global::settingsManager->hide();
         AfxTermExtensionModule(dll);
     }
     return 1;

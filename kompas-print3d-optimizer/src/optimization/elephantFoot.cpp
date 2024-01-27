@@ -7,6 +7,7 @@
 #include "kapiwrap/Macro.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
+#include "settings/SettingInitializer.hpp"
 
 const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
 
@@ -38,7 +39,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 		ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
 		ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
 
-		double width = settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.name)->getValue() * settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getValue();
+		double width = settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getValue() * settings.getDoubleSetting(si::layerHeight.name)->getValue();
 		chamfer->SetChamferParam(true, width, width);
 		ksEntityCollectionPtr array(chamfer->array());
 
@@ -56,7 +57,7 @@ ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elep
 				ksVariablePtr variable3(variableCollection->GetByIndex(3)); // Индекс=3 - "Длина 2"
 
 				std::ostringstream oss;
-				oss << settings.getNumericSetting(SI_ELEPHANT_FOOT_LAYERS_COUNT.name)->getExpression() << " * " << settings.getNumericSetting(SI_LAYER_HEIGHT.name)->getExpression();
+				oss << settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getExpression() << " * " << settings.getDoubleSetting(si::layerHeight.name)->getExpression();
 				variable2->Expression = oss.str().c_str();
 				variable3->Expression = oss.str().c_str();
 			}

@@ -11,55 +11,15 @@
 #include "Optional.hpp"
 #include "settings/PrintSurface.hpp"
 
-Settings::Settings(ksDocument3DPtr document3d) :
-    m_document3d(document3d), m_variableCollection(nullptr), m_printSurface(), m_settingsMap() {
-    ksPartPtr part(document3d->GetPart(pTop_Part));
-    ksFeaturePtr feature(part->GetFeature());
-    m_variableCollection = feature->VariableCollection;
-
-    for (std::pair<std::string, NumericSettingInitializer> pair : VARIABLE_SETTING_INITIALIZERS) {
-        m_settingsMap.insert(std::make_pair(
-            pair.first,
-            std::make_shared<VariableNumericSetting>(VariableNumericSetting(part, pair.second))
-        ));
+Settings::Settings() :
+    m_printSurface(),
+    m_settingsMap()
+{
+    for (si::SettingInitializerMap::value_type pair : si::settingInitializers) {
+        m_settingsMap.insert(
+            std::make_pair(pair.first, pair.second->create())
+        );
     }
-    for (std::pair<std::string, NumericSettingInitializer> pair : LOCAL_SETTING_INITIALIZERS) {
-        m_settingsMap.insert(std::make_pair(
-            pair.first,
-            std::make_shared<LocalNumericSetting>(LocalNumericSetting(pair.second))
-        ));
-    }
-    for (std::pair<std::string, StringSettingInitializer> pair : STRING_SETTING_INITIALIZERS) {
-        m_settingsMap.insert(std::make_pair(
-            pair.first,
-            std::make_shared<StringSetting>(StringSetting(pair.second))
-        ));
-    }
-}
-
-void Settings::loadFromDocument() {
-    m_variableCollection->refresh();
-    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
-        VariableNumericSetting::Ptr vns = std::dynamic_pointer_cast<VariableNumericSetting>(it->second);
-        if (vns) {
-            vns->loadOrCreateVariable(m_document3d->GetPart(Part_Type::pTop_Part), vns->getName(),
-                                      VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).note,
-                                      VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).defaultValue);
-        }
-    }
-}
-
-void Settings::uploadToDocument() {
-    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
-        VariableNumericSetting::Ptr vns = std::dynamic_pointer_cast<VariableNumericSetting>(it->second);
-        if (vns) {
-            vns->createIfNotExists(m_document3d->GetPart(Part_Type::pTop_Part),
-                                   VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).note,
-                                   VARIABLE_SETTING_INITIALIZERS.at(vns->getName()).defaultValue);
-        }
-    }
-    m_variableCollection->refresh();
-    m_document3d->RebuildDocument();
 }
 
 void Settings::setPrintSurface(PrintSurface printSurface) {
@@ -81,13 +41,13 @@ Setting::Ptr Settings::getSetting(std::string name) {
     return m_settingsMap[name];
 }
 
-NumericSetting::Ptr Settings::getNumericSetting(std::string name) {
+DoubleSetting::Ptr Settings::getDoubleSetting(std::string name) {
     Setting::Ptr setting = getSetting(name);
-    NumericSetting::Ptr numericSetting = std::dynamic_pointer_cast<NumericSetting>(setting);
-    if (!numericSetting) {
-        throw std::runtime_error("There is no NumericSetting with name \"" + name + "\"");
+    DoubleSetting::Ptr doubleSetting = std::dynamic_pointer_cast<DoubleSetting>(setting);
+    if (!doubleSetting) {
+        throw std::runtime_error("There is no DoubleSetting with name \"" + name + "\"");
     }
-    return numericSetting;
+    return doubleSetting;
 }
 
 StringSetting::Ptr Settings::getStringSetting(std::string name) {
@@ -97,4 +57,53 @@ StringSetting::Ptr Settings::getStringSetting(std::string name) {
         throw std::runtime_error("There is no StringSetting with name \"" + name + "\"");
     }
     return stringSetting;
+}
+
+void Settings::loadFromDocument(ksDocument3DPtr document3d) {
+    ksPartPtr part(document3d->GetPart(pTop_Part));
+    ksFeaturePtr feature(part->GetFeature());
+    ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+    variableCollection->refresh();
+
+    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
+        if (!it->second->isSyncWithDocument()) {
+            continue;
+        }
+        
+        _bstr_t variableName = (c_variableNamePrefix + it->second->getName()).c_str();
+
+        ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
+        if (variable) {
+            // Только DoubleSetting может синхронизироваться с документом
+            DoubleSetting::Ptr doubleSetting = std::static_pointer_cast<DoubleSetting>(it->second);
+            doubleSetting->setValue(variable->value);
+        }
+    }
+}
+
+void Settings::uploadToDocument(ksDocument3DPtr document3d) {
+    ksPartPtr part(document3d->GetPart(pTop_Part));
+    ksFeaturePtr feature(part->GetFeature());
+    ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+
+    for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
+        if (!it->second->isSyncWithDocument()) {
+            continue;
+        }
+
+        // Только DoubleSetting может синхронизироваться с документом
+        DoubleSetting::Ptr doubleSetting = std::static_pointer_cast<DoubleSetting>(it->second);
+
+        _bstr_t variableName = (c_variableNamePrefix + it->second->getName()).c_str();
+        ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
+        if (!variable) {
+            const DoubleSettingInitializer* dsi = static_cast<const DoubleSettingInitializer*>(si::settingInitializers.at(it->second->getName()));
+            variable = variableCollection->AddNewVariable(variableName, doubleSetting->getValue(), dsi->note);
+        } else {
+            variable->value = doubleSetting->getValue();
+        }
+
+    }
+    variableCollection->refresh();
+    document3d->RebuildDocument();
 }

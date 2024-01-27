@@ -11,11 +11,13 @@ public:
     static const char* ROOT_MACRO_NAME;
 
     DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d);
-    DocumentData(const DocumentData& other) = delete;
-    DocumentData(DocumentData&& other) noexcept = delete;
+    DocumentData(const DocumentData& obj) = delete;
+    DocumentData(DocumentData&& obj) noexcept = delete;
+    DocumentData& operator=(const DocumentData& obj) = delete;
+    DocumentData& operator=(DocumentData&& obj) noexcept = delete;
 
-    Settings& getSettings();
-    HighlightingManager& getHighlightingManager();
+    Settings* getSettings();
+    HighlightingManager* getHighlightingManager();
     Macro getOrCreateRootMacro();
 
 private:

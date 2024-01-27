@@ -6,31 +6,53 @@
 #include <comutil.h>
 #include <unordered_map>
 
-struct NumericSettingInitializer {
+#include "Setting.hpp"
+
+struct SettingInitializer {
     const std::string name;
+
+    SettingInitializer(std::string name_);
+
+    virtual Setting::Ptr create() const = 0;
+};
+
+struct DoubleSettingInitializer : public SettingInitializer {
+    const bool isSyncWithDocument;
     const double defaultValue;
     const std::pair<double, double> range;
     const double step;
-    _bstr_t note;
+    const _bstr_t note;
+
+    DoubleSettingInitializer(const std::string& name_, bool isSyncWithDocument_, double defaultValue_,
+                             std::pair<double, double> range_, double step_, const _bstr_t& note_);
+
+    virtual Setting::Ptr create() const override;
 };
 
-struct StringSettingInitializer {
-    const std::string name;
+struct StringSettingInitializer : public SettingInitializer {
     const _bstr_t defaultValue;
+
+    StringSettingInitializer(const std::string& name_, const _bstr_t& defaultValue_);
+
+    virtual Setting::Ptr create() const override;
 };
 
-extern const NumericSettingInitializer SI_LAYER_HEIGHT;
-extern const NumericSettingInitializer SI_OVERHANG_THRESHOLD;
-extern const NumericSettingInitializer SI_ROUNDING_RADIUS;
-extern const NumericSettingInitializer SI_ROUNDING_DEFLECTION_ANGLE;
-extern const NumericSettingInitializer SI_ELEPHANT_FOOT_LAYERS_COUNT;
-extern const NumericSettingInitializer SI_BRIDGE_HOLE_FILL_LAYERS_COUNT;
-extern const NumericSettingInitializer SI_BRIDGE_HOLE_BUILD_LAYERS_COUNT;
+namespace setting_initializer {
+    using SettingInitializerMap = std::unordered_map<std::string, const SettingInitializer*>;
 
-extern const StringSettingInitializer SI_EXPORT_STL_FOLDER;
+    extern const DoubleSettingInitializer layerHeight;
+    extern const DoubleSettingInitializer overhangThreshold;
+    extern const DoubleSettingInitializer roundingRadius;
+    extern const DoubleSettingInitializer roundingDeflectionAngle;
+    extern const DoubleSettingInitializer elephantFootLayersCount;
+    extern const DoubleSettingInitializer bridgeHoleFillLayersCount;
+    extern const DoubleSettingInitializer bridgeHoleBuildLayersCount;
 
-extern const std::unordered_map<std::string, NumericSettingInitializer> VARIABLE_SETTING_INITIALIZERS;
-extern const std::unordered_map<std::string, NumericSettingInitializer> LOCAL_SETTING_INITIALIZERS;
-extern const std::unordered_map<std::string, StringSettingInitializer> STRING_SETTING_INITIALIZERS;
+    extern const StringSettingInitializer exportStlFolder;
+
+    extern const SettingInitializerMap settingInitializers;
+}
+
+namespace si = setting_initializer;
 
 #endif /* SETTING_INITIALIZER_HPP */
