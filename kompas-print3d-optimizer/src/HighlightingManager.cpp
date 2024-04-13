@@ -33,7 +33,7 @@ std::unique_ptr<ShaderProgram> HighlightingManager::s_shaderProgram = nullptr;
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
-HighlightingManager::HighlightingManager(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings) :
+HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings) :
     DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings),
     m_mode(0x00), m_mouseCoord(0, 0)
 {
@@ -75,27 +75,27 @@ void HighlightingManager::initShaders() {
     s_shaderProgram = std::make_unique<ShaderProgram>(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
 }
 
-IDocumentFramePtr HighlightingManager::getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d) {
-    IKompasDocumentPtr document7 = kompas->TransferInterface(document3d, ksAPITypeEnum::ksAPI7Dual, 0);
-    IDocumentFramesPtr documentFrames = document7->DocumentFrames;
-    IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
+kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d) {
+    kapi::IKompasDocumentPtr document7 = kompas->TransferInterface(document3d, kapi::ksAPITypeEnum::ksAPI7Dual, 0);
+    kapi::IDocumentFramesPtr documentFrames = document7->DocumentFrames;
+    kapi::IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
     return documentFrame;
 }
 
-void HighlightingManager::drawTriangulation(ksPartPtr part, ksFaceDefinitionPtr printFace) {
-    ksBodyPtr body = part->GetMainBody();
-    ksFaceCollectionPtr faceCollection = body->FaceCollection();
+void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
+    kapi::ksBodyPtr body = part->GetMainBody();
+    kapi::ksFaceCollectionPtr faceCollection = body->FaceCollection();
     long nFaces = faceCollection->GetCount();
 
     GLuint vertexArrayObject; glGenVertexArrays(1, &vertexArrayObject);
     GLuint vertexBufferObject; glGenBuffers(1, &vertexBufferObject);
     GLuint elementBufferObject; glGenBuffers(1, &elementBufferObject);
     for (long iFace = 0; iFace < nFaces; iFace++) {
-        ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
+        kapi::ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
 
         s_shaderProgram->setUniform("u_isPrintSurface", face == printFace);
 
-        ksTessellationPtr tesselation = face->GetTessellation();
+        kapi::ksTessellationPtr tesselation = face->GetTessellation();
         tesselation->refresh(); // Нужно обязательно вызывать после перестроения модели
         
         _variant_t points, indexes; tesselation->GetFacetPoints(&points, &indexes);
@@ -173,7 +173,7 @@ bool HighlightingManager::closeFrame() {
     return true;
 }
 
-bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
+bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode) {
     if (m_mode == 0x00) {
         return false;
     }
@@ -220,7 +220,7 @@ bool HighlightingManager::closePaintGL(ksGLObject* glObject, long drawMode) {
     s_shaderProgram->setUniform("u_mouseCoord", m_mouseCoord);
     s_shaderProgram->setUniform("u_mouseRadius", mouseRadius);
 
-    drawTriangulation(m_document3d->GetPart(Part_Type::pTop_Part), printSurface.face);
+    drawTriangulation(m_document3d->GetPart(kapi::Part_Type::pTop_Part), printSurface.face);
 
     return true;
 }

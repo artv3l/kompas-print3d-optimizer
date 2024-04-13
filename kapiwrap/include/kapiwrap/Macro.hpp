@@ -5,23 +5,23 @@
 
 class Macro {
 public:
-    Macro(ksPartPtr part, _bstr_t name, bool staffVisible);
-    explicit Macro(ksEntityPtr entity);
+    Macro(kapi::ksPartPtr part, _bstr_t name, bool staffVisible);
+    explicit Macro(kapi::ksEntityPtr entity);
 
     ~Macro();
     
-    static ksEntityPtr findMacro(ksPartPtr part, _bstr_t name);
+    static kapi::ksEntityPtr findMacro(kapi::ksPartPtr part, _bstr_t name);
 
     bool add(IDispatchPtr obj);
     bool add(Macro macro);
     bool update();
     bool isCreated() const;
     _bstr_t getName() const;
-    ksEntityPtr getEntity() const;
+    kapi::ksEntityPtr getEntity() const;
 
 private:
-    ksEntityPtr m_entity;
-    ksMacro3DDefinitionPtr m_definition;
+    kapi::ksEntityPtr m_entity;
+    kapi::ksMacro3DDefinitionPtr m_definition;
 
 };
 

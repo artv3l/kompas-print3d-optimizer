@@ -59,10 +59,10 @@ StringSetting::Ptr Settings::getStringSetting(std::string name) {
     return stringSetting;
 }
 
-void Settings::loadFromDocument(ksDocument3DPtr document3d) {
-    ksPartPtr part(document3d->GetPart(pTop_Part));
-    ksFeaturePtr feature(part->GetFeature());
-    ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+void Settings::loadFromDocument(kapi::ksDocument3DPtr document3d) {
+    kapi::ksPartPtr part(document3d->GetPart(kapi::pTop_Part));
+    kapi::ksFeaturePtr feature(part->GetFeature());
+    kapi::ksVariableCollectionPtr variableCollection(feature->VariableCollection);
     variableCollection->refresh();
 
     for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
@@ -72,7 +72,7 @@ void Settings::loadFromDocument(ksDocument3DPtr document3d) {
         
         _bstr_t variableName = (c_variableNamePrefix + it->second->getName()).c_str();
 
-        ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
+        kapi::ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
         if (variable) {
             // Только DoubleSetting может синхронизироваться с документом
             DoubleSetting::Ptr doubleSetting = std::static_pointer_cast<DoubleSetting>(it->second);
@@ -81,10 +81,10 @@ void Settings::loadFromDocument(ksDocument3DPtr document3d) {
     }
 }
 
-void Settings::uploadToDocument(ksDocument3DPtr document3d) {
-    ksPartPtr part(document3d->GetPart(pTop_Part));
-    ksFeaturePtr feature(part->GetFeature());
-    ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+void Settings::uploadToDocument(kapi::ksDocument3DPtr document3d) {
+    kapi::ksPartPtr part(document3d->GetPart(kapi::pTop_Part));
+    kapi::ksFeaturePtr feature(part->GetFeature());
+    kapi::ksVariableCollectionPtr variableCollection(feature->VariableCollection);
 
     for (SettingsMap::iterator it = m_settingsMap.begin(); it != m_settingsMap.end(); it++) {
         if (!it->second->isSyncWithDocument()) {
@@ -95,7 +95,7 @@ void Settings::uploadToDocument(ksDocument3DPtr document3d) {
         DoubleSetting::Ptr doubleSetting = std::static_pointer_cast<DoubleSetting>(it->second);
 
         _bstr_t variableName = (c_variableNamePrefix + it->second->getName()).c_str();
-        ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
+        kapi::ksVariablePtr variable = variableCollection->GetByName(variableName, true, false);
         if (!variable) {
             const DoubleSettingInitializer* dsi = static_cast<const DoubleSettingInitializer*>(si::settingInitializers.at(it->second->getName()));
             variable = variableCollection->AddNewVariable(variableName, doubleSetting->getValue(), dsi->note);

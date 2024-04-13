@@ -6,7 +6,7 @@
 struct PlaneEq {
     double a, b, c, d;
 
-    PlaneEq(ksFaceDefinitionPtr face);
+    PlaneEq(kapi::ksFaceDefinitionPtr face);
 
     bool operator==(const PlaneEq& other) const;
     bool operator!=(const PlaneEq& other) const;
@@ -15,12 +15,12 @@ struct PlaneEq {
 };
 
 struct PrintSurface {
-    ksFaceDefinitionPtr face;
+    kapi::ksFaceDefinitionPtr face;
     PlaneEq eq;
 };
 
-std::pair<int, int> countPointsOnEachSide(ksPartPtr part, const PlaneEq& planeEq);
+std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
 
-PrintSurface getSelectedPrintSurface(ksDocument3DPtr document3d);
+PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
 
 #endif /* PRINT_SURFACE_HPP */

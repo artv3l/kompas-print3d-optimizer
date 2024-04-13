@@ -27,8 +27,8 @@ public:
     DoubleSetting::Ptr getDoubleSetting(std::string name);
     StringSetting::Ptr getStringSetting(std::string name);
 
-    void loadFromDocument(ksDocument3DPtr document3d);
-    void uploadToDocument(ksDocument3DPtr document3d);
+    void loadFromDocument(kapi::ksDocument3DPtr document3d);
+    void uploadToDocument(kapi::ksDocument3DPtr document3d);
 
 private:
     using SettingsMap = std::unordered_map<std::string, Setting::Ptr>;

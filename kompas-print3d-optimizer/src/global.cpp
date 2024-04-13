@@ -6,7 +6,7 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 
-KompasObjectPtr Global::kompas = nullptr;
+kapi::KompasObjectPtr Global::kompas = nullptr;
 std::unique_ptr<DocumentsManager> Global::documentsManager = nullptr;
 std::unique_ptr<SettingsManager> Global::settingsManager = nullptr;
 

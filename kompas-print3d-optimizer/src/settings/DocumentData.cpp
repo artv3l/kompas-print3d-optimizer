@@ -7,7 +7,7 @@
 
 const char* DocumentData::ROOT_MACRO_NAME = "Оптимизации";
 
-DocumentData::DocumentData(KompasObjectPtr kompas, ksDocument3DPtr document3d):
+DocumentData::DocumentData(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d):
     m_document3d(document3d), m_settings(), m_rootMacro(),
     m_highlightingManager(kompas, document3d, &m_settings)
 {
@@ -23,9 +23,9 @@ HighlightingManager* DocumentData::getHighlightingManager() {
 }
 
 Macro DocumentData::getOrCreateRootMacro() {
-    ksPartPtr part = m_document3d->GetPart(Part_Type::pTop_Part);
+    kapi::ksPartPtr part = m_document3d->GetPart(kapi::Part_Type::pTop_Part);
     if (!m_rootMacro || !m_rootMacro.value().isCreated() || (m_rootMacro.value().getName() != _bstr_t(ROOT_MACRO_NAME))) {
-        ksEntityPtr macroEntity = Macro::findMacro(part, ROOT_MACRO_NAME);
+        kapi::ksEntityPtr macroEntity = Macro::findMacro(part, ROOT_MACRO_NAME);
         if (!macroEntity) {
             m_rootMacro = Macro(part, ROOT_MACRO_NAME, true);
         } else {

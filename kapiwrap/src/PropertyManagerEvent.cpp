@@ -6,14 +6,14 @@
 #include "PropertyManagerObject.hpp"
 
 PropertyManagerEvent::PropertyManagerEvent(PropertyManagerObject *propertyManager) :
-        AutomationBaseEvent(static_cast<IUnknown *>(propertyManager->getPropertyManager()), DIID_ksPropertyManagerNotify),
+        AutomationBaseEvent(static_cast<IUnknown *>(propertyManager->getPropertyManager()), kapi::DIID_ksPropertyManagerNotify),
         m_propertyManager(propertyManager) {
     advise();
 }
 
 // Карта сообщений
 BEGIN_EVENTSINK_MAP(PropertyManagerEvent, AutomationBaseEvent)
-    ON_EVENT(PropertyManagerEvent, (unsigned int)-1, ksPropertyManagerNotifyEnum::prButtonClick, PropertyManagerEvent::buttonClick, VTS_I4)
+    ON_EVENT(PropertyManagerEvent, (unsigned int)-1, kapi::ksPropertyManagerNotifyEnum::prButtonClick, PropertyManagerEvent::buttonClick, VTS_I4)
 END_EVENTSINK_MAP()
 
 afx_msg bool PropertyManagerEvent::buttonClick(long buttonId) {

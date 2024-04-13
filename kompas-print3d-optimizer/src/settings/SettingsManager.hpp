@@ -12,22 +12,22 @@ class Settings;
 
 class SettingsManager : public PropertyManagerObject {
 public:
-    SettingsManager(KompasObjectPtr kompas);
+    SettingsManager(kapi::KompasObjectPtr kompas);
     virtual ~SettingsManager() = default;
 
     void show(Settings* settings);
 
 private:
-    using EditMap = std::unordered_map<std::string, IPropertyEditPtr>;
+    using EditMap = std::unordered_map<std::string, kapi::IPropertyEditPtr>;
 
-    IPropertyTabPtr m_mainTab;
-    IPropertyControlsPtr m_controls;
+    kapi::IPropertyTabPtr m_mainTab;
+    kapi::IPropertyControlsPtr m_controls;
     EditMap m_editMap;
     Settings* m_shownSettings;
     
     virtual bool buttonClick(long buttonId) override;
 
-    void createEdit(const DoubleSettingInitializer& settingInitializer, ControlTypeEnum type, _bstr_t editName);
+    void createEdit(const DoubleSettingInitializer& settingInitializer, kapi::ControlTypeEnum type, _bstr_t editName);
     void createEdit(const StringSettingInitializer& settingInitializer, _bstr_t editName);
 
     void initControls();

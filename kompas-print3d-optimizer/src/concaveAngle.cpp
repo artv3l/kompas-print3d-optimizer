@@ -4,16 +4,16 @@
 
 const double CHAMFER_WIDTH = 0.1;
 
-bool isConcaveAngle(ksDocument3DPtr document3d, ksEdgeDefinitionPtr edge) {
-    ksPartPtr part(document3d->GetPart(pTop_Part));
+bool isConcaveAngle(kapi::ksDocument3DPtr document3d, kapi::ksEdgeDefinitionPtr edge) {
+    kapi::ksPartPtr part(document3d->GetPart(kapi::pTop_Part));
 
-    ksMassInertiaParamPtr massInertiaParam(part->CalcMassInertiaProperties(0x1 | 0x10)); // mm kg
+    kapi::ksMassInertiaParamPtr massInertiaParam(part->CalcMassInertiaProperties(0x1 | 0x10)); // mm kg
     double startVolume = massInertiaParam->v;
 
-    ksEntityPtr chamferEntity(part->NewEntity(Obj3dType::o3d_chamfer));
-    ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
+    kapi::ksEntityPtr chamferEntity(part->NewEntity(kapi::Obj3dType::o3d_chamfer));
+    kapi::ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
     chamfer->SetChamferParam(true, CHAMFER_WIDTH, CHAMFER_WIDTH);
-    ksEntityCollectionPtr array(chamfer->array());
+    kapi::ksEntityCollectionPtr array(chamfer->array());
     array->Add(edge);
     chamferEntity->hidden = true;
 

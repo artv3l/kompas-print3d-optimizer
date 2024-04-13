@@ -2,13 +2,13 @@
 
 #include "PropertyManagerEvent.hpp"
 
-PropertyManagerObject::PropertyManagerObject(KompasObjectPtr kompas) :
+PropertyManagerObject::PropertyManagerObject(kapi::KompasObjectPtr kompas) :
         m_kompas(kompas), m_application(kompas->ksGetApplication7()),
         m_propertyManager(m_application->CreatePropertyManager(true)),
         m_event(this) {
 }
 
-IPropertyManagerPtr PropertyManagerObject::getPropertyManager() {
+kapi::IPropertyManagerPtr PropertyManagerObject::getPropertyManager() {
     return m_propertyManager;
 }
 

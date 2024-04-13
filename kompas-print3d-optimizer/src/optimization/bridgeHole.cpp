@@ -7,11 +7,12 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "utils.hpp"
-#include "concaveAngle.hpp"
 #include "kapiwrap/Macro.hpp"
 #include "kapiwrap/ConstraintsCreator.hpp"
 #include "kapiwrap/Sketch.hpp"
+
+#include "utils.hpp"
+#include "concaveAngle.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 #include "global.hpp"
@@ -21,20 +22,20 @@ const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD = "Достройка нависающих отверстий";
 const char* MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT = "Отверстие";
 
-bool loopIsCircle(ksLoopPtr loop) {
-	ksEdgeCollectionPtr edges(loop->EdgeCollection());
+bool loopIsCircle(kapi::ksLoopPtr loop) {
+	kapi::ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	int edgesCount = edges->GetCount();
 	if (edgesCount != 1) {
 		return false;
 	}
-	ksEdgeDefinitionPtr edge(edges->GetByIndex(0));
+	kapi::ksEdgeDefinitionPtr edge(edges->GetByIndex(0));
 	if (!edge->IsCircle()) {
 		return false;
 	}
 	return true;
 }
 
-bool checkFaceWithHole(ksFaceDefinitionPtr face, ksFaceDefinitionPtr printFace, ksMeasurerPtr measurer) {
+bool checkFaceWithHole(kapi::ksFaceDefinitionPtr face, kapi::ksFaceDefinitionPtr printFace, kapi::ksMeasurerPtr measurer) {
 	if (!face->IsPlanar() || (face == printFace)) {
 		return false;
 	}
@@ -48,13 +49,13 @@ bool checkFaceWithHole(ksFaceDefinitionPtr face, ksFaceDefinitionPtr printFace, 
 	return true;
 }
 
-bool isHoleDirect(ksFaceDefinitionPtr face, ksLoopPtr loop, ksFaceDefinitionPtr printFace, ksMeasurerPtr measurer) {
-	ksEdgeCollectionPtr edges(loop->EdgeCollection());
+bool isHoleDirect(kapi::ksFaceDefinitionPtr face, kapi::ksLoopPtr loop, kapi::ksFaceDefinitionPtr printFace, kapi::ksMeasurerPtr measurer) {
+	kapi::ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	int edgesCount = edges->GetCount();
 	for (int holeEdgeIndex = 0; holeEdgeIndex < edgesCount; holeEdgeIndex++) {
-		ksEdgeDefinitionPtr holeEdge(edges->GetByIndex(holeEdgeIndex));
+		kapi::ksEdgeDefinitionPtr holeEdge(edges->GetByIndex(holeEdgeIndex));
 
-		ksFaceDefinitionPtr holeFace(holeEdge->GetAdjacentFace(false));
+		kapi::ksFaceDefinitionPtr holeFace(holeEdge->GetAdjacentFace(false));
 		if (holeFace == face) {
 			holeFace = holeEdge->GetAdjacentFace(true);
 		}
@@ -77,18 +78,18 @@ bool isHoleDirect(ksFaceDefinitionPtr face, ksLoopPtr loop, ksFaceDefinitionPtr 
 	return true;
 }
 
-bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopPtr loop, ksFaceDefinitionPtr printFace, ksMeasurerPtr measurer) {
+bool checkHoleLoop(kapi::ksDocument3DPtr document3d, kapi::ksFaceDefinitionPtr face, kapi::ksLoopPtr loop, kapi::ksFaceDefinitionPtr printFace, kapi::ksMeasurerPtr measurer) {
 	if (!isHoleDirect(face, loop, printFace, measurer)) {
 		return false;
 	}
 
-	ksEdgeCollectionPtr edges(loop->EdgeCollection());
+	kapi::ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	int edgesCount = edges->GetCount();
 
 	for (int holeEdgeIndex = 0; holeEdgeIndex < edgesCount; holeEdgeIndex++) {
-		ksEdgeDefinitionPtr holeEdge(edges->GetByIndex(holeEdgeIndex));
+		kapi::ksEdgeDefinitionPtr holeEdge(edges->GetByIndex(holeEdgeIndex));
 
-		ksFaceDefinitionPtr holeFace(holeEdge->GetAdjacentFace(false));
+		kapi::ksFaceDefinitionPtr holeFace(holeEdge->GetAdjacentFace(false));
 		if (holeFace == face) {
 			holeFace = holeEdge->GetAdjacentFace(true);
 		}
@@ -102,9 +103,9 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 		measurer->Calc();
 		double distanceToHoleEdge = measurer->distance;
 
-		ksEdgeCollectionPtr edges2(holeFace->EdgeCollection());
+		kapi::ksEdgeCollectionPtr edges2(holeFace->EdgeCollection());
 		for (int edge2Index = 0; edge2Index < edges2->GetCount(); edge2Index++) {
-			ksEdgeDefinitionPtr edge2(edges2->GetByIndex(edge2Index));
+			kapi::ksEdgeDefinitionPtr edge2(edges2->GetByIndex(edge2Index));
 			if (edge2 == holeEdge) {
 				continue;
 			}
@@ -127,26 +128,26 @@ bool checkHoleLoop(ksDocument3DPtr document3d, ksFaceDefinitionPtr face, ksLoopP
 	return true;
 }
 
-ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDirection, Settings& settings, int multiplier) {
-	ksEntityPtr extrusionEntity(part->NewEntity(o3d_cutExtrusion));
-	ksCutExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
+kapi::ksEntityPtr cutExtrusion(kapi::ksPartPtr part, kapi::ksEntityPtr sketchEntity, bool normalDirection, Settings& settings, int multiplier) {
+	kapi::ksEntityPtr extrusionEntity(part->NewEntity(kapi::o3d_cutExtrusion));
+	kapi::ksCutExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
 	extrusionDef->cut = true;
-	extrusionDef->chooseType = ksChBodiesAndParts;
+	extrusionDef->chooseType = kapi::ksChBodiesAndParts;
 	if (normalDirection) {
-		extrusionDef->directionType = dtNormal;
+		extrusionDef->directionType = kapi::dtNormal;
 	} else {
-		extrusionDef->directionType = dtReverse;
+		extrusionDef->directionType = kapi::dtReverse;
 	}
 	double depth = settings.getDoubleSetting(si::bridgeHoleBuildLayersCount.name)->getValue() *
 		settings.getDoubleSetting(si::layerHeight.name)->getValue() * multiplier;
-	extrusionDef->SetSideParam(normalDirection, etBlind, depth, 0, false);
+	extrusionDef->SetSideParam(normalDirection, kapi::etBlind, depth, 0, false);
 	extrusionDef->SetSketch(sketchEntity);
 	extrusionEntity->Create();
 
 	{ // Привязываем размеры к переменным
-		ksFeaturePtr feature(extrusionEntity->GetFeature());
-		ksVariableCollectionPtr variableCollection(feature->VariableCollection);
-		ksVariablePtr variable(variableCollection->GetByIndex(1)); // Индекс=3 - "Расстояние 1"
+		kapi::ksFeaturePtr feature(extrusionEntity->GetFeature());
+		kapi::ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+		kapi::ksVariablePtr variable(variableCollection->GetByIndex(1)); // Индекс=3 - "Расстояние 1"
 
 		std::ostringstream oss;
 		oss << multiplier << " * ("
@@ -161,24 +162,24 @@ ksEntityPtr cutExtrusion(ksPartPtr part, ksEntityPtr sketchEntity, bool normalDi
 
 /* Закрытие нависающих отверстий тонким слоем материала */
 
-std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, HoleType holeType) {
-	ksMeasurerPtr measurer(part->GetMeasurer());
+std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace, HoleType holeType) {
+	kapi::ksMeasurerPtr measurer(part->GetMeasurer());
 
-	ksBodyPtr body = part->GetMainBody();
-	ksFaceCollectionPtr faces = body->FaceCollection();
+	kapi::ksBodyPtr body = part->GetMainBody();
+	kapi::ksFaceCollectionPtr faces = body->FaceCollection();
 	int facesCount = faces->GetCount();
 
 	std::list<BridgeHoleFillTarget> bridgeHoleFillTargets;
 
 	for (int faceIndex = 0; faceIndex < facesCount; faceIndex++) {
-		ksFaceDefinitionPtr face = faces->GetByIndex(faceIndex);
+		kapi::ksFaceDefinitionPtr face = faces->GetByIndex(faceIndex);
 		if (!checkFaceWithHole(face, printFace, measurer)) {
 			continue;
 		}
 
-		ksLoopCollectionPtr loops(face->LoopCollection());
+		kapi::ksLoopCollectionPtr loops(face->LoopCollection());
 		for (int loopIndex = 0; loopIndex < loops->GetCount(); loopIndex++) {
-			ksLoopPtr innerLoop(loops->GetByIndex(loopIndex));
+			kapi::ksLoopPtr innerLoop(loops->GetByIndex(loopIndex));
 			if (innerLoop->IsOuter()) {
 				continue;
 			}
@@ -201,7 +202,7 @@ std::list<BridgeHoleFillTarget> getBridgeHoleFillTargets(ksDocument3DPtr documen
 	return bridgeHoleFillTargets;
 }
 
-ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, Settings& settings) {
+kapi::ksEntityPtr fillBridgeHoles(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, std::list<BridgeHoleFillTarget> bridgeHoleFillTargets, Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_FILL, true);
 
 	for (BridgeHoleFillTarget target : bridgeHoleFillTargets) {
@@ -210,7 +211,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 		Sketch sketch(kompas, part, target.face);
 		macroElement.add(sketch.entity);
 
-		ksEdgeCollectionPtr edges(target.loop->EdgeCollection());
+		kapi::ksEdgeCollectionPtr edges(target.loop->EdgeCollection());
 		int edgesCount = edges->GetCount();
 		for (int edgeIndex = 0; edgeIndex < edgesCount; edgeIndex++) {
 			sketch.definition->AddProjectionOf(edges->GetByIndex(edgeIndex));
@@ -218,17 +219,17 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 		sketch.endEdit();
 
 		double extrusionDepth = settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getValue() * settings.getDoubleSetting(si::layerHeight.name)->getValue();
-		ksEntityPtr extrusionEntity(part->NewEntity(o3d_bossExtrusion));
-		ksBossExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
-		extrusionDef->chooseType = ksChBodiesAndParts;
-		extrusionDef->directionType = dtReverse;
-		extrusionDef->SetSideParam(false, etBlind, extrusionDepth, 0, false);
+		kapi::ksEntityPtr extrusionEntity(part->NewEntity(kapi::o3d_bossExtrusion));
+		kapi::ksBossExtrusionDefinitionPtr extrusionDef(extrusionEntity->GetDefinition());
+		extrusionDef->chooseType = kapi::ksChBodiesAndParts;
+		extrusionDef->directionType = kapi::dtReverse;
+		extrusionDef->SetSideParam(false, kapi::etBlind, extrusionDepth, 0, false);
 		extrusionDef->SetSketch(sketch.entity);
 		extrusionEntity->Create();
 		{ // Привязываем размеры к переменным
-			ksFeaturePtr feature(extrusionEntity->GetFeature());
-			ksVariableCollectionPtr variableCollection(feature->VariableCollection);
-			ksVariablePtr variable(variableCollection->GetByIndex(3)); // Индекс=3 - "Расстояние 2"
+			kapi::ksFeaturePtr feature(extrusionEntity->GetFeature());
+			kapi::ksVariableCollectionPtr variableCollection(feature->VariableCollection);
+			kapi::ksVariablePtr variable(variableCollection->GetByIndex(3)); // Индекс=3 - "Расстояние 2"
 
 			std::ostringstream oss;
 			oss << settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getExpression() << " * " << settings.getDoubleSetting(si::layerHeight.name)->getExpression();
@@ -241,7 +242,7 @@ ksEntityPtr fillBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<Br
 	return macro.getEntity();
 }
 
-ksEntityPtr optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings, HoleType holeType) {
+kapi::ksEntityPtr optimizeBridgeHoleFill(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings, HoleType holeType) {
 	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface().face, holeType);
 	if (targets.empty()) {
 		return nullptr;
@@ -251,13 +252,13 @@ ksEntityPtr optimizeBridgeHoleFill(KompasObjectPtr kompas, ksDocument3DPtr docum
 
 /* Достройка нависающих отверстий для печати мостами */
 
-bool isOuterLoopForBuild(ksLoopPtr loop) {
+bool isOuterLoopForBuild(kapi::ksLoopPtr loop) {
 	if (loopIsCircle(loop)) {
 		return true;
 	}
-	ksEdgeCollectionPtr edges(loop->EdgeCollection());
+	kapi::ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	for (int edgeIndex = 0; edgeIndex < edges->GetCount(); edgeIndex++) {
-		ksEdgeDefinitionPtr edge(edges->GetByIndex(edgeIndex));
+		kapi::ksEdgeDefinitionPtr edge(edges->GetByIndex(edgeIndex));
 		if (!edge->IsStraight() && !edge->IsArc()) {
 			return false;
 		}
@@ -265,30 +266,30 @@ bool isOuterLoopForBuild(ksLoopPtr loop) {
 	return true;
 }
 
-std::list<BridgeHoleBuildTarget> getBridgeHoleBuildTargets(ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace) {
-	ksMeasurerPtr measurer(part->GetMeasurer());
+std::list<BridgeHoleBuildTarget> getBridgeHoleBuildTargets(kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
+	kapi::ksMeasurerPtr measurer(part->GetMeasurer());
 
-	ksBodyPtr body = part->GetMainBody();
-	ksFaceCollectionPtr faces = body->FaceCollection();
+	kapi::ksBodyPtr body = part->GetMainBody();
+	kapi::ksFaceCollectionPtr faces = body->FaceCollection();
 	int facesCount = faces->GetCount();
 
 	std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets;
 
 	for (int faceIndex = 0; faceIndex < facesCount; faceIndex++) {
-		ksFaceDefinitionPtr face = faces->GetByIndex(faceIndex);
+		kapi::ksFaceDefinitionPtr face = faces->GetByIndex(faceIndex);
 		if (!checkFaceWithHole(face, printFace, measurer)) {
 			continue;
 		}
 
-		ksLoopCollectionPtr loops(face->LoopCollection());
+		kapi::ksLoopCollectionPtr loops(face->LoopCollection());
 		int loopsCount = loops->GetCount();
 
 		if (loopsCount != 2) {
 			continue;
 		}
 
-		ksLoopPtr testLoop(loops->GetByIndex(0));
-		ksLoopPtr innerLoop, outerLoop;
+		kapi::ksLoopPtr testLoop(loops->GetByIndex(0));
+		kapi::ksLoopPtr innerLoop, outerLoop;
 		if (testLoop->IsOuter()) {
 			outerLoop = testLoop;
 			innerLoop = loops->GetByIndex(1);
@@ -302,13 +303,13 @@ std::list<BridgeHoleBuildTarget> getBridgeHoleBuildTargets(ksDocument3DPtr docum
 		}
 
 		if (loopIsCircle(outerLoop)) {
-			ksEdgeCollectionPtr innerEdges(innerLoop->EdgeCollection());
-			ksEdgeDefinitionPtr innerEdge(innerEdges->GetByIndex(0));
-			double innerRadius = innerEdge->GetLength(ksLengthUnitsEnum::ksLUnMM) / (2 * M_PI);
+			kapi::ksEdgeCollectionPtr innerEdges(innerLoop->EdgeCollection());
+			kapi::ksEdgeDefinitionPtr innerEdge(innerEdges->GetByIndex(0));
+			double innerRadius = innerEdge->GetLength(kapi::ksLengthUnitsEnum::ksLUnMM) / (2 * M_PI);
 
-			ksEdgeCollectionPtr outerEdges(outerLoop->EdgeCollection());
-			ksEdgeDefinitionPtr outerEdge(outerEdges->GetByIndex(0));
-			double outerRadius = outerEdge->GetLength(ksLengthUnitsEnum::ksLUnMM) / (2 * M_PI);
+			kapi::ksEdgeCollectionPtr outerEdges(outerLoop->EdgeCollection());
+			kapi::ksEdgeDefinitionPtr outerEdge(outerEdges->GetByIndex(0));
+			double outerRadius = outerEdge->GetLength(kapi::ksLengthUnitsEnum::ksLUnMM) / (2 * M_PI);
 
 			if ((2 * innerRadius * innerRadius) >= (outerRadius * outerRadius)) {
 				continue;
@@ -322,44 +323,44 @@ std::list<BridgeHoleBuildTarget> getBridgeHoleBuildTargets(ksDocument3DPtr docum
 	return bridgeHoleBuildTargets;
 }
 
-void drawLoopProjection(ksSketchDefinitionPtr sketchDef, ksLoopPtr loop) {
-	ksEdgeCollectionPtr edges(loop->EdgeCollection());
+void drawLoopProjection(kapi::ksSketchDefinitionPtr sketchDef, kapi::ksLoopPtr loop) {
+	kapi::ksEdgeCollectionPtr edges(loop->EdgeCollection());
 	for (int i = 0; i < edges->GetCount(); i++) {
-		ksEdgeDefinitionPtr edge(edges->GetByIndex(i));
+		kapi::ksEdgeDefinitionPtr edge(edges->GetByIndex(i));
 		sketchDef->AddProjectionOf(edge);
 	}
 }
 
-ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target) {
-	ksEdgeCollectionPtr innerEdges(target.innerLoop->EdgeCollection());
-	ksEdgeDefinitionPtr innerEdge(innerEdges->GetByIndex(0));
+kapi::ICirclePtr drawThinInnerCircleProjection(Sketch sketch, BridgeHoleBuildTarget target) {
+	kapi::ksEdgeCollectionPtr innerEdges(target.innerLoop->EdgeCollection());
+	kapi::ksEdgeDefinitionPtr innerEdge(innerEdges->GetByIndex(0));
 	sketch.definition->AddProjectionOf(innerEdge);
 
-	ICirclesPtr circles(sketch.drawingContainer->Circles);
-	ICirclePtr innerCircle(circles->GetCircle(0));
-	innerCircle->Style = ksCurveStyleEnum::ksCSThin;
+	kapi::ICirclesPtr circles(sketch.drawingContainer->Circles);
+	kapi::ICirclePtr innerCircle(circles->GetCircle(0));
+	innerCircle->Style = kapi::ksCurveStyleEnum::ksCSThin;
 	innerCircle->Update();
 
 	return innerCircle;
 }
 
-void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
+void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, kapi::ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
 	drawLoopProjection(sketch.definition, target.outerLoop);
 
-	ICirclesPtr circles(sketch.drawingContainer->Circles);
-	ICirclePtr outerCircle;
+	kapi::ICirclesPtr circles(sketch.drawingContainer->Circles);
+	kapi::ICirclePtr outerCircle;
 	for (int circleIndex = 0; circleIndex < circles->Count; circleIndex++) {
-		ICirclePtr circle(circles->GetCircle(circleIndex));
+		kapi::ICirclePtr circle(circles->GetCircle(circleIndex));
 		if (circle != innerCircle) {
 			outerCircle = circle;
 		}
 	}
-	outerCircle->Style = ksCurveStyleEnum::ksCSThin;
+	outerCircle->Style = kapi::ksCurveStyleEnum::ksCSThin;
 	outerCircle->Update();
 
-	ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+	kapi::ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 
-	ILineSegmentPtr lineSegment1(lineSegments->Add());
+	kapi::ILineSegmentPtr lineSegment1(lineSegments->Add());
 	lineSegment1->X1 = outerCircle->Xc + innerCircle->Radius; lineSegment1->Y1 = outerCircle->Yc - innerCircle->Radius;
 	lineSegment1->X2 = outerCircle->Xc - innerCircle->Radius; lineSegment1->Y2 = outerCircle->Yc - innerCircle->Radius;
 	lineSegment1->Update();
@@ -369,7 +370,7 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 	constrCreator.horizontal();
 	constrCreator.tangentTwoCurves(innerCircle);
 
-	ILineSegmentPtr lineSegment2(lineSegments->Add());
+	kapi::ILineSegmentPtr lineSegment2(lineSegments->Add());
 	lineSegment2->X1 = outerCircle->Xc + innerCircle->Radius; lineSegment2->Y1 = outerCircle->Yc + innerCircle->Radius;
 	lineSegment2->X2 = outerCircle->Xc - innerCircle->Radius; lineSegment2->Y2 = outerCircle->Yc + innerCircle->Radius;
 	lineSegment2->Update();
@@ -379,9 +380,9 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 	constrCreator.parallel(lineSegment1);
 	constrCreator.tangentTwoCurves(innerCircle);
 
-	IArcsPtr arcs(sketch.drawingContainer->Arcs);
+	kapi::IArcsPtr arcs(sketch.drawingContainer->Arcs);
 	{
-		IArcPtr arc(arcs->Add());
+		kapi::IArcPtr arc(arcs->Add());
 		arc->Xc = outerCircle->Xc; arc->Yc = outerCircle->Yc;
 		arc->Radius = outerCircle->Radius;
 		arc->X1 = lineSegment1->X1; arc->Y1 = lineSegment1->Y1;
@@ -394,7 +395,7 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 		constrCreator.mergePoints(2, lineSegment2, 0);
 	}
 	{
-		IArcPtr arc(arcs->Add());
+		kapi::IArcPtr arc(arcs->Add());
 		arc->Xc = outerCircle->Xc; arc->Yc = outerCircle->Yc;
 		arc->Radius = outerCircle->Radius;
 		arc->X1 = lineSegment1->X2; arc->Y1 = lineSegment1->Y2;
@@ -408,7 +409,7 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, ICirclePtr innerCircle, Bri
 	}
 }
 
-void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points) {
+void closeContour(kapi::ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points) {
 	size_t nPoints = points.size();
 	if ((nPoints < 2) || (nPoints % 2 != 0)) {
 		return;
@@ -422,9 +423,9 @@ void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> point
 
 	// Размеры всегда будут четными
 	for (std::list<MergePointInfo>::const_iterator it = points.cbegin(); it != points.cend(); it++) {
-		ILineSegmentPtr lineSegment(lineSegments->Add());
+		kapi::ILineSegmentPtr lineSegment(lineSegments->Add());
 		lineSegment->X1 = it->x; lineSegment->Y1 = it->y;
-		IDrawingObjectPtr drawingObject1 = it->drawingObject; int drawingObjectIndex1 = it->drawingObjectIndex;
+		kapi::IDrawingObjectPtr drawingObject1 = it->drawingObject; int drawingObjectIndex1 = it->drawingObjectIndex;
 		it++;
 		lineSegment->X2 = it->x; lineSegment->Y2 = it->y;
 		lineSegment->Update();
@@ -434,11 +435,11 @@ void closeContour(ILineSegmentsPtr lineSegments, std::list<MergePointInfo> point
 	}
 }
 
-std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCircle, double angle) {
+std::pair<kapi::ILinePtr, kapi::ILinePtr> drawBasicLines(Sketch sketch, kapi::ICirclePtr innerCircle, double angle) {
 	double y1 = innerCircle->Yc - innerCircle->Radius;
 	double y2 = innerCircle->Yc + innerCircle->Radius;
 
-	ILinesPtr lines(sketch.drawingContainer->Lines);
+	kapi::ILinesPtr lines(sketch.drawingContainer->Lines);
 
 	/*
 	ILinePtr horizontalLine(lines->Add());
@@ -480,7 +481,7 @@ std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCirc
 	constrCreator.dimWithVariable(oss.str().c_str());
 	*/
 
-	ILinePtr line1(lines->Add());
+	kapi::ILinePtr line1(lines->Add());
 	line1->X1 = innerCircle->Xc + 1; line1->Y1 = y1;
 	line1->X2 = innerCircle->Xc - 1; line1->Y2 = y1;
 	line1->Update();
@@ -488,7 +489,7 @@ std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCirc
 	constrCreator.horizontal();
 	constrCreator.tangentTwoCurves(innerCircle);
 	
-	ILinePtr line2(lines->Add());
+	kapi::ILinePtr line2(lines->Add());
 	line2->X1 = innerCircle->Xc + 1; line2->Y1 = y2;
 	line2->X2 = innerCircle->Xc - 1; line2->Y2 = y2;
 	line2->Update();
@@ -499,18 +500,18 @@ std::pair<ILinePtr, ILinePtr> drawBasicLines(Sketch sketch, ICirclePtr innerCirc
 	return std::make_pair(line1, line2);
 }
 
-bool pointInsideInterval(ksMathematic2DPtr math2d, double x, double y, ILinePtr line1, ILinePtr line2) {
+bool pointInsideInterval(kapi::ksMathematic2DPtr math2d, double x, double y, kapi::ILinePtr line1, kapi::ILinePtr line2) {
 	double distance1 = math2d->ksDistancePntLineForPoint(x, y, line1->X1, line1->Y1, line1->X2, line1->Y2);
 	double distance2 = math2d->ksDistancePntLineForPoint(x, y, line2->X1, line2->Y1, line2->X2, line2->Y2);
 	double intervalLength = math2d->ksDistancePntLineForPoint(line1->X1, line1->Y1, line2->X1, line2->Y1, line2->X2, line2->Y2);
 	return doubleEqual(distance1 + distance2, intervalLength);
 }
 
-void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) {
-	ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment) {
+	kapi::ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
 	
-	ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
-	ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
 	int res1 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line1->Reference, dynArr1);
 	int res2 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line2->Reference, dynArr2);
 
@@ -519,7 +520,7 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 		!pointInsideInterval(math2d, lineSegment->X2, lineSegment->Y2, info.line1, info.line2) &&
 		(res1 == 0) && (res2 == 0))
 	{
-		lineSegment->Style = ksCurveStyleEnum::ksCSThin;
+		lineSegment->Style = kapi::ksCurveStyleEnum::ksCSThin;
 		lineSegment->Update();
 		return;
 	}
@@ -529,7 +530,7 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 		return;
 	}
 
-	lineSegment->Style = ksCurveStyleEnum::ksCSThin;
+	lineSegment->Style = kapi::ksCurveStyleEnum::ksCSThin;
 	lineSegment->Update();
 
 	/*
@@ -538,14 +539,14 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 	  - Вторая точка лежит на line2.
 	*/
 
-	ILineSegmentsPtr lineSegments(info.sketch.drawingContainer->LineSegments);
+	kapi::ILineSegmentsPtr lineSegments(info.sketch.drawingContainer->LineSegments);
 	if ((res1 == 1) && (res2 == 1)) { // найдено 2 пересечения
-		ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam);
+		kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
 		dynArr1->ksGetArrayItem(0, point1);
-		ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam);
+		kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
 		dynArr2->ksGetArrayItem(0, point2);
 
-		ILineSegmentPtr newLineSegment(lineSegments->Add());
+		kapi::ILineSegmentPtr newLineSegment(lineSegments->Add());
 		newLineSegment->X1 = point1->x; newLineSegment->Y1 = point1->y;
 		newLineSegment->X2 = point2->x; newLineSegment->Y2 = point2->y;
 		newLineSegment->Update();
@@ -568,14 +569,14 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 			partnerIndex = 1;
 		}
 
-		ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam);
+		kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
 		if (res1 == 1) {
 			dynArr1->ksGetArrayItem(0, point);
 		} else {
 			dynArr2->ksGetArrayItem(0, point);
 		}
 
-		ILineSegmentPtr newLineSegment(lineSegments->Add());
+		kapi::ILineSegmentPtr newLineSegment(lineSegments->Add());
 		newLineSegment->X1 = x; newLineSegment->Y1 = y;
 		newLineSegment->X2 = point->x; newLineSegment->Y2 = point->y;
 		newLineSegment->Update();
@@ -593,11 +594,11 @@ void processLineSegment(Sketch1NotCircleInfo info, ILineSegmentPtr lineSegment) 
 	}
 }
 
-void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
-	ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
+	kapi::ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
 
-	ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
-	ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
 	int res1 = math2d->ksIntersectCurvCurv(arc->Reference, info.line1->Reference, dynArr1);
 	int res2 = math2d->ksIntersectCurvCurv(arc->Reference, info.line2->Reference, dynArr2);
 
@@ -619,20 +620,20 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 		}
 	}
 
-	arc->Style = ksCurveStyleEnum::ksCSThin;
+	arc->Style = kapi::ksCurveStyleEnum::ksCSThin;
 	arc->Update();
 
-	IArcsPtr arcs(info.sketch.drawingContainer->Arcs);
+	kapi::IArcsPtr arcs(info.sketch.drawingContainer->Arcs);
 
 	if ((res1 + res2 == 1)) { // пересечени(е)/(я) только с одной осью
-		ksDynamicArrayPtr dynArr;
+		kapi::ksDynamicArrayPtr dynArr;
 		
 		if (dynArr1->ksGetArrayCount() != 0) { dynArr = dynArr1; } else { dynArr = dynArr2; }
 
 		if (dynArr->ksGetArrayCount() == 1) { // всего одно пересечение с одной из осей
-			ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(0, point);
+			kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point);
 
-			IArcPtr newArc(arcs->Add());
+			kapi::IArcPtr newArc(arcs->Add());
 			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 			newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
 			newArc->X2 = point->x; newArc->Y2 = point->y;
@@ -649,8 +650,8 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 				info.points2.push_back(MergePointInfo{point->x, point->y, newArc, 2});
 			}
 		} else { // два пересечения с одной осью
-			ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(0, point1);
-			ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr->ksGetArrayItem(1, point2);
+			kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point1);
+			kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(1, point2);
 
 			double distance1 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point1->x, point1->y);
 			double distance2 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point2->x, point2->y);
@@ -661,7 +662,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 			if (arcPoint1InsideInterval) { // обе точки внутри промежутка
 				// оставляем 2 крайние части дуги
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
 					newArc->X2 = point1->x; newArc->Y2 = point1->y;
@@ -679,7 +680,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 					}
 				}
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = point2->x; newArc->Y1 = point2->y;
 					newArc->X2 = arc->X2; newArc->Y2 = arc->Y2;
@@ -698,7 +699,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 				}
 			} else { // обе точки вне промежутка
 				// оставляем центральную часть дуги
-				IArcPtr newArc(arcs->Add());
+				kapi::IArcPtr newArc(arcs->Add());
 				newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 				newArc->X1 = point1->x; newArc->Y1 = point1->y;
 				newArc->X2 = point2->x; newArc->Y2 = point2->y;
@@ -722,10 +723,10 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 		}
 	} else { // пересечения с обеими осями
 		if ((dynArr1->ksGetArrayCount() == 1) && (dynArr2->ksGetArrayCount() == 1)) { // одно пересечение с каждой осью
-			ksMathPointParamPtr point1 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr1->ksGetArrayItem(0, point1);
-			ksMathPointParamPtr point2 = global::kompas->GetParamStruct(ko_MathPointParam); dynArr2->ksGetArrayItem(0, point2);
+			kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(0, point1);
+			kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(0, point2);
 
-			IArcPtr newArc(arcs->Add());
+			kapi::IArcPtr newArc(arcs->Add());
 			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 
 			double distance1 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point1->x, point1->y);
@@ -755,14 +756,14 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 		} else if ((dynArr1->ksGetArrayCount() == 2) && (dynArr2->ksGetArrayCount() == 1) ||
 				   (dynArr1->ksGetArrayCount() == 1) && (dynArr2->ksGetArrayCount() == 2))
 		{
-			std::vector<std::pair<double, ksMathPointParamPtr>> points;
+			std::vector<std::pair<double, kapi::ksMathPointParamPtr>> points;
 			for (int i = 0; i < dynArr1->ksGetArrayCount(); i++) {
-				ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr1->ksGetArrayItem(i, point);
+				kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(i, point);
 				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
 				points.push_back(std::make_pair(distance, point));
 			}
 			for (int i = 0; i < dynArr2->ksGetArrayCount(); i++) {
-				ksMathPointParamPtr point = global::kompas->GetParamStruct(ko_MathPointParam); dynArr2->ksGetArrayItem(i, point);
+				kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(i, point);
 				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
 				points.push_back(std::make_pair(distance, point));
 			}
@@ -770,7 +771,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 
 			if (arcPoint1InsideInterval) {
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = arc->X1; newArc->Y1 = arc->Y1;
 					newArc->X2 = points[0].second->x; newArc->Y2 = points[0].second->y;
@@ -788,7 +789,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 					}
 				}
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = points[1].second->x; newArc->Y1 = points[1].second->y;
 					newArc->X2 = points[2].second->x; newArc->Y2 = points[2].second->y;
@@ -811,7 +812,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 				}
 			} else {
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = points[0].second->x; newArc->Y1 = points[0].second->y;
 					newArc->X2 = points[1].second->x; newArc->Y2 = points[1].second->y;
@@ -833,7 +834,7 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 					}
 				}
 				{
-					IArcPtr newArc(arcs->Add());
+					kapi::IArcPtr newArc(arcs->Add());
 					newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
 					newArc->X1 = points[2].second->x; newArc->Y1 = points[2].second->y;
 					newArc->X2 = arc->X2; newArc->Y2 = arc->Y2;
@@ -855,20 +856,20 @@ void processArc(Sketch1NotCircleInfo info, IArcPtr arc) {
 	}
 }
 
-void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
+void bridgeHoleBuildNotCircleDrawSketch1(kapi::KompasObjectPtr kompas, Sketch sketch, kapi::ICirclePtr innerCircle, BridgeHoleBuildTarget target) {
 	drawLoopProjection(sketch.definition, target.outerLoop);
 
 	double y1 = innerCircle->Yc - innerCircle->Radius;
 	double y2 = innerCircle->Yc + innerCircle->Radius;
 
 	// todo: определить оптимальный угол наклона вспомогательных прямых
-	ksSurfacePtr sketchSurface = sketch.definition->GetSurface();
+	kapi::ksSurfacePtr sketchSurface = sketch.definition->GetSurface();
 	
 
 	// Строим вспомогательные линии
-	std::pair<ILinePtr, ILinePtr> basicLines = drawBasicLines(sketch, innerCircle, 40.0);
+	std::pair<kapi::ILinePtr, kapi::ILinePtr> basicLines = drawBasicLines(sketch, innerCircle, 40.0);
 
-	ksMathematic2DPtr math2d = kompas->GetMathematic2D();
+	kapi::ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
 	// Точки для замыкания контура
 	std::list<MergePointInfo> points1;
@@ -876,17 +877,17 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
 
 	Sketch1NotCircleInfo info{sketch, basicLines.first, basicLines.second, points1, points2};
 
-	ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+	kapi::ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 	int nLineSegments = lineSegments->Count;
 	for (int iLineSegment = 0; iLineSegment < nLineSegments; iLineSegment++) {
-		ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(iLineSegment));
+		kapi::ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(iLineSegment));
 		processLineSegment(info, lineSegment);
 	}
 
-	IArcsPtr arcs(sketch.drawingContainer->Arcs);
+	kapi::IArcsPtr arcs(sketch.drawingContainer->Arcs);
 	int nArcs = arcs->Count;
 	for (int iArc = 0; iArc < nArcs; iArc++) {
-		IArcPtr arc(arcs->GetArc(iArc));
+		kapi::IArcPtr arc(arcs->GetArc(iArc));
 		processArc(info, arc);
 	}
 
@@ -894,11 +895,11 @@ void bridgeHoleBuildNotCircleDrawSketch1(KompasObjectPtr kompas, Sketch sketch, 
     closeContour(lineSegments, points2);
 }
 
-void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
-	ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
+void bridgeHoleBuildDrawSketch2(kapi::KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount) {
+	kapi::ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
 
-	IRegularPolygonsPtr regularPolygons = sketch.drawingContainer->RegularPolygons;
-	IRegularPolygonPtr regularPolygon = regularPolygons->Add();
+	kapi::IRegularPolygonsPtr regularPolygons = sketch.drawingContainer->RegularPolygons;
+	kapi::IRegularPolygonPtr regularPolygon = regularPolygons->Add();
 	regularPolygon->Xc = innerCircle->Xc; regularPolygon->Yc = innerCircle->Yc;
 	regularPolygon->Count = angleCount;
 	regularPolygon->Describe = true;
@@ -912,14 +913,14 @@ void bridgeHoleBuildDrawSketch2(KompasObjectPtr kompas, Sketch sketch, BridgeHol
 	constrCreator.horizontalAlignPoints(1, regularPolygon, 2);
 }
 
-ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, Settings& settings) {
+kapi::ksEntityPtr buildBridgeHoles(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleBuildTargets, Settings& settings) {
 	Macro macro(part, MACRO_NAME_BRIDGE_HOLE_BUILD, true);
 
 	for (BridgeHoleBuildTarget target : bridgeHoleBuildTargets) {
 		Macro macroElement(part, MACRO_NAME_BRIDGE_HOLE_BUILD_ELEMENT, true);
 
 		Sketch sketch(kompas, part, target.face);
-		ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
+		kapi::ICirclePtr innerCircle = drawThinInnerCircleProjection(sketch, target);
 		double centerX = innerCircle->Xc, centerY = innerCircle->Yc, radius = innerCircle->Radius;
 		
 		if (loopIsCircle(target.outerLoop)) {
@@ -948,7 +949,7 @@ ksEntityPtr buildBridgeHoles(KompasObjectPtr kompas, ksPartPtr part, std::list<B
 	return macro.getEntity();
 }
 
-ksEntityPtr optimizeBridgeHoleBuild(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings) {
+kapi::ksEntityPtr optimizeBridgeHoleBuild(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings) {
 	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface().face);
 	if (targets.empty()) {
 		return nullptr;

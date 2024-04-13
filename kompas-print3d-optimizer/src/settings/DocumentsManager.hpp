@@ -6,20 +6,20 @@
 #include "settings/DocumentData.hpp"
 
 struct Document3DPtrReferenceHash {
-    size_t operator()(ksDocument3DPtr document3d) const;
+    size_t operator()(kapi::ksDocument3DPtr document3d) const;
 };
 
 class DocumentsManager {
 public:
-    DocumentsManager(KompasObjectPtr kompas);
+    DocumentsManager(kapi::KompasObjectPtr kompas);
 
-    DocumentData& getOrCreateDocumentData(ksDocument3DPtr document3d);
-    bool remove(ksDocument3DPtr document3d);
+    DocumentData& getOrCreateDocumentData(kapi::ksDocument3DPtr document3d);
+    bool remove(kapi::ksDocument3DPtr document3d);
 
 private:
-    using DocumentDataMap = std::unordered_map<ksDocument3DPtr, DocumentData, Document3DPtrReferenceHash>;
+    using DocumentDataMap = std::unordered_map<kapi::ksDocument3DPtr, DocumentData, Document3DPtrReferenceHash>;
 
-    KompasObjectPtr m_kompas;
+    kapi::KompasObjectPtr m_kompas;
     DocumentDataMap m_documentDataMap;
 };
 

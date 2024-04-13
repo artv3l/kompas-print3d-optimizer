@@ -20,13 +20,13 @@
 #include "global.hpp"
 
 
-void fastExportStl(ksDocument3DPtr document3d, Settings& settings) {
-    ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
+void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings) {
+    kapi::ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
     param->Init();
-    param->format = D3FormatConvType::format_STL;
+    param->format = kapi::D3FormatConvType::format_STL;
     param->formatBinary = true;
     param->angle = 2 * M_PI / 180.0;
-    param->stepType = ksStepTypeEnum::ksDeviationStep;
+    param->stepType = kapi::ksStepTypeEnum::ksDeviationStep;
 
     std::pair<std::string, std::string> pair = splitFileNameAndRemoveExtension(std::string(document3d->fileName));
     std::string stlFolder = std::string(settings.getStringSetting(si::exportStlFolder.name)->getValue());
@@ -44,7 +44,7 @@ unsigned int WINAPI LIBRARYID() {
 
 void WINAPI LIBRARYENTRY(unsigned int comm) {
 
-    ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
+    kapi::ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
     if (!document3d) {
         global::kompas->ksMessage("Необходимо открыть документ-модель");
         return;
@@ -70,7 +70,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
 
     switch (comm) { // Быстрый экспорт
     case 5: {
-        IApplicationPtr application = global::kompas->ksGetApplication7();
+        kapi::IApplicationPtr application = global::kompas->ksGetApplication7();
         fastExportStl(document3d, *settings);
         application->IMessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
         return;
@@ -99,8 +99,8 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     // Оптимизации
-    ksPartPtr part = document3d->GetPart(pTop_Part);
-    ksEntityPtr optimizationResult = nullptr;
+    kapi::ksPartPtr part = document3d->GetPart(kapi::pTop_Part);
+    kapi::ksEntityPtr optimizationResult = nullptr;
     size_t reworkCount = 0;
     switch (comm) {
     case 10:

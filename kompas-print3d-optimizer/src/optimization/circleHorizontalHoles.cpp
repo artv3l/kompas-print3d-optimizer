@@ -17,18 +17,18 @@ const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные �
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";
 const double RADIUS_RATIO = 1.0 / 3.0;
 
-ksEntityPtr createConeFaceAxis(ksPartPtr part, ksFaceDefinitionPtr coneFace, bool hidden) {
-    ksEntityPtr entity = part->NewEntity(Obj3dType::o3d_axisConeFace);
-    ksAxisConefaceDefinitionPtr axis = entity->GetDefinition();
+kapi::ksEntityPtr createConeFaceAxis(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr coneFace, bool hidden) {
+    kapi::ksEntityPtr entity = part->NewEntity(kapi::Obj3dType::o3d_axisConeFace);
+    kapi::ksAxisConefaceDefinitionPtr axis = entity->GetDefinition();
     axis->SetFace(coneFace);
     entity->hidden = hidden;
     entity->Create();
     return entity;
 }
 
-ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityPtr point, bool hidden) {
-    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_planePerpendicular));
-    ksPlanePerpendicularDefinitionPtr definition(entity->GetDefinition());
+kapi::ksEntityPtr createPlanePerpendicular(kapi::ksPartPtr part, kapi::ksEntityPtr axis, kapi::ksEntityPtr point, bool hidden) {
+    kapi::ksEntityPtr entity(part->NewEntity(kapi::Obj3dType::o3d_planePerpendicular));
+    kapi::ksPlanePerpendicularDefinitionPtr definition(entity->GetDefinition());
     definition->SetPoint(point);
     definition->SetEdge(axis);
     entity->hidden = hidden;
@@ -36,9 +36,9 @@ ksEntityPtr createPlanePerpendicular(ksPartPtr part, ksEntityPtr axis, ksEntityP
     return entity;
 }
 
-ksEntityPtr createPlaneLineToPlane(ksPartPtr part, ksEntityPtr line, ksEntityPtr plane, bool isParallel, bool hidden) {
-    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_planeLineToPlane));
-    ksPlaneLineToPlaneDefinitionPtr definition(entity->GetDefinition());
+kapi::ksEntityPtr createPlaneLineToPlane(kapi::ksPartPtr part, kapi::ksEntityPtr line, kapi::ksEntityPtr plane, bool isParallel, bool hidden) {
+    kapi::ksEntityPtr entity(part->NewEntity(kapi::Obj3dType::o3d_planeLineToPlane));
+    kapi::ksPlaneLineToPlaneDefinitionPtr definition(entity->GetDefinition());
     bool a2 = definition->SetEdge(line);
     bool a1 = definition->SetPlane(plane);
     definition->parallel = isParallel;
@@ -47,53 +47,53 @@ ksEntityPtr createPlaneLineToPlane(ksPartPtr part, ksEntityPtr line, ksEntityPtr
     return entity;
 }
 
-IPoint3DPtr createPointCenter(IPart7Ptr part7, IFacePtr face7, bool hidden) {
-    IModelContainerPtr modelContainer(part7);
+kapi::IPoint3DPtr createPointCenter(kapi::IPart7Ptr part7, kapi::IFacePtr face7, bool hidden) {
+    kapi::IModelContainerPtr modelContainer(part7);
 
-    IPoints3DPtr points3d(modelContainer->Points3D);
-    IPoint3DPtr point3d(points3d->Add());
-    point3d->ParameterType = ksPoint3DTypeEnum::ksPCenter;
+    kapi::IPoints3DPtr points3d(modelContainer->Points3D);
+    kapi::IPoint3DPtr point3d(points3d->Add());
+    point3d->ParameterType = kapi::ksPoint3DTypeEnum::ksPCenter;
     point3d->Hidden = hidden;
-    IPoint3DParamCenterPtr point3dParamCenter(point3d->Parameters);
+    kapi::IPoint3DParamCenterPtr point3dParamCenter(point3d->Parameters);
 
-    IModelObjectPtr faceModelObject(face7);
+    kapi::IModelObjectPtr faceModelObject(face7);
     point3dParamCenter->SetObject(faceModelObject);
     point3d->Update();
 
     return point3d;
 }
 
-ksEntityPtr createCutExtrusion(ksPartPtr part, Sketch sketch) {
-    ksEntityPtr entity(part->NewEntity(Obj3dType::o3d_cutExtrusion));
-    ksCutExtrusionDefinitionPtr definition(entity->GetDefinition());
+kapi::ksEntityPtr createCutExtrusion(kapi::ksPartPtr part, Sketch sketch) {
+    kapi::ksEntityPtr entity(part->NewEntity(kapi::Obj3dType::o3d_cutExtrusion));
+    kapi::ksCutExtrusionDefinitionPtr definition(entity->GetDefinition());
     definition->cut = true;
-    definition->chooseType = ksChBodiesAndParts;
-    definition->directionType = ksDirectionTypeEnum::dtBoth;
+    definition->chooseType = kapi::ksChBodiesAndParts;
+    definition->directionType = kapi::ksDirectionTypeEnum::dtBoth;
     definition->SetSketch(sketch.entity);
 
-    ksExtrusionParamPtr param(definition->ExtrusionParam());
-    param->typeNormal = ksEndTypeEnum::etUpToNearSurface;
-    param->typeReverse = ksEndTypeEnum::etUpToNearSurface;
+    kapi::ksExtrusionParamPtr param(definition->ExtrusionParam());
+    param->typeNormal = kapi::ksEndTypeEnum::etUpToNearSurface;
+    param->typeReverse = kapi::ksEndTypeEnum::etUpToNearSurface;
 
     entity->Create();
     return entity;
 }
 
-ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable) {
-    ksEdgeCollectionPtr edges = target->EdgeCollection();
-    ksEdgeDefinitionPtr edge = edges->GetByIndex(0);
+kapi::ICirclePtr createBaseCircle(Sketch sketch, kapi::ksFaceDefinitionPtr target, _bstr_t& out_radiusVariable) {
+    kapi::ksEdgeCollectionPtr edges = target->EdgeCollection();
+    kapi::ksEdgeDefinitionPtr edge = edges->GetByIndex(0);
     sketch.definition->AddProjectionOf(edge);
 
-    ICirclesPtr circles = sketch.drawingContainer->Circles;
-    IArcsPtr arcs = sketch.drawingContainer->Arcs;
+    kapi::ICirclesPtr circles = sketch.drawingContainer->Circles;
+    kapi::IArcsPtr arcs = sketch.drawingContainer->Arcs;
 
-    ICirclePtr baseCircle = nullptr;
+    kapi::ICirclePtr baseCircle = nullptr;
     if (circles->Count == 1) {
         baseCircle = circles->GetCircle(0);
     } else if (arcs->Count > 0) {
         baseCircle = circles->Add();
-        IArcPtr baseArc = arcs->GetArc(0);
-        baseArc->Style = ksCurveStyleEnum::ksCSThin;
+        kapi::IArcPtr baseArc = arcs->GetArc(0);
+        baseArc->Style = kapi::ksCurveStyleEnum::ksCSThin;
         baseArc->Update();
 
         baseCircle->Xc = baseArc->Xc; baseCircle->Yc = baseArc->Yc; baseCircle->Radius = baseArc->Radius;
@@ -103,19 +103,19 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
         constrCreator.mergePoints(0, baseArc, 0);
         constrCreator.equalRadius(baseArc);
     }
-    baseCircle->Style = ksCurveStyleEnum::ksCSThin;
+    baseCircle->Style = kapi::ksCurveStyleEnum::ksCSThin;
     baseCircle->Update();
 
     // создаем радиальный размер и получаем имя переменной
-    ISymbols2DContainerPtr symbols2dContainer(sketch.view);
-    IRadialDimensionsPtr radialDimensions(symbols2dContainer->RadialDimensions);
-    IRadialDimensionPtr radialDim(radialDimensions->Add());
+    kapi::ISymbols2DContainerPtr symbols2dContainer(sketch.view);
+    kapi::IRadialDimensionsPtr radialDimensions(symbols2dContainer->RadialDimensions);
+    kapi::IRadialDimensionPtr radialDim(radialDimensions->Add());
     radialDim->BaseObject = baseCircle;
     radialDim->Update();
-    IDrawingObject1Ptr radialDimDrawingObject1(radialDim);
+    kapi::IDrawingObject1Ptr radialDimDrawingObject1(radialDim);
     {
-        IParametriticConstraintPtr constraint(radialDimDrawingObject1->NewConstraint());
-        constraint->ConstraintType = ksConstraintTypeEnum::ksCDimWithVariable;
+        kapi::IParametriticConstraintPtr constraint(radialDimDrawingObject1->NewConstraint());
+        constraint->ConstraintType = kapi::ksConstraintTypeEnum::ksCDimWithVariable;
         constraint->Create();
         out_radiusVariable = constraint->Variable;
     }
@@ -123,9 +123,9 @@ ICirclePtr createBaseCircle(Sketch sketch, ksFaceDefinitionPtr target, _bstr_t& 
     return baseCircle;
 }
 
-void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _bstr_t radiusVariable, DoubleSetting::Ptr overhangThreshold, double rotationOffset) {
+void drawTriangle(Sketch sketch, kapi::ICirclePtr baseCircle, kapi::ILinePtr verticalLine, _bstr_t radiusVariable, DoubleSetting::Ptr overhangThreshold, double rotationOffset) {
     double radius = baseCircle->Radius;
-    ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
+    kapi::ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 
     // Считаем координаты треугольников в системе координат, где начало - центр baseCircle, ось y - verticalLine
     double dx = radius * RADIUS_RATIO;
@@ -139,11 +139,11 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     l1 = matrix * l1; r1 = matrix * r1; lr2 = matrix * lr2;
 
     // строим отрезки
-    ILineSegmentPtr lineSegL(lineSegments->Add());
+    kapi::ILineSegmentPtr lineSegL(lineSegments->Add());
     lineSegL->X1 = l1.x; lineSegL->Y1 = l1.y;
     lineSegL->X2 = lr2.x; lineSegL->Y2 = lr2.y;
     lineSegL->Update();
-    ILineSegmentPtr lineSegR(lineSegments->Add());
+    kapi::ILineSegmentPtr lineSegR(lineSegments->Add());
     lineSegR->X1 = r1.x; lineSegR->Y1 = r1.y;
     lineSegR->X2 = lr2.x; lineSegR->Y2 = lr2.y;
     lineSegR->Update();
@@ -156,8 +156,8 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     constrCreator.equalLength(lineSegL);
 
     // строим дугу
-    IArcsPtr arcs(sketch.drawingContainer->Arcs);
-    IArcPtr arc(arcs->Add());
+    kapi::IArcsPtr arcs(sketch.drawingContainer->Arcs);
+    kapi::IArcPtr arc(arcs->Add());
     arc->Xc = baseCircle->Xc; arc->Yc = baseCircle->Yc;
     arc->Radius = radius;
     arc->X1 = l1.x; arc->Y1 = l1.y;
@@ -169,16 +169,16 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     constrCreator.mergePoints(1, lineSegL, 0);
     constrCreator.mergePoints(2, lineSegR, 0);
 
-    ISymbols2DContainerPtr symbols2dContainer(sketch.view);
-    ILineDimensionsPtr lineDimensions(symbols2dContainer->LineDimensions);
-    IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
+    kapi::ISymbols2DContainerPtr symbols2dContainer(sketch.view);
+    kapi::ILineDimensionsPtr lineDimensions(symbols2dContainer->LineDimensions);
+    kapi::IAngleDimensionsPtr angleDimensions(symbols2dContainer->AngleDimensions);
 
     // линейный размер
-    ILineDimensionPtr lineDim(lineDimensions->Add());
+    kapi::ILineDimensionPtr lineDim(lineDimensions->Add());
     lineDim->X1 = l1.x; lineDim->Y1 = l1.y;
     lineDim->X2 = r1.x; lineDim->Y2 = r1.y;
     lineDim->X3 = (l1.x + r1.x) / 2; lineDim->Y3 = (l1.y + r1.y) / 2;
-    lineDim->Orientation = ksLineDimensionOrientationEnum::ksLinDParallel;
+    lineDim->Orientation = kapi::ksLineDimensionOrientationEnum::ksLinDParallel;
     lineDim->Update();
     constrCreator = ConstraintsCreator(lineDim);
     constrCreator.mergePoints(0, lineSegL, 0);
@@ -188,16 +188,16 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
 
     // угловой размер
     double dimAngle = 180.0 - (2.0 * overhangThreshold->getValue());
-    IAngleDimensionPtr angleDim(angleDimensions->Add(DrawingObjectTypeEnum::ksDrADimension));
-    angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+    kapi::IAngleDimensionPtr angleDim(angleDimensions->Add(kapi::DrawingObjectTypeEnum::ksDrADimension));
+    angleDim->DimensionType = kapi::ksAngleDimTypeEnum::ksADMinAngle;
     angleDim->BaseObject1 = lineSegL;
     angleDim->BaseObject2 = lineSegR;
     angleDim->Radius = 0;
     angleDim->X3 = (l1.x + r1.x) / 2; angleDim->Y3 = (l1.y + r1.y) / 2;
     if (dimAngle > 90.0) {
-        angleDim->DimensionType = ksAngleDimTypeEnum::ksADMaxAngle;
+        angleDim->DimensionType = kapi::ksAngleDimTypeEnum::ksADMaxAngle;
     } else {
-        angleDim->DimensionType = ksAngleDimTypeEnum::ksADMinAngle;
+        angleDim->DimensionType = kapi::ksAngleDimTypeEnum::ksADMinAngle;
     }
     angleDim->Update();
     constrCreator = ConstraintsCreator(angleDim);
@@ -206,34 +206,34 @@ void drawTriangle(Sketch sketch, ICirclePtr baseCircle, ILinePtr verticalLine, _
     constrCreator.dimWithVariable(expression.c_str());
 }
 
-void drawSketch(Sketch sketch, ksFaceDefinitionPtr target, ksEntityPtr verticalPlane, DoubleSetting::Ptr overhangThreshold) {
+void drawSketch(Sketch sketch, kapi::ksFaceDefinitionPtr target, kapi::ksEntityPtr verticalPlane, DoubleSetting::Ptr overhangThreshold) {
     _bstr_t radiusVariable;
-    ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
+    kapi::ICirclePtr baseCircle = createBaseCircle(sketch, target, radiusVariable);
     
     sketch.definition->AddProjectionOf(verticalPlane);
-    ILinesPtr lines(sketch.drawingContainer->Lines);
-    ILinePtr verticalLine(lines->GetLine(0));
+    kapi::ILinesPtr lines(sketch.drawingContainer->Lines);
+    kapi::ILinePtr verticalLine(lines->GetLine(0));
 
     drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, -M_PI_2);
     drawTriangle(sketch, baseCircle, verticalLine, radiusVariable, overhangThreshold, M_PI_2);
 }
 
-Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace, ksFaceDefinitionPtr target, DoubleSetting::Ptr overhangThreshold) {
+Macro buildHoleTriangle(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace, kapi::ksFaceDefinitionPtr target, DoubleSetting::Ptr overhangThreshold) {
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT, true);
 
     // ось по цилиндрической поверхности
-    ksEntityPtr axis = createConeFaceAxis(part, target);
+    kapi::ksEntityPtr axis = createConeFaceAxis(part, target);
     macro.add(axis);
 
     // точка в центре цилиндрической поверхности
-    IPart7Ptr part7 = kompas->TransferInterface(part, ksAPITypeEnum::ksAPI7Dual, 0);
-    IFacePtr targetFace7 = kompas->TransferInterface(target, ksAPITypeEnum::ksAPI7Dual, 0);
-    IPoint3DPtr point7 = createPointCenter(part7, targetFace7);
+    kapi::IPart7Ptr part7 = kompas->TransferInterface(part, kapi::ksAPITypeEnum::ksAPI7Dual, 0);
+    kapi::IFacePtr targetFace7 = kompas->TransferInterface(target, kapi::ksAPITypeEnum::ksAPI7Dual, 0);
+    kapi::IPoint3DPtr point7 = createPointCenter(part7, targetFace7);
     // Т.к. macro это API5, а point3d это API7, то добавить точку напрямую мы не можем. Мне показалось, что проще всего найти эту же точку в EntityCollection
-    ksEntityPtr point = nullptr;
-    ksEntityCollectionPtr entityCollection = part->EntityCollection(Obj3dType::o3d_point3D);
+    kapi::ksEntityPtr point = nullptr;
+    kapi::ksEntityCollectionPtr entityCollection = part->EntityCollection(kapi::Obj3dType::o3d_point3D);
     for (int i = 0; i < entityCollection->GetCount(); i++) {
-        ksEntityPtr entity = entityCollection->GetByIndex(i);
+        kapi::ksEntityPtr entity = entityCollection->GetByIndex(i);
         if (entity->name == point7->Name) {
             point = entity;
             break;
@@ -242,11 +242,11 @@ Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPa
     macro.add(point);
 
     // плоскость перпендикулярно оси через точку - плоскость эскиза
-    ksEntityPtr sketchPlane = createPlanePerpendicular(part, axis, point);
+    kapi::ksEntityPtr sketchPlane = createPlanePerpendicular(part, axis, point);
     macro.add(sketchPlane);
 
     // плоскость, перпендикулярная эскизу. При ее проецировании на эскиз получим вертикальную ось
-    ksEntityPtr verticalPlane = createPlaneLineToPlane(part, axis, printFace->GetEntity(), false);
+    kapi::ksEntityPtr verticalPlane = createPlaneLineToPlane(part, axis, printFace->GetEntity(), false);
     macro.add(verticalPlane);
 
     // эскиз
@@ -255,25 +255,25 @@ Macro buildHoleTriangle(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPa
     sketch.endEdit();
     macro.add(sketch.entity);
 
-    ksEntityPtr cutExtrusion = createCutExtrusion(part, sketch);
+    kapi::ksEntityPtr cutExtrusion = createCutExtrusion(part, sketch);
     macro.add(cutExtrusion);
 
     return macro;
 }
 
-std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, ksFaceDefinitionPtr printFace) {
-    ksBodyPtr body = part->GetMainBody();
-    std::list<ksFaceDefinitionPtr> targets;
+std::list<kapi::ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
+    kapi::ksBodyPtr body = part->GetMainBody();
+    std::list<kapi::ksFaceDefinitionPtr> targets;
 
-    ksFaceCollectionPtr faces = body->FaceCollection();
+    kapi::ksFaceCollectionPtr faces = body->FaceCollection();
     for (int iFace = 0; iFace < faces->GetCount(); iFace++) {
-        ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+        kapi::ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
         if (!face->IsCylinder()) {
             continue;
         }
 
         // проверяем, что цилиндрическая поверхность горизонтальна
-        ksMeasurerPtr measurer = part->GetMeasurer();
+        kapi::ksMeasurerPtr measurer = part->GetMeasurer();
         measurer->SetObject1(printFace);
         measurer->SetObject2(face);
         measurer->Calc();
@@ -290,7 +290,7 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
         * Строим вектор из точки (0, vMin) в точку (pi, vMin)
         * Если эти 2 вектора указывают в одном направлении (скалярное произведение больше нуля), то поверхность является отверстием
         */
-        ksSurfacePtr surface = face->GetSurface();
+        kapi::ksSurfacePtr surface = face->GetSurface();
         if (!surface->IsClosedU()) {
             continue;
         }
@@ -318,15 +318,15 @@ std::list<ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(KompasObjectPtr ko
     return targets;
 }
 
-ksEntityPtr optimizeCircleHorizontalHoles(KompasObjectPtr kompas, ksDocument3DPtr document3d, ksPartPtr part, Settings& settings) {
+kapi::ksEntityPtr optimizeCircleHorizontalHoles(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings) {
     PrintSurface printSurface = settings.getPrintSurface();
-    std::list<ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
+    std::list<kapi::ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
     if (targets.empty()) {
         return nullptr;
     }
 
     Macro macro(part, MACRO_NAME_CIRCLE_HORIZONTAL_HOLES, true);
-    for (ksFaceDefinitionPtr target : targets) {
+    for (kapi::ksFaceDefinitionPtr target : targets) {
         macro.add(buildHoleTriangle(kompas, document3d, part, printSurface.face, target, settings.getDoubleSetting(si::overhangThreshold.name)));
     }
     return macro.getEntity();

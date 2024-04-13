@@ -14,14 +14,14 @@ public:
         layersEverywhere = 0x01, layersAtCursor = 0x02, overhangs = 0x04,
     };
 
-    HighlightingManager(KompasObjectPtr kompas, ksDocument3DPtr document3d, Settings* settings);
+    HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings);
     virtual ~HighlightingManager() = default;
 
     void toggleMode(Mode mode);
     void refreshWindow() const;
 
 private:
-    ksDocument3DPtr m_document3d;
+    kapi::ksDocument3DPtr m_document3d;
     Settings* m_settings;
     uint8_t m_mode;
     glm::vec2 m_mouseCoord;
@@ -32,13 +32,13 @@ private: /* static */
     static short s_framesCount;
     
     static void initShaders();
-    static IDocumentFramePtr getDocumentFrame(KompasObjectPtr kompas, ksDocument3DPtr document3d);
-    static void drawTriangulation(ksPartPtr part, ksFaceDefinitionPtr printFace);
+    static kapi::IDocumentFramePtr getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d);
+    static void drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace);
     
 private: /* events */
     bool activate() override;
     bool closeFrame() override;
-    bool closePaintGL(ksGLObject* glObject, long drawMode) override;
+    bool closePaintGL(kapi::ksGLObject* glObject, long drawMode) override;
     bool deactivate() override;
     bool mouseDown(short nButton, short nShiftState, long x, long y) override;
     bool mouseMove(short nShiftState, long x, long y) override;

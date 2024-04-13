@@ -2,14 +2,14 @@
 #define SKETCH_HPP
 
 struct Sketch {
-    ksEntityPtr entity;
-    ksSketchDefinitionPtr definition;
-    ksDocument2DPtr document2d;
-    IKompasDocument2DPtr document2d_api7;
-    IViewPtr view;
-    IDrawingContainerPtr drawingContainer;
+    kapi::ksEntityPtr entity;
+    kapi::ksSketchDefinitionPtr definition;
+    kapi::ksDocument2DPtr document2d;
+    kapi::IKompasDocument2DPtr document2d_api7;
+    kapi::IViewPtr view;
+    kapi::IDrawingContainerPtr drawingContainer;
 
-    Sketch(KompasObjectPtr kompas, ksPartPtr part, IDispatchPtr plane);
+    Sketch(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, IDispatchPtr plane);
 
     void endEdit() const;
 };

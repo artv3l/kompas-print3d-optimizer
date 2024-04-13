@@ -34,11 +34,11 @@
 #include <COMUTIL.H>
 #include <comdef.h>
 
-#import "ksConstants.tlb" no_namespace named_guids
-#import "ksConstants3D.tlb" no_namespace named_guids
-#import "kAPI5.tlb" no_namespace named_guids \
-    rename("min", "Imin") rename("max", "Imax")
-#import "kAPI7.tlb" no_namespace named_guids \
-    rename("PostMessage", "IPostMessage") rename("MessageBoxEx", "IMessageBoxEx") rename("DeleteFile", "IDeleteFile") rename("FindText", "IFindText")
+#import "ksConstants.tlb" rename_namespace("kapi")
+#import "ksConstants3D.tlb" rename_namespace("kapi")
+#import "kAPI5.tlb" rename_namespace("kapi") \
+    rename("min", "Imin") rename("max", "Imax") rename("GetObject", "GetObject_")
+#import "kAPI7.tlb" rename_namespace("kapi") named_guids \
+    rename("PostMessage", "IPostMessage") rename("MessageBoxEx", "IMessageBoxEx") rename("DeleteFile", "IDeleteFile") rename("FindText", "IFindText") rename("GetObject", "GetObject_")
 
 #endif /* STDAFX_H */

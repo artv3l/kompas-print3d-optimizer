@@ -1,7 +1,7 @@
 #include "connection.hpp"
 
-KompasObjectPtr getKompasObjectPtr() {
-    KompasObjectPtr getKompas(NULL);
+kapi::KompasObjectPtr getKompasObjectPtr() {
+    kapi::KompasObjectPtr getKompas(NULL);
     CString filename;
     if (::GetModuleFileName(NULL, filename.GetBuffer(255), 255)) {
         filename.ReleaseBuffer(255);

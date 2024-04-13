@@ -1,14 +1,14 @@
 #include "Macro.hpp"
 
-Macro::Macro(ksPartPtr part, _bstr_t name, bool staffVisible):
-        m_entity(part->NewEntity(o3d_MacroObject)),
+Macro::Macro(kapi::ksPartPtr part, _bstr_t name, bool staffVisible):
+        m_entity(part->NewEntity(kapi::o3d_MacroObject)),
         m_definition(m_entity->GetDefinition()) {
     m_entity->name = name;
     m_definition->StaffVisible = staffVisible;
     m_entity->Create();
 }
 
-Macro::Macro(ksEntityPtr entity) :
+Macro::Macro(kapi::ksEntityPtr entity) :
     m_entity(entity), m_definition(m_entity->GetDefinition())
 {}
 
@@ -17,8 +17,8 @@ Macro::~Macro() {
     update();
 }
 
-ksEntityPtr Macro::findMacro(ksPartPtr part, _bstr_t name) {
-    ksEntityCollectionPtr macroCollection = part->EntityCollection(Obj3dType::o3d_MacroObject);
+kapi::ksEntityPtr Macro::findMacro(kapi::ksPartPtr part, _bstr_t name) {
+    kapi::ksEntityCollectionPtr macroCollection = part->EntityCollection(kapi::Obj3dType::o3d_MacroObject);
     return macroCollection->GetByName(name, true, false);
 }
 
@@ -42,6 +42,6 @@ _bstr_t Macro::getName() const {
     return m_entity->name;
 }
 
-ksEntityPtr Macro::getEntity() const {
+kapi::ksEntityPtr Macro::getEntity() const {
     return m_entity;
 }

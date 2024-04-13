@@ -5,11 +5,11 @@
 
 class Settings;
 
-bool isEdgeForRounding(ksEdgeDefinitionPtr edge, ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
+bool isEdgeForRounding(kapi::ksEdgeDefinitionPtr edge, kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace, double deflectionAngle);
 
-std::list<ksEdgeDefinitionPtr> getRoundingTargets(ksPartPtr part, ksFaceDefinitionPtr printFace, double deflectionAngle);
-ksEntityPtr roundEdges(ksPartPtr part, std::list<ksEdgeDefinitionPtr> roundingTargets, double radius);
+std::list<kapi::ksEdgeDefinitionPtr> getRoundingTargets(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace, double deflectionAngle);
+kapi::ksEntityPtr roundEdges(kapi::ksPartPtr part, std::list<kapi::ksEdgeDefinitionPtr> roundingTargets, double radius);
 
-ksEntityPtr optimizeRounding(ksPartPtr part, Settings& settings);
+kapi::ksEntityPtr optimizeRounding(kapi::ksPartPtr part, Settings& settings);
 
 #endif /* ROUNDING_HPP */

@@ -7,9 +7,9 @@
 
 class Settings;
 
-std::list<ksLoopPtr> getElephantFootTargets(ksPartPtr part, PrintSurface printSurface);
-ksEntityPtr createElephantFootChamfers(ksPartPtr part, std::list<ksLoopPtr> elephantFootTargets, Settings& settings);
+std::list<kapi::ksLoopPtr> getElephantFootTargets(kapi::ksPartPtr part, PrintSurface printSurface);
+kapi::ksEntityPtr createElephantFootChamfers(kapi::ksPartPtr part, std::list<kapi::ksLoopPtr> elephantFootTargets, Settings& settings);
 
-ksEntityPtr optimizeElephantFoot(ksPartPtr part, Settings& settings);
+kapi::ksEntityPtr optimizeElephantFoot(kapi::ksPartPtr part, Settings& settings);
 
 #endif /* ELEPHANT_FOOT_HPP */

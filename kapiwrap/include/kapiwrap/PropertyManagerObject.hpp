@@ -5,9 +5,9 @@
 
 class PropertyManagerObject {
 public:
-    PropertyManagerObject(KompasObjectPtr kompas);
+    PropertyManagerObject(kapi::KompasObjectPtr kompas);
 
-    IPropertyManagerPtr getPropertyManager();
+    kapi::IPropertyManagerPtr getPropertyManager();
 
     virtual bool buttonClick(long buttonId) = 0;
 
@@ -15,9 +15,9 @@ public:
     virtual void hide();
 
 protected:
-    KompasObjectPtr m_kompas;
-    IApplicationPtr m_application;
-    IPropertyManagerPtr m_propertyManager;
+    kapi::KompasObjectPtr m_kompas;
+    kapi::IApplicationPtr m_application;
+    kapi::IPropertyManagerPtr m_propertyManager;
 
 private:
     PropertyManagerEvent m_event;

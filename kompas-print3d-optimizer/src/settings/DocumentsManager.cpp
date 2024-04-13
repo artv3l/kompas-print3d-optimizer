@@ -5,15 +5,15 @@
 #include "settings/DocumentData.hpp"
 #include "settings/Settings.hpp"
 
-size_t Document3DPtrReferenceHash::operator()(ksDocument3DPtr document3d) const {
+size_t Document3DPtrReferenceHash::operator()(kapi::ksDocument3DPtr document3d) const {
     return document3d->reference;
 }
 
-DocumentsManager::DocumentsManager(KompasObjectPtr kompas):
+DocumentsManager::DocumentsManager(kapi::KompasObjectPtr kompas):
     m_kompas(kompas)
 {}
 
-DocumentData& DocumentsManager::getOrCreateDocumentData(ksDocument3DPtr document3d) {
+DocumentData& DocumentsManager::getOrCreateDocumentData(kapi::ksDocument3DPtr document3d) {
     DocumentDataMap::iterator it = m_documentDataMap.find(document3d);
     if (it == m_documentDataMap.end()) {
         it = m_documentDataMap.emplace(std::piecewise_construct,
@@ -26,7 +26,7 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksDocument3DPtr document
     return it->second;
 }
 
-bool DocumentsManager::remove(ksDocument3DPtr document3d) {
+bool DocumentsManager::remove(kapi::ksDocument3DPtr document3d) {
     DocumentDataMap::iterator it = m_documentDataMap.find(document3d);
     if (it == m_documentDataMap.end()) {
         return false;

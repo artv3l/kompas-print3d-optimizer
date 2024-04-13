@@ -8,7 +8,7 @@
 
 class Global {
 public:
-    static KompasObjectPtr kompas;
+    static kapi::KompasObjectPtr kompas;
     static std::unique_ptr<DocumentsManager> documentsManager;
     static std::unique_ptr<SettingsManager> settingsManager;
 

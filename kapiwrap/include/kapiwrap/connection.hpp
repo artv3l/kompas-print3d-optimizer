@@ -1,6 +1,6 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-KompasObjectPtr getKompasObjectPtr();
+kapi::KompasObjectPtr getKompasObjectPtr();
 
 #endif /* CONNECTION_HPP */
