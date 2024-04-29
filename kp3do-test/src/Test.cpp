@@ -6,7 +6,7 @@ TestExpected::TestExpected(const njson& json):
 
 Test::Test(const std::string& path, const njson& json):
     label(json["label"]),
-    modelFilename(path + "/" + static_cast<std::string>(json["modelFilename"])),
+    modelFilename(path + "\\" + static_cast<std::string>(json["modelFilename"])),
     printFaceArea(json["printFaceArea"]),
     scenario(),
     expected(json["expected"])

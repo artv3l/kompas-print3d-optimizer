@@ -40,7 +40,7 @@ HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksD
     // GLAD нужно инициализировать когда открыт документ
     if (!s_isGladInited) {
         if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
-            global::kompas->ksMessage("Ошибка инициализации GLAD");
+            kompasMessage("Ошибка инициализации GLAD");
         }
     }
     /*
@@ -51,7 +51,7 @@ HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksD
         try {
             initShaders();
         } catch (const std::runtime_error& e) {
-            global::kompas->ksMessage("Ошибка компиляции шейдеров");
+            kompasMessage("Ошибка компиляции шейдеров");
             std::cerr << e.what() << "\n";
         }
     }

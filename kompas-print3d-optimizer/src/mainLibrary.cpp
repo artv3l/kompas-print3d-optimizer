@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdexcept>
 #include <utility>
+#include <sstream>
 
 #include <WinUser.h>
 
@@ -18,7 +19,6 @@
 #include "settings/SettingsManager.hpp"
 #include "utils.hpp"
 #include "global.hpp"
-
 
 void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings) {
     kapi::ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
@@ -46,7 +46,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
 
     kapi::ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
     if (!document3d) {
-        global::kompas->ksMessage("Необходимо открыть документ-модель");
+        kompasMessage("Необходимо открыть документ-модель");
         return;
     }
 
@@ -61,9 +61,9 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         try {
             PrintSurface printSurface = getSelectedPrintSurface(document3d);
             settings->setPrintSurface(printSurface);
-            global::kompas->ksMessage("Плоскость печати успешно выбрана!");
+            kompasMessage("Плоскость печати успешно выбрана!");
         } catch (const std::runtime_error& e) {
-            global::kompas->ksMessage(e.what());
+            kompasMessage(e.what());
         }
         return;
     }
@@ -77,7 +77,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }}
 
     if (!settings->isPrintSurfaceSelected()) {
-        global::kompas->ksMessage("Плоскость печати не выбрана!");
+        kompasMessage("Плоскость печати не выбрана!");
         return;
     }
 
@@ -130,15 +130,17 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         break;
     }
     if (!optimizationResult) {
-        global::kompas->ksMessage("Не найдено геометрии для оптимизации");
+        kompasMessage("Не найдено геометрии для оптимизации");
     } else {
         Macro rootMacro = documentData.getOrCreateRootMacro();
         rootMacro.add(optimizationResult);
         document3d->RebuildDocument();
         if (reworkCount != 0) {
-            global::kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));
+            std::ostringstream oss;
+            oss << "Необходимо доработать элементов: " << reworkCount;
+            kompasMessage(oss.str());
         } else {
-            global::kompas->ksMessage("Оптимизация модели была выполнена!");
+            //kompasMessage("Оптимизация модели была выполнена!");
         }
     }
 }

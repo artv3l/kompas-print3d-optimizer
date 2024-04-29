@@ -18,4 +18,6 @@ public:
 
 using global = Global;
 
+void kompasMessage(std::string message);
+
 #endif /* GLOBAL_HPP */
