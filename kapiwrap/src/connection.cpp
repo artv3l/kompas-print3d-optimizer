@@ -1,5 +1,9 @@
 #include "connection.hpp"
 
+#include <Windows.h>
+#include <iostream>
+#include <stdexcept>
+
 kapi::KompasObjectPtr getKompasObjectPtr() {
     kapi::KompasObjectPtr getKompas(NULL);
     CString filename;
@@ -19,4 +23,40 @@ kapi::KompasObjectPtr getKompasObjectPtr() {
         }
     }
     return getKompas;
+}
+
+const wchar_t objectName[] = L"KOMPAS.Application.5";
+
+bool isKompasInstalled() {
+    CLSID clsid;
+    HRESULT res;
+    res = CLSIDFromProgID(objectName, &clsid);
+    return (res == S_OK);
+}
+
+bool isKompasRun() {
+    CLSID clsid;
+    CLSIDFromProgID(objectName, &clsid);
+    HRESULT res;
+    IUnknown* pIUnknown;
+    res = GetActiveObject(clsid, NULL, &pIUnknown);
+    if (res == S_OK) {
+        pIUnknown->Release();
+        return true;
+    }
+    return false;
+}
+
+kapi::KompasObjectPtr kompasInit() {
+    if (!isKompasInstalled()) {
+        throw std::runtime_error("Kompas-3D is not installed");
+    }
+    kapi::KompasObjectPtr pKompas;
+    if (isKompasRun()) {
+        pKompas.GetActiveObject(objectName);
+    } else {
+        throw std::runtime_error("Kompas-3D is not running");
+    }
+    pKompas->Visible = true;
+    return pKompas;
 }

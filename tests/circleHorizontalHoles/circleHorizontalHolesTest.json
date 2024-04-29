@@ -1,0 +1,11 @@
+[
+    {
+        "label": "test1",
+        "modelFilename": "test1.m3d",
+        "printFaceArea": 400,
+        "scenario": [17],
+        "expected": {
+            "volume": 6343
+        }
+    }
+]

@@ -2,6 +2,7 @@
     "name": "kompas-print3d-optimizer",
     "dependencies": [
         "glm",
-        {"name": "glad", "features": ["gl-api-33"]}
+        {"name": "glad", "features": ["gl-api-33"]},
+        "nlohmann-json"
     ]
 }
