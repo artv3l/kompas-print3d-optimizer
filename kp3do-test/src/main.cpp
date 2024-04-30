@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <string>
 #include <fstream>
-#include <list>
+#include <vector>
 
 #include "glm/glm.hpp"
 #include "nlohmann/json.hpp"
@@ -15,7 +15,7 @@ using njson = nlohmann::json;
 
 bool doubleEqual(double a, double b, double epsilon = 0.0001);
 std::string read_file(std::string_view path);
-std::list<Test> readTests(std::string testPath);
+std::vector<Test> readTests(std::string testPath);
 kapi::ksFaceDefinitionPtr findPrintFace(kapi::ksPartPtr part, double area);
 kapi::IProceduresLibraryPtr findLibrary(kapi::KompasObjectPtr kompas, _bstr_t name);
 
@@ -37,18 +37,19 @@ int main() {
     }
     library->Attach = true;
 
-    std::list<Test> tests = readTests("F:\\code\\kompas-print3d-optimizer\\tests");
+    std::vector<std::vector<Test>::iterator> failedTests;
 
-    for (const Test& test : tests) {
+    std::vector<Test> tests = readTests("F:\\code\\kompas-print3d-optimizer\\tests");
+    for (auto test = tests.begin(); test != tests.end(); test++) {
         kapi::ksDocument3DPtr document3d = kompas->Document3D();
-        if (!document3d->Open(test.modelFilename.c_str(), false)) {
+        if (!document3d->Open(test->modelFilename.c_str(), false)) {
             std::cerr << "Document not found" << "\n";
             continue;
         }
         kapi::ksPartPtr part = document3d->GetPart(kapi::pTop_Part);
         kapi::ksSelectionMngPtr selectionMng = document3d->GetSelectionMng();
 
-        kapi::ksFaceDefinitionPtr printFace = findPrintFace(part, test.printFaceArea);
+        kapi::ksFaceDefinitionPtr printFace = findPrintFace(part, test->printFaceArea);
         if (!printFace) {
             std::cerr << "PrintFace not found" << "\n";
             continue;
@@ -57,16 +58,26 @@ int main() {
         library->Execute(2, nullptr, true);
         while (library->Executable);
 
-        for (int command : test.scenario) {
+        for (int command : test->scenario) {
             library->Execute(command, nullptr, true);
             while (library->Executable);
         }
 
         kapi::ksMassInertiaParamPtr massInertiaParam(part->CalcMassInertiaProperties(0x1 | 0x10)); // mm kg
-        bool testOk = doubleEqual(massInertiaParam->v, test.expected.volume);
-        std::cout << test.label << " : " << (testOk ? "Ok" : "Error") << "\n";
+        bool testOk = doubleEqual(massInertiaParam->v, test->expected.volume);
+        if (!testOk) {
+            failedTests.push_back(test);
+        }
 
         document3d->close();
+    }
+
+    std::cout << "Test run results: Ok " << tests.size() - failedTests.size() << " ; Failed " << failedTests.size() << "\n";
+    if (!failedTests.empty()) {
+        std::cout << "Failed tests:" << "\n";
+        for (auto test : failedTests) {
+            std::cout << test->path << " : " << test->label << "\n";
+        }
     }
     
     return 0;
@@ -95,10 +106,10 @@ std::string read_file(std::string_view path) {
     return out;
 }
 
-std::list<Test> readTests(std::string testPath) {
+std::vector<Test> readTests(std::string testPath) {
     namespace fs = std::filesystem;
 
-    std::list<Test> tests;
+    std::vector<Test> tests;
     for (const fs::directory_entry& dirEntry : fs::recursive_directory_iterator(testPath)) {
         if (!dirEntry.is_regular_file() || dirEntry.path().extension().string() != ".json") {
             continue;
@@ -107,7 +118,7 @@ std::list<Test> readTests(std::string testPath) {
         std::string testsString = read_file(dirEntry.path().string());
         njson testsJson = njson::parse(testsString);
         for (const njson& testJson : testsJson) {
-            tests.push_back(Test(dirEntry.path().parent_path().string(), testJson));
+            tests.push_back(Test(dirEntry.path(), testJson));
         }
     }
     return tests;

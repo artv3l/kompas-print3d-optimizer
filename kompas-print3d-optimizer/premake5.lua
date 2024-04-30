@@ -62,3 +62,13 @@ project "kompas-print3d-optimizer"
         links {
             "%{vcpkg.lib.release}/glad.lib"
         }
+
+    filter "configurations:TestBuild"
+        defines { "NDEBUG", "TEST_BUILD" }
+        symbols "Off"
+        optimize "On"
+        runtime "Release"
+
+        links {
+            "%{vcpkg.lib.release}/glad.lib"
+        }

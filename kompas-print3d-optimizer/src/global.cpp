@@ -22,7 +22,6 @@ bool Global::isInited() {
     return kompas && documentsManager && settingsManager;
 }
 
-#define TEST_BUILD
 void kompasMessage(std::string message) {
 #ifndef TEST_BUILD
     global::kompas->ksMessage(message.c_str());

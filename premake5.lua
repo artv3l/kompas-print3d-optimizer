@@ -18,7 +18,7 @@ KOMPAS_DEVUTIL = os.getenv("KOMPAS_DEVUTIL")
 
 workspace "kompas-print3d-optimizer"
     architecture "x86_64"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "TestBuild" }
     startproject "kompas-print3d-optimizer"
 
 include "oglwrap"
