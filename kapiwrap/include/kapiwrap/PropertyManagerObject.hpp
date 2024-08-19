@@ -9,7 +9,13 @@ public:
 
     kapi::IPropertyManagerPtr getPropertyManager();
 
-    virtual bool buttonClick(long buttonId) = 0;
+    virtual bool buttonClick(long buttonId);
+    virtual bool changeControlValue(IDispatch* control);
+    virtual bool controlCommand(IDispatch* control, long buttonId);
+    virtual bool buttonUpdate(long buttonId, long* check, short* enable);
+    virtual bool processActivate();
+    virtual bool processDeactivate();
+    virtual bool commandHelp(long buttonId);
 
     virtual void show();
     virtual void hide();

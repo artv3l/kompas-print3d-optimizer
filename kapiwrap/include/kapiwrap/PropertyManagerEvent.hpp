@@ -11,6 +11,12 @@ public:
     virtual ~PropertyManagerEvent() = default;
 
     afx_msg bool buttonClick(long buttonId);
+    afx_msg bool changeControlValue(IDispatch* control);
+    afx_msg bool controlCommand(IDispatch* control, long buttonId);
+    afx_msg bool buttonUpdate(long buttonId, long* check, short* enable);
+    afx_msg bool processActivate();
+    afx_msg bool processDeactivate();
+    afx_msg bool commandHelp(long buttonId);
 
     DECLARE_EVENTSINK_MAP();
 
