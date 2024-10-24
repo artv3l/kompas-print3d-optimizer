@@ -34,11 +34,20 @@
 #include <COMUTIL.H>
 #include <comdef.h>
 
-#import "ksConstants.tlb" rename_namespace("kapi")
-#import "ksConstants3D.tlb" rename_namespace("kapi")
-#import "kAPI5.tlb" rename_namespace("kapi") \
-    rename("min", "Imin") rename("max", "Imax") rename("GetObject", "GetObject_")
-#import "kAPI7.tlb" rename_namespace("kapi") named_guids \
-    rename("PostMessage", "IPostMessage") rename("MessageBoxEx", "IMessageBoxEx") rename("DeleteFile", "IDeleteFile") rename("FindText", "IFindText") rename("GetObject", "GetObject_")
+#import "ksConstants.tlb" rename_namespace("kapi_consts") named_guids
+#import "ksConstants3D.tlb" rename_namespace("kapi_consts3d") named_guids
+#import "kAPI5.tlb" rename_namespace("kapi_5") named_guids \
+    rename("min", "kApi5_min") rename("max", "kApi5_max") rename("GetObject", "kApi5_GetObject")
+#import "kAPI7.tlb" rename_namespace("kapi_7") named_guids \
+    rename("DeleteFile", "kApi7_DeleteFile") rename("PostMessage", "kApi7_PostMessage") rename("GetObject", "kApi7_GetObject") \
+    rename("FindText", "kApi7_FindText") rename("MessageBoxEx", "kApi7_MessageBoxEx") rename("DrawText", "kApi7_DrawText")
+
+namespace kapi
+{
+using namespace kapi_consts;
+using namespace kapi_consts3d;
+using namespace kapi_5;
+using namespace kapi_7;
+}
 
 #endif /* STDAFX_H */

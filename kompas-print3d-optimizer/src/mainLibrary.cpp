@@ -72,7 +72,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     case 5: {
         kapi::IApplicationPtr application = global::kompas->ksGetApplication7();
         fastExportStl(document3d, *settings);
-        application->IMessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
+        application->kApi7_MessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
         return;
     }}
 
