@@ -19,8 +19,8 @@ project "kompas-print3d-optimizer"
         "%{wks.location}/oglwrap/include",
         "%{wks.location}/kapiwrap/include",
 
-        "%{localDependencies.kompasApi.include}",
-        "%{localDependencies.kompasApi.lib}",
+        "%{localDependencies.KompasAPI.include}",
+        "%{localDependencies.KompasAPI.lib}",
 
         "%{vcpkg.include}",
     }
@@ -29,19 +29,19 @@ project "kompas-print3d-optimizer"
         "oglwrap",
         "kapiwrap",
 
-        "%{localDependencies.kompasApi.lib64}/kApi2D5.lib",
-        "%{localDependencies.kompasApi.lib64}/kAPI3D5.lib",
+        "%{localDependencies.KompasAPI.lib64}/kApi2D5.lib",
+        "%{localDependencies.KompasAPI.lib64}/kAPI3D5.lib",
 
         "opengl32.lib"
     }
 
     prebuildcommands {
-        "%{KOMPAS_DEVUTIL}/delete-lib.exe \"Подготовка к FDM 3D печати\""
+        "%{paths.KompasDevutil}/delete-lib.exe \"Подготовка к FDM 3D печати\""
     }
 
     postbuildcommands {
         "{COPYFILE} %{prj.location}/%{prj.name}.xml %{cfg.buildtarget.directory}",
-        "%{KOMPAS_DEVUTIL}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
+        "%{paths.KompasDevutil}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
     }
 
     filter "configurations:Debug"

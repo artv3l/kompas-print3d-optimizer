@@ -1,20 +1,24 @@
-vcpkgPath = "%{wks.location}/vcpkg_installed/x64-windows"
-vcpkg = {
-    include = "%{vcpkgPath}/include",
-    lib = { debug = "%{vcpkgPath}/debug/lib", release = "%{vcpkgPath}/lib"},
-    bin = { debug = "%{vcpkgPath}/debug/bin", release = "%{vcpkgPath}/bin"},
+paths = {
+    vcpkg = "%{wks.location}/vcpkg_installed/x64-windows",
+    KompasSdk = os.getenv("KOMPAS_SDK"),
+    KompasDevutil = os.getenv("KOMPAS_DEVUTIL"),
+    SmallFbx = os.getenv("SMALL_FBX"),
+    Kapiwrap = os.getenv("kapiwrap"),
 }
 
-KOMPAS_SDK = os.getenv("KOMPAS_SDK")
+vcpkg = {
+    include = "%{paths.vcpkg}/include",
+    lib = { debug = "%{paths.vcpkg}/debug/lib", release = "%{paths.vcpkg}/lib"},
+    bin = { debug = "%{paths.vcpkg}/debug/bin", release = "%{paths.vcpkg}/bin"},
+}
+
 localDependencies = {
-    kompasApi = {
-        include = "%{KOMPAS_SDK}/Include",
-        lib = "%{KOMPAS_SDK}/lib",
-        lib64 = "%{KOMPAS_SDK}/lib64",
+    KompasAPI = {
+        include = "%{paths.KompasSdk}/Include",
+        lib = "%{paths.KompasSdk}/lib",
+        lib64 = "%{paths.KompasSdk}/lib64",
     },
 }
-
-KOMPAS_DEVUTIL = os.getenv("KOMPAS_DEVUTIL")
 
 workspace "kompas-print3d-optimizer"
     architecture "x86_64"

@@ -16,15 +16,14 @@ project "kapiwrap"
     includedirs {
         "include/kapiwrap",
 
-        "%{wks.location}/oglwrap/include",
-
-        "%{localDependencies.kompasApi.include}",
-        "%{localDependencies.kompasApi.lib}",
+        "%{localDependencies.KompasAPI.include}",
+        "%{localDependencies.KompasAPI.lib}",
     }
 
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
+        optimize "Off"
         runtime "Debug"
 
     filter "configurations:Release"
