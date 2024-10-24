@@ -18,13 +18,20 @@ namespace detail {
 
     template <> struct GetControlType<kapi::ControlTypeEnum::ksControlCheckBox> : DeclareUsingType<kapi::IPropertyCheckBoxPtr> {};
     template <> struct GetControlType<kapi::ControlTypeEnum::ksControlEditReal> : DeclareUsingType<kapi::IPropertyEditPtr> {};
+    template <> struct GetControlType<kapi::ControlTypeEnum::ksControlTwinSwitcher> : DeclareUsingType<kapi::IPropertyTwinSwitcherPtr> {};
 
 }
 
 template <kapi::ControlTypeEnum controlType>
-class OptionalControl {
+class OptionalControl final {
 public:
-    OptionalControl(kapi::IPropertyControlsPtr controls);
+    OptionalControl(kapi::IPropertyControlsPtr controls, bool isEnableOnInit, const _bstr_t& checkBoxName);
+    OptionalControl(const OptionalControl& obj) = delete;
+    OptionalControl(OptionalControl&& obj) noexcept = delete;
+
+public:
+    OptionalControl& operator=(const OptionalControl& obj) = delete;
+    OptionalControl& operator=(OptionalControl&& obj) noexcept = delete;
 
 private:
     kapi::IPropertyCheckBoxPtr m_checkBox = nullptr;
@@ -32,10 +39,6 @@ private:
 
 };
 
-template<kapi::ControlTypeEnum controlType>
-inline OptionalControl<controlType>::OptionalControl(kapi::IPropertyControlsPtr controls) {
-    m_checkBox = controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
-    m_control = controls->Add(controlType);
-}
+
 
 #endif /* OPTIONAL_CONTROL_HPP */
