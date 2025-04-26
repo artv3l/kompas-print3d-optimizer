@@ -6,6 +6,7 @@
 class PropertyManagerObject {
 public:
     PropertyManagerObject(kapi::KompasObjectPtr kompas);
+    virtual ~PropertyManagerObject() = default;
 
     kapi::IPropertyManagerPtr getPropertyManager();
 
