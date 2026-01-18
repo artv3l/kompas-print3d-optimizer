@@ -15,6 +15,7 @@ protected:
 
     virtual afx_msg bool activate() = 0;
     virtual afx_msg bool closeFrame() = 0;
+    virtual afx_msg bool beginPaintGL(kapi::ksGLObject* glObject, long drawMode) = 0;
     virtual afx_msg bool closePaintGL(kapi::ksGLObject* glObject, long drawMode) = 0;
     virtual afx_msg bool deactivate() = 0;
     virtual afx_msg bool mouseDown(short nButton, short nShiftState, long x, long y) = 0;

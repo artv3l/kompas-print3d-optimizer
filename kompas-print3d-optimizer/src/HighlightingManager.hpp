@@ -11,7 +11,7 @@ class Settings;
 class HighlightingManager : public DocumentFrameEvent {
 public:
     enum Mode : uint8_t {
-        layersEverywhere = 0x01, layersAtCursor = 0x02, overhangs = 0x04,
+        off = 0x00, layersEverywhere = 0x01, layersAtCursor = 0x02, overhangs = 0x04,
     };
 
     HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings);
@@ -38,6 +38,7 @@ private: /* static */
 private: /* events */
     bool activate() override;
     bool closeFrame() override;
+    bool beginPaintGL(kapi::ksGLObject* glObject, long drawMode) override;
     bool closePaintGL(kapi::ksGLObject* glObject, long drawMode) override;
     bool deactivate() override;
     bool mouseDown(short nButton, short nShiftState, long x, long y) override;

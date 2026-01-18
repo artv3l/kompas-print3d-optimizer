@@ -173,10 +173,13 @@ bool HighlightingManager::closeFrame() {
     return true;
 }
 
-bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode) {
-    if (m_mode == 0x00) {
-        return false;
+bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode) {
+    if (m_mode == Mode::off) {
+        return true;
     }
+
+    glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
@@ -222,7 +225,11 @@ bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode
 
     drawTriangulation(m_document3d->GetPart(kapi::Part_Type::pTop_Part), printSurface.face);
 
-    return true;
+    return false;
+}
+
+bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode) {
+    return false /* unused */;
 }
 
 bool HighlightingManager::deactivate() {

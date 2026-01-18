@@ -18,9 +18,8 @@ out vec3 normal;
 void main() {
     position = a_position;
     normal = a_normal;
-    /* Смещаем полигоны в направлении нормали, чтобы не появлялись артефакты при вращении.
-       Они появляются, потому что мы рисуем полигоны поверх уже нарисованных, но нет никаких гарантий, что наши полигоны отрисуются сверху. */
-    gl_Position = u_projection * u_modelview * vec4(a_position + (a_normal * 0.03f), 1.0f);
+
+    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
 }
 
 )glsl";
@@ -30,11 +29,35 @@ inline const std::string FRAGMENT_SHADER_CODE = R"glsl(
 
 #define PI 3.1415926538
 
+struct Light {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+};
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+};
+
+
+const Light c_defaultLight = Light(
+    vec3(0.3f, -0.3f, -1.0f),
+    vec3(0.2f, 0.2f, 0.2f),
+    vec3(0.5f, 0.5f, 0.5f)
+);
+
+const Material c_defaultMaterial = Material(
+    vec3(0.8f, 0.8f, 0.8f),
+    vec3(0.8f, 0.8f, 0.8f)
+);
+
 layout(origin_upper_left) in vec4 gl_FragCoord;
 
 in vec3 position;
 in vec3 normal;
 
+uniform mat4 u_modelview;
 uniform int u_mode;
 uniform vec3 u_printSurfaceNormal;
 uniform float u_printSurfaceD;
@@ -49,27 +72,43 @@ out vec4 FragColor;
 
 void main() {
     float epsilon = 0.01;
-    vec4 color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    
+
+    // ambient
+    vec3 ambient = c_defaultLight.ambient * c_defaultMaterial.ambient;
+
+    // diffuse
+    mat3 normalMatrix = mat3(transpose(inverse(u_modelview)));
+    vec3 norm = normalize(normalMatrix * normal);
+    vec3 lightDir = normalize(-c_defaultLight.direction);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = c_defaultLight.diffuse * (diff * c_defaultMaterial.diffuse);
+
+    vec3 color = ambient + diffuse;
+
     float angle = acos(dot(u_printSurfaceNormal, normal) / length(u_printSurfaceNormal) / length(normal));
-    if (bool(u_mode & 0x04)) { // нависания
+
+    // нависания
+    if (bool(u_mode & 0x04)) {
         if ((angle < u_overhangThreshold) && !(abs(angle - u_overhangThreshold) < epsilon) && !u_isPrintSurface) {
-            color.ra = vec2(1.0f, 0.3f);
+            color.r = 1.0f;
         }
     }
-    if (bool(u_mode & 0x03) && !(abs(angle) < epsilon) && !(abs(angle - PI) < epsilon)) { // слои
+
+    // слои
+    if (bool(u_mode & 0x03) && !(abs(angle) < epsilon) && !(abs(angle - PI) < epsilon)) {
         float dist = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) / length(u_printSurfaceNormal);
         if (abs(dist - (round(dist / u_layerHeight) * u_layerHeight)) < u_lineWidth * abs(sin(angle))) {
             if (bool(u_mode & 0x01)) { // везде
-                color.rba = vec3(0.0f, 1.0f, 0.6f);
+                color.rb = vec2(0.0f, 1.0f);
             } else { // у курсора
                 if (length(u_mouseCoord - gl_FragCoord.xy) < u_mouseRadius) {
-                    color.rba = vec3(0.0f, 1.0f, 0.6f);
+                    color.rb = vec2(0.0f, 1.0f);
                 }
             }
         }
     }
-    FragColor = color;
+
+    FragColor = vec4(color, 1.0f);
 }
 
 )glsl";

@@ -16,6 +16,7 @@ DocumentFrameEvent::DocumentFrameEvent(kapi::IDocumentFramePtr documentFrame) :
 BEGIN_EVENTSINK_MAP(DocumentFrameEvent, AutomationBaseEvent)
     ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frActivate, DocumentFrameEvent::activate, VTS_NONE)
     ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frCloseFrame, DocumentFrameEvent::closeFrame, VTS_NONE)
+    ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frBeginPaintGL, DocumentFrameEvent::beginPaintGL, VTS_DISPATCH VTS_I4)
     ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frClosePaintGL, DocumentFrameEvent::closePaintGL, VTS_DISPATCH VTS_I4)
     ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frDeactivate, DocumentFrameEvent::deactivate, VTS_NONE)
     ON_EVENT(DocumentFrameEvent, (unsigned int)-1, kapi::ksDocumentFrameNotifyEnum::frMouseDown, DocumentFrameEvent::mouseDown, VTS_I2 VTS_I2 VTS_I4 VTS_I4)
