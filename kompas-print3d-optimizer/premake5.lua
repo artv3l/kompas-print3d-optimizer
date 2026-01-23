@@ -50,7 +50,15 @@ project "kompas-print3d-optimizer"
         runtime "Debug"
 
         links {
-            "%{vcpkg.lib.debug}/glad.lib"
+            "%{vcpkg.lib.debug}/glad.lib",
+            "%{vcpkg.lib.debug}/CorradeMain-d.lib",
+            "%{vcpkg.lib.debug}/Magnum-d.lib",
+            "%{vcpkg.lib.debug}/MagnumPrimitives-d.lib",
+            "%{vcpkg.lib.debug}/MagnumTrade-d.lib",
+        }
+
+        postbuildcommands {
+            "{COPY} %{vcpkg.bin.debug}/* %{prj.location}/bin/Debug",
         }
 
     filter "configurations:Release"

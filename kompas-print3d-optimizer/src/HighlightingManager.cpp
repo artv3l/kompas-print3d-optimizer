@@ -19,6 +19,7 @@
 #include "utils.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
+#include "mesh.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -56,6 +57,8 @@ HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksD
         }
     }
     s_framesCount++;
+
+    Mesh icosphere = generateIcosphere();
 }
 
 void HighlightingManager::toggleMode(Mode mode) {
