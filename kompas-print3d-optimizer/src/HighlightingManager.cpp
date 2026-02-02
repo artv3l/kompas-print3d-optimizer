@@ -20,6 +20,9 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 #include "mesh.hpp"
+#include "generic/windows.hpp"
+#include "generic/math.hpp"
+#include "oglwrap/VertexArray.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -86,14 +89,8 @@ kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObject
 void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
     kapi::ksBodyPtr body = part->GetMainBody();
     kapi::ksFaceCollectionPtr faceCollection = body->FaceCollection();
-    long nFaces = faceCollection->GetCount();
 
-    Mesh icosphere = generateIcosphere();
-
-    GLuint vertexArrayObject; glGenVertexArrays(1, &vertexArrayObject);
-    GLuint vertexBufferObject; glGenBuffers(1, &vertexBufferObject);
-    GLuint elementBufferObject; glGenBuffers(1, &elementBufferObject);
-    for (long iFace = 0; iFace < nFaces; iFace++) {
+    for (long iFace = 0, count = faceCollection->GetCount(); iFace < count; iFace++) {
         kapi::ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
 
         s_shaderProgram->setUniform("u_isPrintSurface", face == printFace);
@@ -101,66 +98,14 @@ void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDe
         kapi::ksTessellationPtr tesselation = face->GetTessellation();
         tesselation->refresh(); // Нужно обязательно вызывать после перестроения модели
         
-        _variant_t points, indexes; tesselation->GetFacetPoints(&points, &indexes);
-        _variant_t normals; tesselation->GetFacetNormals(&normals);
-        if ((points.vt != (VT_ARRAY | VT_R8)) || !points.parray ||
-            (indexes.vt != (VT_ARRAY | VT_I4)) || !indexes.parray ||
-            (normals.vt != (VT_ARRAY | VT_R8)) || !normals.parray) {
-            break;
-        }
-        GLsizei nPoints = points.parray->rgsabound[0].cElements - points.parray->rgsabound[0].lLbound;
-        if ((points.parray->cDims != 1) || (nPoints == 0) || (nPoints % 3 != 0)) {
-            break;
-        }
-        GLsizei nIndexes = indexes.parray->rgsabound[0].cElements - indexes.parray->rgsabound[0].lLbound;
-        if ((indexes.parray->cDims != 1) || (nIndexes == 0) || (nIndexes % 3 != 0)) {
-            break;
-        }
-        double HUGEP* pPoints = NULL; SafeArrayAccessData(points.parray, (void HUGEP * FAR*) & pPoints);
-        int HUGEP* pIndexes = NULL; SafeArrayAccessData(indexes.parray, (void HUGEP * FAR*) & pIndexes);
-        double HUGEP* pNormals = NULL; SafeArrayAccessData(normals.parray, (void HUGEP * FAR*) & pNormals);
-        if (!pPoints || !pIndexes || !pNormals) {
-            break;
-        }
+        Mesh mesh = copyToMesh(tesselation);
+        //Mesh mesh = generateIcosphere();
 
-        std::vector<double> arrayBuffer(static_cast<size_t>(nPoints) * 2); // точки + нормали
-        for (size_t i = 0; i < static_cast<size_t>(nPoints / 3); i++) {
-            for (size_t j = 0; j < 3; j++) {
-                arrayBuffer[(i * 6) + j] = pPoints[(i * 3) + j];
-                arrayBuffer[(i * 6) + 3 + j] = pNormals[(i * 3) + j];
-            }
-        }
-
-        glBindVertexArray(vertexArrayObject);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-        glBufferData(GL_ARRAY_BUFFER, icosphere.vertices.size() * 3 * 2 * sizeof(float), icosphere.vertices.data(), GL_DYNAMIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, icosphere.indices.size() * sizeof(unsigned int), icosphere.indices.data(), GL_DYNAMIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-
-        glBindVertexArray(vertexArrayObject);
-        glDrawElements(GL_TRIANGLES, icosphere.indices.size(), GL_UNSIGNED_INT, 0);
-
-        SafeArrayUnaccessData(indexes.parray);
-        SafeArrayUnaccessData(points.parray);
+        VertexArray model(mesh);
+        model.draw(GL_TRIANGLES);
     }
 
-    glDeleteVertexArrays(1, &vertexArrayObject);
-    glDeleteBuffers(1, &vertexBufferObject);
-    glDeleteBuffers(1, &elementBufferObject);
-
     glUseProgram(0);
-    glBindVertexArray(0);
 }
 
 bool HighlightingManager::activate() {
@@ -253,4 +198,30 @@ bool HighlightingManager::mouseMove(short nShiftState, long x, long y) {
     m_mouseCoord = glm::vec2(x, y);
     m_documentFrame->RefreshWindow();
     return true;
+}
+
+Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
+{
+    checkPtr(tessellation);
+
+    _variant_t pointsVariant, indexesVariant, normalsVariant;
+    tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
+    tessellation->GetFacetNormals(&normalsVariant);
+    auto&& [points, pointsLock] = getSafeArrayData<glm::dvec3>(pointsVariant);
+    auto&& [normals, normalsLock] = getSafeArrayData<glm::dvec3>(normalsVariant);
+    auto&& [indexes, indexesLock] = getSafeArrayData<int>(indexesVariant);
+
+    auto toFloatVec = [](const glm::dvec3& dvec3) { return glm::vec3(dvec3);  };
+
+    Mesh mesh;
+
+    mesh.positions.reserve(points.size());
+    std::transform(points.begin(), points.end(), std::back_inserter(mesh.positions), toFloatVec);
+
+    mesh.normals.reserve(normals.size());
+    std::transform(normals.begin(), normals.end(), std::back_inserter(mesh.normals), toFloatVec);
+
+    std::copy(indexes.begin(), indexes.end(), std::back_inserter(mesh.indexes));
+
+    return mesh;
 }

@@ -5,6 +5,7 @@
 
 #include "oglwrap/Shader.hpp"
 #include "kapiwrap/DocumentFrameEvent.hpp"
+#include "mesh.hpp"
 
 class Settings;
 
@@ -45,5 +46,7 @@ private: /* events */
     bool mouseMove(short nShiftState, long x, long y) override;
 
 };
+
+Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 
 #endif /* HIGHLIGHTING_MANAGER_HPP */

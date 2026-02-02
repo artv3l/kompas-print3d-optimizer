@@ -1,6 +1,9 @@
 #include "mesh.hpp"
 
 #include <cassert>
+#include <algorithm>
+#include <vector>
+#include <iterator>
 
 #include <Magnum/Primitives/Icosphere.h>
 #include <Magnum/Trade/MeshData.h>
@@ -19,22 +22,19 @@ Mesh generateIcosphere()
         return {};
     }
 
+    auto toGlmVec = [](const Magnum::Vector3 & vec3) { return glm::vec3(vec3.x(), vec3.y(), vec3.z()); };
+
     Mesh result;
-    auto position = positions.cbegin();
-    auto normal = normals.cbegin();
-    while (position != positions.cend() && normal != normals.cend())
-    {
-        Vertex vertex;
-        vertex.position = glm::vec3(position->x(), position->y(), position->z());
-        vertex.normal = glm::vec3(normal->x(), normal->y(), normal->z());
-        result.vertices.emplace_back(std::move(vertex));
 
-        ++position;
-        ++normal;
-    }
+    result.positions.reserve(positions.size());
+    std::transform(positions.begin(), positions.end(), std::back_inserter(result.positions), toGlmVec);
 
-    for (auto&& i : icosphere.indicesAsArray())
-        result.indices.emplace_back(i);
+    result.normals.reserve(normals.size());
+    std::transform(normals.begin(), normals.end(), std::back_inserter(result.normals), toGlmVec);
+
+    auto indexes = icosphere.indicesAsArray();
+    result.indexes.reserve(indexes.size());
+    std::copy(indexes.begin(), indexes.end(), std::back_inserter(result.indexes));
 
     return result;
 }

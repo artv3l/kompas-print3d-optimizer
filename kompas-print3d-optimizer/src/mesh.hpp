@@ -2,18 +2,8 @@
 #define MESH_HPP
 
 #include <vector>
-
 #include <glm/glm.hpp>
-
-struct Vertex final {
-    glm::vec3 position;
-    glm::vec3 normal;
-};
-
-struct Mesh final {
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-};
+#include "oglwrap/Mesh.hpp"
 
 Mesh generateIcosphere();
 
