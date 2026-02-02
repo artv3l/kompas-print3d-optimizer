@@ -57,8 +57,6 @@ HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksD
         }
     }
     s_framesCount++;
-
-    Mesh icosphere = generateIcosphere();
 }
 
 void HighlightingManager::toggleMode(Mode mode) {
@@ -89,6 +87,8 @@ void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDe
     kapi::ksBodyPtr body = part->GetMainBody();
     kapi::ksFaceCollectionPtr faceCollection = body->FaceCollection();
     long nFaces = faceCollection->GetCount();
+
+    Mesh icosphere = generateIcosphere();
 
     GLuint vertexArrayObject; glGenVertexArrays(1, &vertexArrayObject);
     GLuint vertexBufferObject; glGenBuffers(1, &vertexBufferObject);
@@ -134,22 +134,22 @@ void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDe
         glBindVertexArray(vertexArrayObject);
 
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-        glBufferData(GL_ARRAY_BUFFER, nPoints * 2 * sizeof(double), arrayBuffer.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, icosphere.vertices.size() * 3 * 2 * sizeof(float), icosphere.vertices.data(), GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, nIndexes * sizeof(int), pIndexes, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, icosphere.indices.size() * sizeof(unsigned int), icosphere.indices.data(), GL_DYNAMIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)(3 * sizeof(double)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
         glBindVertexArray(vertexArrayObject);
-        glDrawElements(GL_TRIANGLES, nIndexes, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, icosphere.indices.size(), GL_UNSIGNED_INT, 0);
 
         SafeArrayUnaccessData(indexes.parray);
         SafeArrayUnaccessData(points.parray);
@@ -181,7 +181,12 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
         return true;
     }
 
-    glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+    glm::dvec4 dir;
+    m_documentFrame->GetPickRay(0, 0, nullptr, nullptr, nullptr, &dir.x, &dir.y, &dir.z);
+    kapi::ksPartPtr part = m_document3d->GetPart(kapi::Part_Type::pTop_Part);
+    auto stat = calcOrientationStat(part->GetMainBody(), dir);
+
+    glClearColor(0, stat.supportArea / stat.bodyArea, 0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

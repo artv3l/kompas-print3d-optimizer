@@ -12,7 +12,7 @@ struct Vertex final {
 
 struct Mesh final {
     std::vector<Vertex> vertices;
-    std::vector<size_t> indices;
+    std::vector<unsigned int> indices;
 };
 
 Mesh generateIcosphere();

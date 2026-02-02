@@ -1,7 +1,7 @@
 project "kompas-print3d-optimizer"
     kind "SharedLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 
     targetextension (".rtw")
     characterset ("Unicode")

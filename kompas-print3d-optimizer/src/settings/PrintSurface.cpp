@@ -2,6 +2,10 @@
 
 #include <utility>
 #include <stdexcept>
+#include <span>
+#include <algorithm>
+
+#include <glm/glm.hpp>
 
 #include "utils.hpp"
 
@@ -94,4 +98,73 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 	}
 
 	return PrintSurface{face, planeEq};
+}
+
+using Lock = std::function<void()>;
+template <typename T>
+std::pair<std::span<T>, Lock> getSafeArrayData(const _variant_t& variant)
+{
+	if (!(variant.vt & VT_ARRAY) || !variant.parray) {
+		assert(false);
+		return {};
+	}
+
+	size_t count = variant.parray->rgsabound[0].cElements - variant.parray->rgsabound[0].lLbound;
+	if (count <= 0 || variant.parray->cDims != 1) {
+		assert(false);
+		return {};
+	}
+
+	T HUGEP * data = nullptr;
+	SafeArrayAccessData(variant.parray, (void HUGEP * FAR*) & data);
+
+	const UINT elemSize = SafeArrayGetElemsize(variant.parray);
+	return { std::span<T>(data, count / (sizeof(T) / elemSize)), [&variant](){ SafeArrayUnaccessData(variant.parray); }};
+}
+
+
+OrientationStat calcOrientationStat(kapi::ksBodyPtr body, const glm::vec3& direction)
+{
+	auto calcTriangleArea = [](const glm::dvec3& a, const glm::dvec3& b, const glm::dvec3& c) {
+		glm::dvec3 ab = b - a;
+		glm::dvec3 ac = c - a;
+		return 0.5 * glm::length(glm::cross(ab, ac));
+	};
+
+	auto calcAngle = [](const glm::vec3 & a, const glm::vec3 & b) -> float {
+		float dot = glm::dot(a, b);
+		float len = glm::length(a) * glm::length(b);
+		if (doubleEqual(len, 0.0))
+			return 0.0f;
+		return std::acos(std::clamp(dot / len, -1.0f, 1.0f));
+	};
+
+	checkPtr(body);
+	auto faces = checkCast<kapi::ksFaceCollectionPtr>(body->FaceCollection());
+
+	OrientationStat result;
+
+	for (size_t i = 0, facesCount = faces->GetCount(); i < facesCount; ++i) {
+		kapi::ksFaceDefinitionPtr face = faces->GetByIndex(i);
+		kapi::ksTessellationPtr tessellation = face->GetTessellation();
+		tessellation->refresh(); // Нужно обязательно вызывать после перестроения модели
+
+		_variant_t pointsVariant, indexesVariant, normalsVariant;
+		tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
+		tessellation->GetFacetNormals(&normalsVariant);
+		auto&& [normals, normalsLock] = getSafeArrayData<glm::dvec3>(normalsVariant);
+		auto&& [points, pointsLock] = getSafeArrayData<glm::dvec3>(pointsVariant);
+		auto&& [indexes, indexesLock] = getSafeArrayData<int>(indexesVariant);
+
+		for (int i = 0; i < indexes.size(); i += 3) {
+			glm::dvec3 normal = normals[indexes[i]];
+			double area = calcTriangleArea(points[indexes[i]], points[indexes[i + 1]], points[indexes[i + 2]]);
+			result.bodyArea += area;
+			if (calcAngle(normal, direction) < degreeToRadian(45)) {
+				result.supportArea += area;
+			}
+		}
+	}
+
+	return result;
 }
