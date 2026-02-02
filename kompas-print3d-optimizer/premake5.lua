@@ -39,11 +39,6 @@ project "kompas-print3d-optimizer"
         "%{paths.KompasDevutil}/delete-lib.exe \"Подготовка к FDM 3D печати\""
     }
 
-    postbuildcommands {
-        "{COPYFILE} %{prj.location}/%{prj.name}.xml %{cfg.buildtarget.directory}",
-        "%{paths.KompasDevutil}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
-    }
-
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
@@ -58,7 +53,9 @@ project "kompas-print3d-optimizer"
         }
 
         postbuildcommands {
-            "{COPY} %{vcpkg.bin.debug}/* %{prj.location}/bin/Debug",
+            "{COPYFILE} %{prj.location}/%{prj.name}.xml %{cfg.buildtarget.directory}",
+            "{COPYDIR} %{vcpkg.bin.debug} %{cfg.buildtarget.directory}",
+            "%{paths.KompasDevutil}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
         }
 
     filter "configurations:Release"
