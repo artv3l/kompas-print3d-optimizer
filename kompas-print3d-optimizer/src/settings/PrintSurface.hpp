@@ -5,34 +5,38 @@
 
 #include <glm/vec3.hpp>
 
+#include "oglwrap/Mesh.hpp"
+
+
 struct PlaneEq {
-    double a, b, c, d;
+	double a, b, c, d;
 
-    PlaneEq(kapi::ksFaceDefinitionPtr face);
+	PlaneEq(kapi::ksFaceDefinitionPtr face);
 
-    bool operator==(const PlaneEq& other) const;
-    bool operator!=(const PlaneEq& other) const;
+	bool operator==(const PlaneEq& other) const;
+	bool operator!=(const PlaneEq& other) const;
 
-    void invert();
+	void invert();
 };
 
 struct PrintSurface {
-    kapi::ksFaceDefinitionPtr face;
-    PlaneEq eq;
+	kapi::ksFaceDefinitionPtr face;
+	PlaneEq eq;
 };
 
-/*
-  Статистика выбранной ориентации детали (плоскости печати).
-  Нужно учитывать, что деталь может измениться. Тогда эта статистика становится неактуальной.
-*/
-struct OrientationStat {
-    double bodyArea = 0.0; // Общая площадь всей детали
-    double supportArea = 0.0; // Площадь поддержек
-    // ? Максимальный угол нависаний
+struct OrientationStatByMesh final {
+	kapi::ksBodyPtr body; // Деталь, для которой проводится анализ
+	double bodyArea; // Площадь детали
+
+	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
+	std::vector<double> overhangsArea; // Площади нависаний для каждого вектора из m_evalMesh
+
+	// ? Максимальный угол нависаний
 };
 
 std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
 PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
-OrientationStat calcOrientationStat(kapi::ksBodyPtr body, const glm::vec3 & direction);
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold);
+Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 
 #endif /* PRINT_SURFACE_HPP */

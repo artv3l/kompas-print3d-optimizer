@@ -52,6 +52,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
 
     DocumentData& documentData = global::documentsManager->getOrCreateDocumentData(document3d);
     Settings* settings = documentData.getSettings();
+    HighlightingManager* highlightingManager = documentData.getHighlightingManager();
 
     switch (comm) { // Настройки
     case 1:
@@ -76,13 +77,20 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }}
 
+    switch (comm) { // Определение плоскости печати
+    case 20: {
+        highlightingManager->toggleMode(HighlightingManager::Mode::orientationIcosphere);
+        highlightingManager->refreshWindow();
+        return;
+    }
+    }
+
     if (!settings->isPrintSurfaceSelected()) {
         global::kompas->ksMessage("Плоскость печати не выбрана!");
         return;
     }
 
     if (comm >= 30) { // Подсветка элементов
-        HighlightingManager* highlightingManager = documentData.getHighlightingManager();
         switch (comm) {
         case 30:
             highlightingManager->toggleMode(HighlightingManager::Mode::layersEverywhere);

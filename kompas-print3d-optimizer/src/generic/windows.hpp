@@ -5,10 +5,10 @@
 
 #include <comutil.h>
 
-using Lock = std::function<void()>;
+#include <oglwrap/ActionLock.hpp>
 
 template <typename T>
-std::pair<std::span<T>, Lock> getSafeArrayData(const _variant_t& variant)
+std::pair<std::span<T>, ActionLock> getSafeArrayData(const _variant_t& variant)
 {
 	if (!(variant.vt & VT_ARRAY) || !variant.parray) {
 		assert(false);
@@ -25,5 +25,7 @@ std::pair<std::span<T>, Lock> getSafeArrayData(const _variant_t& variant)
 	SafeArrayAccessData(variant.parray, (void HUGEP * FAR*) & data);
 
 	const UINT elemSize = SafeArrayGetElemsize(variant.parray);
-	return { std::span<T>(data, count / (sizeof(T) / elemSize)), [&variant]() { SafeArrayUnaccessData(variant.parray); } };
+	std::span<T> span(data, count / (sizeof(T) / elemSize));
+	ActionLock lock([&variant]() { SafeArrayUnaccessData(variant.parray); });
+	return std::make_pair(span, std::move(lock));
 }

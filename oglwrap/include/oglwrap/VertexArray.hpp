@@ -5,6 +5,7 @@
 
 #include <glad/glad.h>
 
+#include "ActionLock.hpp"
 #include "VertexBuffer.hpp"
 #include "Mesh.hpp"
 
@@ -12,12 +13,10 @@ class VertexArray {
 public:
     using Ptr = std::shared_ptr<VertexArray>;
 
-    static void unbind();
-
 public:
     VertexArray(const Mesh& mesh);
 
-    void bind() const;
+    [[nodiscard]] ActionLock bind() const;
     void setElementBuffer(const ElementBuffer::Ptr& elementBuffer);
     void addVertexBuffer(const VertexBuffer::Ptr& vertexBuffer);
 

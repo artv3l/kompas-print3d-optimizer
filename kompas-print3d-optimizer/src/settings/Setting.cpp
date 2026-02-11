@@ -50,7 +50,7 @@ _variant_t DoubleSetting::getVariantValue() const {
 }
 
 void DoubleSetting::setVariantValue(_variant_t variant) {
-    if ((variant.vt == VT_I4) || (variant.vt == VT_R8)) {
+    if ((variant.vt == VT_I4) || (variant.vt == VT_R8) || (variant.vt == VT_INT)) {
         m_value = variant;
     }
 }

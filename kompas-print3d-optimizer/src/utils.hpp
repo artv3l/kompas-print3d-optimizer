@@ -11,11 +11,12 @@ class NullptrException : public std::runtime_error {
 };
 
 template <typename Source>
-void checkPtr(Source ptr) {
+Source checkPtr(Source ptr) {
 	if (!ptr) {
 		assert(false);
 		throw NullptrException("Unexpected nullptr");
 	}
+	return ptr;
 }
 
 template <typename Result, typename Source>

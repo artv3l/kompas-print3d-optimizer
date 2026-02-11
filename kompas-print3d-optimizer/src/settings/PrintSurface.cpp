@@ -4,12 +4,14 @@
 #include <stdexcept>
 #include <span>
 #include <algorithm>
+#include <iterator>
 
 #include <glm/glm.hpp>
 
 #include "utils.hpp"
 #include "generic/math.hpp"
 #include "generic/windows.hpp"
+#include "mesh.hpp"
 
 PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
 	if (!face->IsPlanar()) {
@@ -103,34 +105,112 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 }
 
 
-OrientationStat calcOrientationStat(kapi::ksBodyPtr body, const glm::vec3& direction)
+// Рассчитать площадь всей сетки
+double calcTotalAreaByMesh(const Mesh& mesh)
 {
-	checkPtr(body);
-	auto faces = checkCast<kapi::ksFaceCollectionPtr>(body->FaceCollection());
+	assert(mesh.indexes.size() % 3 == 0);
 
-	OrientationStat result;
+	double totalArea = 0.0;
+	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+		const size_t i1 = mesh.indexes[iIndex];
+		const size_t i2 = mesh.indexes[iIndex + 1];
+		const size_t i3 = mesh.indexes[iIndex + 2];
+		totalArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+	}
+	return totalArea;
+}
 
-	for (size_t i = 0, facesCount = faces->GetCount(); i < facesCount; ++i) {
-		kapi::ksFaceDefinitionPtr face = faces->GetByIndex(i);
-		kapi::ksTessellationPtr tessellation = face->GetTessellation();
-		tessellation->refresh(); // Нужно обязательно вызывать после перестроения модели
+// Рассчитать суммарную площадь нависаний. overhangThreshold в градусах, direction направлено вниз от печатного стола
+double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double overhangThreshold)
+{
+	assert(mesh.indexes.size() % 3 == 0);
 
-		_variant_t pointsVariant, indexesVariant, normalsVariant;
-		tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
-		tessellation->GetFacetNormals(&normalsVariant);
-		auto&& [normals, normalsLock] = getSafeArrayData<glm::dvec3>(normalsVariant);
-		auto&& [points, pointsLock] = getSafeArrayData<glm::dvec3>(pointsVariant);
-		auto&& [indexes, indexesLock] = getSafeArrayData<int>(indexesVariant);
+	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
+	double overhangsArea = 0.0;
 
-		for (int i = 0; i < indexes.size(); i += 3) {
-			glm::vec3 normal = normals[indexes[i]];
-			double area = calcTriangleArea(points[indexes[i]], points[indexes[i + 1]], points[indexes[i + 2]]);
-			result.bodyArea += area;
-			if (calcAngleBetween(normal, direction) < degreeToRadian(45)) {
-				result.supportArea += area;
-			}
+	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+		const size_t i1 = mesh.indexes[iIndex];
+		const size_t i2 = mesh.indexes[iIndex + 1];
+		const size_t i3 = mesh.indexes[iIndex + 2];
+
+		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
+		const glm::vec3 normal = mesh.normals[i1];
+		const double angleRad = calcAngleBetween(normal, direction);
+
+		/*
+		  Если угол равен нулю, то считаем что эта грань плоскость печати или печатается мостом.
+		  Что не очень правильно, т.к. нужно считать плоскостью печати ближайшую грань в
+		  направлении плоскости печати. И не учитывать только ее.
+
+		  Пока для простоты считаем что все остальные горизонтальные грани могут напечататься мостами.
+		*/
+		if (!doubleEqual(angleRad, 0.0) && (angleRad < overhangThresholdRad)) {
+			overhangsArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 		}
 	}
 
-	return result;
+	return overhangsArea;
+}
+
+// Рассчитать суммарную площадь нависаний и площаь всего тела по тесселляции тела
+std::pair<double, std::vector<double>> calcOverhangsAreaByBodyTessellation(
+	kapi::ksBodyPtr body, std::span<const glm::vec3> directions, double overhangThreshold)
+{
+	auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+
+	std::vector<double> overhangsArea(directions.size(), 0.0);
+	double bodyArea = 0.0;
+
+	for (size_t iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
+	{
+		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
+		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
+		Mesh faceMesh = copyToMesh(tessellation);
+
+		bodyArea += calcTotalAreaByMesh(faceMesh);
+
+		auto calcOverhangsArea = std::bind(calcOverhangsAreaByMesh, faceMesh, std::placeholders::_1, overhangThreshold);
+		std::ranges::transform(directions, overhangsArea, overhangsArea.begin(), std::plus<double>(), calcOverhangsArea);
+	}
+
+	return std::make_pair(bodyArea, overhangsArea);
+}
+
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold)
+{
+	Mesh icosphere = generateIcosphere();
+	auto result = calcOverhangsAreaByBodyTessellation(body, icosphere.normals, overhangThreshold);
+
+	OrientationStatByMesh stat;
+	stat.body = body;
+	stat.bodyArea = result.first;
+	stat.evalMesh = std::move(icosphere);
+	stat.overhangsArea = std::move(result.second);
+	return stat;
+}
+
+Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
+{
+	checkPtr(tessellation);
+
+	_variant_t pointsVariant, indexesVariant, normalsVariant;
+	tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
+	tessellation->GetFacetNormals(&normalsVariant);
+	auto&& [points, pointsLock] = getSafeArrayData<glm::dvec3>(pointsVariant);
+	auto&& [normals, normalsLock] = getSafeArrayData<glm::dvec3>(normalsVariant);
+	auto&& [indexes, indexesLock] = getSafeArrayData<int>(indexesVariant);
+
+	auto toFloatVec = [](const glm::dvec3& dvec3) { return glm::vec3(dvec3); };
+
+	Mesh mesh;
+
+	mesh.positions.reserve(points.size());
+	std::transform(points.begin(), points.end(), std::back_inserter(mesh.positions), toFloatVec);
+
+	mesh.normals.reserve(normals.size());
+	std::transform(normals.begin(), normals.end(), std::back_inserter(mesh.normals), toFloatVec);
+
+	std::copy(indexes.begin(), indexes.end(), std::back_inserter(mesh.indexes));
+
+	return mesh;
 }

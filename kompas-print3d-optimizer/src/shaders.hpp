@@ -113,4 +113,66 @@ void main() {
 
 )glsl";
 
+inline const std::string VERTEX_SHADER_CODE_ORIENTATION = R"glsl(
+#version 330
+
+layout (location = 0) in vec3 a_position;
+layout (location = 1) in vec3 a_normal;
+layout (location = 2) in vec3 a_color;
+
+uniform mat4 u_modelview;
+uniform mat4 u_projection;
+
+out vec3 normal;
+out vec3 color;
+
+void main() {
+    normal = a_normal;
+    color = a_color;
+
+    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
+}
+
+)glsl";
+
+inline const std::string FRAGMENT_SHADER_CODE_ORIENTATION = R"glsl(
+#version 330
+
+struct Light {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+};
+
+const Light c_defaultLight = Light(
+    vec3(0.3f, -0.3f, -1.0f),
+    vec3(0.2f, 0.2f, 0.2f),
+    vec3(0.5f, 0.5f, 0.5f)
+);
+
+in vec3 normal;
+in vec3 color;
+
+uniform mat4 u_modelview;
+
+out vec4 FragColor;
+
+void main() {
+    float epsilon = 0.01;
+
+    // ambient
+    vec3 ambient = c_defaultLight.ambient * color;
+
+    // diffuse
+    mat3 normalMatrix = mat3(transpose(inverse(u_modelview)));
+    vec3 norm = normalize(normalMatrix * normal);
+    vec3 lightDir = normalize(-c_defaultLight.direction);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = c_defaultLight.diffuse * (diff * color);
+
+    FragColor = vec4(ambient + diffuse, 1.0f);
+}
+
+)glsl";
+
 #endif /* SHADERS_HPP */

@@ -307,7 +307,7 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, DoubleSetti
 }
 
 kapi::ksEntityPtr optimizeRoundingEdgesOnPrintFace(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, Settings& settings, ReworkType reworkType, size_t& reworkCount) {
-    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, settings.getPrintSurface(), reworkType);
+    std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, *settings.getPrintSurface(), reworkType);
     if (targets.empty()) {
         return nullptr;
     }

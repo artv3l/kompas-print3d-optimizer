@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <optional>
 
 #include "settings/PrintSurface.hpp"
 #include "settings/Setting.hpp"
@@ -22,7 +23,7 @@ public:
 
     void setPrintSurface(PrintSurface printSurface);
     bool isPrintSurfaceSelected() const;
-    PrintSurface getPrintSurface() const;
+    std::optional<PrintSurface> getPrintSurface() const;
     Setting::Ptr getSetting(std::string name);
     DoubleSetting::Ptr getDoubleSetting(std::string name);
     StringSetting::Ptr getStringSetting(std::string name);
@@ -33,7 +34,7 @@ public:
 private:
     using SettingsMap = std::unordered_map<std::string, Setting::Ptr>;
 
-    Optional<PrintSurface> m_printSurface;
+    std::optional<PrintSurface> m_printSurface;
     SettingsMap m_settingsMap;
 };
 

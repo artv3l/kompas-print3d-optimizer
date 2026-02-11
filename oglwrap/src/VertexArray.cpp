@@ -1,9 +1,5 @@
 #include "VertexArray.hpp"
 
-void VertexArray::unbind() {
-    glBindVertexArray(0);
-}
-
 VertexArray::VertexArray(const Mesh& mesh) {
     glGenVertexArrays(1, &m_id);
 
@@ -24,36 +20,37 @@ VertexArray::VertexArray(const Mesh& mesh) {
         addVertexBuffer(vb);
     }
 
+    auto lock = bind(); // До создания ElementBuffer и загрузки его данных
     ElementBuffer::Ptr eb = std::make_shared<ElementBuffer>(mesh.indexes.data(), static_cast<GLsizeiptr>(mesh.indexes.size()));
     setElementBuffer(eb);
 }
 
-void VertexArray::bind() const {
+ActionLock VertexArray::bind() const {
+    GLint prev = 0;
+    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev);
     glBindVertexArray(m_id);
+    return ActionLock([prev]() { glBindVertexArray(prev); });
 }
 
 void VertexArray::setElementBuffer(const ElementBuffer::Ptr& elementBuffer) {
-    bind();
+    auto lock = bind();
     elementBuffer->bind();
     m_elementBuffer = elementBuffer;
-    unbind();
     elementBuffer->unbind();
 }
 
 void VertexArray::addVertexBuffer(const VertexBuffer::Ptr& vertexBuffer) {
-    bind();
+    auto lock = bind();
     vertexBuffer->bind();
     for (const Layout& layout : vertexBuffer->getLayouts()) {
         glVertexAttribPointer(layout.index, layout.size, layout.type, layout.normalized, layout.stride, layout.pointer);
         glEnableVertexAttribArray(layout.index); 
     }
     m_vertexBuffers.push_back(vertexBuffer);
-    unbind();
     vertexBuffer->unbind();
 }
 
 void VertexArray::draw(GLenum mode) const {
-    bind();
+    auto lock = bind();
     glDrawElements(mode, static_cast<GLsizei>(m_elementBuffer->getCount()), GL_UNSIGNED_INT, 0);
-    unbind();
 }

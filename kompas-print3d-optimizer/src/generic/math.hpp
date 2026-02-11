@@ -12,7 +12,7 @@ T::value_type calcTriangleArea(const T& a, const T& b, const T& c)
 {
 	auto ab = b - a;
 	auto ac = c - a;
-	return glm::length(glm::cross(ab, ac)) / 2.0;
+	return glm::length(glm::cross(ab, ac)) / static_cast<T::value_type>(2.0);
 }
 
 // Угол между векторами в радианах

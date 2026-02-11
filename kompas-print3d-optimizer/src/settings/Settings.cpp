@@ -30,11 +30,8 @@ bool Settings::isPrintSurfaceSelected() const {
     return static_cast<bool>(m_printSurface);
 }
 
-PrintSurface Settings::getPrintSurface() const {
-    if (!m_printSurface) {
-        throw std::runtime_error("Плоскость печати не выбрана");
-    }
-    return m_printSurface.value();
+std::optional<PrintSurface> Settings::getPrintSurface() const {
+    return m_printSurface;
 }
 
 Setting::Ptr Settings::getSetting(std::string name) {

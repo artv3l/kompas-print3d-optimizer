@@ -319,7 +319,7 @@ std::list<kapi::ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(kapi::Kompas
 }
 
 kapi::ksEntityPtr optimizeCircleHorizontalHoles(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings) {
-    PrintSurface printSurface = settings.getPrintSurface();
+    PrintSurface printSurface = *settings.getPrintSurface();
     std::list<kapi::ksFaceDefinitionPtr> targets = getCircleHorizontalHoleTargets(kompas, document3d, part, printSurface.face);
     if (targets.empty()) {
         return nullptr;

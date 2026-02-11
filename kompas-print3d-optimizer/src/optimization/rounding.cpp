@@ -63,7 +63,7 @@ kapi::ksEntityPtr roundEdges(kapi::ksPartPtr part, std::list<kapi::ksEdgeDefinit
 
 kapi::ksEntityPtr optimizeRounding(kapi::ksPartPtr part, Settings& settings) {
 	std::list<kapi::ksEdgeDefinitionPtr> targets =
-		getRoundingTargets(part, settings.getPrintSurface().face, settings.getDoubleSetting(si::roundingDeflectionAngle.name)->getValue());
+		getRoundingTargets(part, settings.getPrintSurface()->face, settings.getDoubleSetting(si::roundingDeflectionAngle.name)->getValue());
 	if (targets.empty()) {
 		return nullptr;
 	}

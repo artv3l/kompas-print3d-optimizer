@@ -243,7 +243,7 @@ kapi::ksEntityPtr fillBridgeHoles(kapi::KompasObjectPtr kompas, kapi::ksPartPtr 
 }
 
 kapi::ksEntityPtr optimizeBridgeHoleFill(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings, HoleType holeType) {
-	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface().face, holeType);
+	std::list<BridgeHoleFillTarget> targets = getBridgeHoleFillTargets(document3d, part, settings.getPrintSurface()->face, holeType);
 	if (targets.empty()) {
 		return nullptr;
 	}
@@ -950,7 +950,7 @@ kapi::ksEntityPtr buildBridgeHoles(kapi::KompasObjectPtr kompas, kapi::ksPartPtr
 }
 
 kapi::ksEntityPtr optimizeBridgeHoleBuild(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, kapi::ksPartPtr part, Settings& settings) {
-	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface().face);
+	std::list<BridgeHoleBuildTarget> targets = getBridgeHoleBuildTargets(document3d, part, settings.getPrintSurface()->face);
 	if (targets.empty()) {
 		return nullptr;
 	}

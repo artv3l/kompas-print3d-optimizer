@@ -70,7 +70,7 @@ kapi::ksEntityPtr createElephantFootChamfers(kapi::ksPartPtr part, std::list<kap
 }
 
 kapi::ksEntityPtr optimizeElephantFoot(kapi::ksPartPtr part, Settings& settings) {
-	std::list<kapi::ksLoopPtr> targets = getElephantFootTargets(part, settings.getPrintSurface());
+	std::list<kapi::ksLoopPtr> targets = getElephantFootTargets(part, *settings.getPrintSurface());
 	if (targets.empty()) {
 		return nullptr;
 	}
