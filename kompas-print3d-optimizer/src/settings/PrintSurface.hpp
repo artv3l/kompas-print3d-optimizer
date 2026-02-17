@@ -31,6 +31,8 @@ struct OrientationStatByMesh final {
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
 	std::vector<double> overhangsArea; // Площади нависаний для каждого вектора из m_evalMesh
 
+	std::vector<double> printSurfacesArea; // Площади поверхностей печати для каждого вектора из m_evalMesh
+
 	// ? Максимальный угол нависаний
 };
 

@@ -1,5 +1,6 @@
 #include "HighlightingManager.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <iostream>
 #include <libloaderapi.h>
@@ -57,7 +58,16 @@ OrientationEvalMesh::OrientationEvalMesh(const OrientationStatByMesh& stat) :
         float v = 1.0f - static_cast<float>(overhangArea / bodyArea);
         return glm::vec3(1.0f - v, v, 0.0f);
         };
-    std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
+    //std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
+
+
+    auto maxArea = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
+    //stat.printSurfacesArea
+    auto toColor2 = [maxArea](double psArea) -> glm::vec3 {
+        float v = 1.0f - static_cast<float>(psArea / maxArea);
+        return glm::vec3(1.0f - v, v, 0.0f);
+        };
+    std::ranges::transform(stat.printSurfacesArea, colors.begin(), toColor2);
 
     VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
         colors.data(),

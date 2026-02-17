@@ -5,6 +5,7 @@
 #include <span>
 #include <algorithm>
 #include <iterator>
+#include <optional>
 
 #include <glm/glm.hpp>
 
@@ -152,6 +153,88 @@ double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double ov
 	return overhangsArea;
 }
 
+/*
+  Рассчитать площадь поверхности печати по направлению
+  
+  threshold Отклонение во сколько градусов считаем нулевым
+
+  result.first Площадь, которая будет соприкосаться с печатным столом
+  result.second Расстояние от части поверхности, которая будет соприкосаться с печатным столом,
+                до начала координат. Нужно чтобы среди всех поверхностей, которые перпендикулярны
+				направлению direction выбрать самое дальнее. Только эта поверхности и будет
+				поверхностью печати. Остальные могут быть мостами. Если площадь нулевая,
+				то это значение не имеет смысла.
+*/
+std::pair<double, double> calcPrintSurfaceAreaByMesh(const Mesh& mesh, glm::vec3 direction, double threshold)
+{
+	assert(mesh.indexes.size() % 3 == 0);
+
+	double area = 0.0;
+	
+	double distSum = 0.0;
+	size_t distCount = 0;
+
+	const double thresholdRad = degreeToRadian(threshold);
+	const glm::vec3 directionNorm = glm::normalize(direction);
+	const glm::vec3 zero(0.0f, 0.0f, 0.0f);
+
+	for (size_t iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+		const size_t i1 = mesh.indexes[iIndex];
+		const size_t i2 = mesh.indexes[iIndex + 1];
+		const size_t i3 = mesh.indexes[iIndex + 2];
+
+		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
+		const glm::vec3 normal = mesh.normals[i1];
+		const double angleRad = calcAngleBetween(normal, direction);
+
+		if (std::isless(angleRad, thresholdRad)) {
+			area += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+			
+			distSum += glm::dot(zero - mesh.positions[i1], directionNorm);
+			distSum += glm::dot(zero - mesh.positions[i2], directionNorm);
+			distSum += glm::dot(zero - mesh.positions[i3], directionNorm);
+			distCount += 3;
+
+			// TODO Сравнивать с предыдущей координатой и отсеивать по треугольникам
+		}
+	}
+
+	return std::make_pair(area, (distCount != 0) ? (distSum / distCount) : 0.0);
+}
+
+std::vector<double> calcPrintSurfaceAreaByBodyTessellation(kapi::ksBodyPtr body, std::span<const glm::vec3> directions,
+	double threshold)
+{
+	auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+
+	std::vector<double> areas(directions.size(), 0.0);
+	std::vector<double> distances(directions.size(), 0.0);
+
+	for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
+	{
+		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
+		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
+		Mesh faceMesh = copyToMesh(tessellation);
+
+		for (size_t i = 0; i < directions.size(); ++i) {
+			const glm::vec3& direction = directions[i];
+			auto&& [area, distance] = calcPrintSurfaceAreaByMesh(faceMesh, direction, threshold);
+			if (doubleEqual(area, 0.0)) {
+				continue;
+			}
+
+			if (doubleEqual(areas[i], 0.0) || std::isless(distance, distances[i])) {
+				areas[i] = area;
+				distances[i] = distance;
+			} else if (doubleEqual(distance, distances[i])) {
+				areas[i] += area;
+			}
+		}
+	}
+
+	return areas;
+}
+
 // Рассчитать суммарную площадь нависаний и площаь всего тела по тесселляции тела
 std::pair<double, std::vector<double>> calcOverhangsAreaByBodyTessellation(
 	kapi::ksBodyPtr body, std::span<const glm::vec3> directions, double overhangThreshold)
@@ -161,7 +244,7 @@ std::pair<double, std::vector<double>> calcOverhangsAreaByBodyTessellation(
 	std::vector<double> overhangsArea(directions.size(), 0.0);
 	double bodyArea = 0.0;
 
-	for (size_t iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
+	for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
 	{
 		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
 		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
@@ -184,14 +267,17 @@ OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double ove
 	OrientationStatByMesh stat;
 	stat.body = body;
 	stat.bodyArea = result.first;
-	stat.evalMesh = std::move(icosphere);
 	stat.overhangsArea = std::move(result.second);
+	stat.printSurfacesArea = calcPrintSurfaceAreaByBodyTessellation(body, icosphere.normals, 5.0);
+	stat.evalMesh = std::move(icosphere);
 	return stat;
 }
 
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
 {
 	checkPtr(tessellation);
+
+	tessellation->refresh();
 
 	_variant_t pointsVariant, indexesVariant, normalsVariant;
 	tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
