@@ -19,6 +19,7 @@ public:
     Settings* getSettings();
     HighlightingManager* getHighlightingManager();
     Macro getOrCreateRootMacro();
+    kapi::ksDocument3DPtr getDocument() const;
 
 private:
     kapi::ksDocument3DPtr m_document3d;

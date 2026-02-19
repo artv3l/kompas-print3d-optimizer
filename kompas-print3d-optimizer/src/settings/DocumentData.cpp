@@ -34,3 +34,8 @@ Macro DocumentData::getOrCreateRootMacro() {
     }
     return m_rootMacro.value();
 }
+
+kapi::ksDocument3DPtr DocumentData::getDocument() const
+{
+    return m_document3d;
+}

@@ -14,17 +14,14 @@ class Settings;
 class DrawableMesh
 {
 public:
-    DrawableMesh(const Mesh& mesh);
+    DrawableMesh(std::shared_ptr<Mesh> mesh);
     virtual ~DrawableMesh() = default;
 
     void draw() const;
-protected:
-    VertexArray m_vao;
-};
 
-class OrientationEvalMesh : public DrawableMesh {
-public:
-    OrientationEvalMesh(const OrientationStatByMesh& stat);
+protected:
+    std::weak_ptr<Mesh> m_mesh;
+    VertexArray m_vao;
 };
 
 class HighlightingManager : public DocumentFrameEvent {
@@ -33,7 +30,6 @@ public:
         off = 0x00,
         layersEverywhere = 0x01, layersAtCursor = 0x02,
         overhangs = 0x04,
-        orientationIcosphere = 0x08,
     };
 
     HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings);
@@ -42,13 +38,15 @@ public:
     void toggleMode(Mode mode);
     void refreshWindow() const;
 
+    void setCustomMesh(std::shared_ptr<Mesh> customMesh);
+
 private:
     kapi::ksDocument3DPtr m_document3d;
     Settings* m_settings;
     uint8_t m_mode;
     glm::vec2 m_mouseCoord;
 
-    std::unique_ptr<OrientationEvalMesh> m_orientationEvalMesh;
+    std::unique_ptr<DrawableMesh> m_customMesh;
 
 private: /* static */
     static std::unique_ptr<ShaderProgram> s_shaderProgram;

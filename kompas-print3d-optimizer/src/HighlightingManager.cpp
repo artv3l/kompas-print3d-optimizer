@@ -39,9 +39,18 @@ std::unique_ptr<ShaderProgram> HighlightingManager::s_shaderOrientationEvalMesh 
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
-DrawableMesh::DrawableMesh(const Mesh& mesh) :
-    m_vao(mesh)
+DrawableMesh::DrawableMesh(std::shared_ptr<Mesh> mesh) :
+    m_mesh(mesh),
+    m_vao(*mesh)
 {
+    if (ColoredMesh* coloredMesh = dynamic_cast<ColoredMesh*>(mesh.get())) {
+        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
+            coloredMesh->colors.data(),
+            static_cast<GLsizeiptr>(coloredMesh->colors.size() * sizeof(glm::vec3))
+        );
+        vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
+        m_vao.addVertexBuffer(vb);
+    }
 }
 
 void DrawableMesh::draw() const
@@ -49,37 +58,9 @@ void DrawableMesh::draw() const
     m_vao.draw(GL_TRIANGLES);
 }
 
-OrientationEvalMesh::OrientationEvalMesh(const OrientationStatByMesh& stat) :
-    DrawableMesh(stat.evalMesh)
-{
-    std::vector<glm::vec3> colors(stat.evalMesh.normals.size(), glm::vec3());
-
-    auto toColor = [bodyArea = stat.bodyArea](double overhangArea) -> glm::vec3 {
-        float v = 1.0f - static_cast<float>(overhangArea / bodyArea);
-        return glm::vec3(1.0f - v, v, 0.0f);
-        };
-    //std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
-
-
-    auto maxArea = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
-    //stat.printSurfacesArea
-    auto toColor2 = [maxArea](double psArea) -> glm::vec3 {
-        float v = 1.0f - static_cast<float>(psArea / maxArea);
-        return glm::vec3(1.0f - v, v, 0.0f);
-        };
-    std::ranges::transform(stat.printSurfacesArea, colors.begin(), toColor2);
-
-    VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
-        colors.data(),
-        static_cast<GLsizeiptr>(colors.size() * sizeof(glm::vec3))
-    );
-    vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
-    m_vao.addVertexBuffer(vb);
-}
-
 HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings) :
     DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings),
-    m_mode(0x00), m_mouseCoord(0, 0), m_orientationEvalMesh()
+    m_mode(0x00), m_mouseCoord(0, 0), m_customMesh()
 {
     // GLAD нужно инициализировать когда открыт документ
     if (!s_isGladInited) {
@@ -109,17 +90,19 @@ void HighlightingManager::toggleMode(Mode mode) {
     } else if (mode & Mode::layersAtCursor) {
         m_mode &= ~Mode::layersEverywhere;
     }
-
-    if (m_mode & Mode::orientationIcosphere) {
-        kapi::ksPartPtr part = m_document3d->GetPart(kapi::Part_Type::pTop_Part);
-        const double overhangThreshold = m_settings->getDoubleSetting(si::overhangThreshold.name)->getValue();
-        OrientationStatByMesh stat = calcOrientationStatByMesh(part->GetMainBody(), overhangThreshold);
-        m_orientationEvalMesh = std::make_unique<OrientationEvalMesh>(stat);
-    }
 }
 
 void HighlightingManager::refreshWindow() const {
     m_documentFrame->RefreshWindow();
+}
+
+void HighlightingManager::setCustomMesh(std::shared_ptr<Mesh> customMesh)
+{
+    if (customMesh) {
+        m_customMesh = std::make_unique<DrawableMesh>(customMesh);
+    } else {
+        m_customMesh = nullptr;
+    }
 }
 
 void HighlightingManager::initShaders() {
@@ -167,7 +150,7 @@ bool HighlightingManager::closeFrame() {
 }
 
 bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode) {
-    if (m_mode == Mode::off) {
+    if (m_mode == Mode::off && !m_customMesh) {
         return true;
     }
 
@@ -183,14 +166,14 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
     glGetFloatv(GL_PROJECTION_MATRIX, matrix4);
     glm::mat4 projection(glm::make_mat4(matrix4));
 
-    if (m_mode & Mode::orientationIcosphere) {
+    if (m_customMesh) {
         modelview = glm::scale(modelview, glm::vec3(10.0f, 10.0f, 10.0f));
 
         s_shaderOrientationEvalMesh->use();
         s_shaderOrientationEvalMesh->setUniform("u_modelview", modelview);
         s_shaderOrientationEvalMesh->setUniform("u_projection", projection);
 
-        m_orientationEvalMesh->draw();
+        m_customMesh->draw();
 
         glUseProgram(0);
     } else if (m_settings->isPrintSurfaceSelected()) {

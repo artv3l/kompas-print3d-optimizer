@@ -16,6 +16,7 @@
 #include "optimization/circleHorizontalHoles.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
+#include "orientation/PrFindOrientation.hpp"
 #include "utils.hpp"
 #include "global.hpp"
 
@@ -78,9 +79,9 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }}
 
     switch (comm) { // Определение плоскости печати
-    case 20: {
-        highlightingManager->toggleMode(HighlightingManager::Mode::orientationIcosphere);
-        highlightingManager->refreshWindow();
+    case 21: {
+        global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
+        global::prFindOrientation->show();
         return;
     }
     }
