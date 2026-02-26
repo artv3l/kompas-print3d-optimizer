@@ -24,6 +24,9 @@ extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
 
     } else if (dwReason == DLL_PROCESS_DETACH) {
         global::settingsManager->hide();
+        if (global::prFindOrientation)
+            global::prFindOrientation->hide();
+
         AfxTermExtensionModule(dll);
     }
     return 1;

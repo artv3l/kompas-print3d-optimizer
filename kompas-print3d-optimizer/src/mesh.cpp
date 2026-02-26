@@ -12,7 +12,7 @@
 
 Mesh generateIcosphere()
 {
-    auto icosphere = Magnum::Primitives::icosphereSolid(1);
+    auto icosphere = Magnum::Primitives::icosphereSolid(2);
     
     auto positions = icosphere.positions3DAsArray();
     auto normals = icosphere.normalsAsArray();

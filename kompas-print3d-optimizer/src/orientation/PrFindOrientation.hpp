@@ -11,6 +11,7 @@ public:
 private:
 	virtual bool buttonClick(long buttonId) override;
 	virtual bool changeControlValue(IDispatch* control);
+	virtual bool controlCommand(IDispatch* control, long buttonId);
 
 private:
 	void initControls();
@@ -22,4 +23,7 @@ private:
 
 	kapi::IPropertyListPtr m_metricsList;
 	kapi::IPropertyCheckBoxPtr m_visualizeCheckBox;
+	kapi::IPropertyTextButtonPtr m_recalcButton;
+
+	std::unique_ptr<OrientationStatByMesh> m_stat;
 };

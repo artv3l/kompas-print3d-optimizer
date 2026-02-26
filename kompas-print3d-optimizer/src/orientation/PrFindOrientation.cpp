@@ -37,17 +37,16 @@ bool PrFindOrientation::buttonClick(long buttonId)
 
 bool PrFindOrientation::changeControlValue(IDispatch* control)
 {
-	if (static_cast<bool>(m_visualizeCheckBox->Value)) {
-		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		const double overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
-		OrientationStatByMesh stat = calcOrientationStatByMesh(part->GetMainBody(), overhangThreshold);
+	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
+		OrientationStatByMesh& stat = *m_stat;
 
 		std::vector<glm::vec3> colors(stat.evalMesh.normals.size(), glm::vec3());
 
 		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Площадь нависаний")) { // TODO
-			auto toColor = [bodyArea = stat.bodyArea](double overhangArea) -> glm::vec3
+			auto maxArea = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
+			auto toColor = [maxArea](double overhangArea) -> glm::vec3
 				{
-					float v = 1.0f - static_cast<float>(overhangArea / bodyArea);
+					float v = 1.0f - static_cast<float>(overhangArea / maxArea);
 					return glm::vec3(1.0f - v, v, 0.0f);
 				};
 			std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
@@ -55,7 +54,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 			auto maxArea = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
 			auto toColor = [maxArea](double psArea) -> glm::vec3
 				{
-					float v = 1.0f - static_cast<float>(psArea / maxArea);
+					float v = static_cast<float>(psArea / maxArea);
 					return glm::vec3(1.0f - v, v, 0.0f);
 				};
 			std::ranges::transform(stat.printSurfacesArea, colors.begin(), toColor);
@@ -68,12 +67,23 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		mesh->normals = stat.evalMesh.normals;
 		mesh->indexes = stat.evalMesh.indexes;
 		mesh->colors = colors;
-		
+
 		auto hm = m_documentData.getHighlightingManager();
 		hm->setCustomMesh(mesh);
 	} else {
 		auto hm = m_documentData.getHighlightingManager();
 		hm->setCustomMesh(nullptr);
+	}
+
+	return false; /* unused */
+}
+
+bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
+{
+	if (buttonId == m_recalcButton->Id) {
+		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
+		const double overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
+		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(), overhangThreshold));
 	}
 
 	return false; /* unused */
@@ -88,6 +98,7 @@ void PrFindOrientation::initControls()
 
 		{
 			m_metricsList = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
+			m_metricsList->Id = 1;
 			m_metricsList->Name = L"Метрика";
 			m_metricsList->ReadOnly = true;
 
@@ -98,7 +109,13 @@ void PrFindOrientation::initControls()
 		}
 		{
 			m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
+			m_visualizeCheckBox->Id = 2;
 			m_visualizeCheckBox->Name = L"Показывать визуализацию";
+		}
+		{
+			m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
+			m_recalcButton->Id = 3;
+			m_recalcButton->Name = L"Рассчитать";
 		}
 
 		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd);
