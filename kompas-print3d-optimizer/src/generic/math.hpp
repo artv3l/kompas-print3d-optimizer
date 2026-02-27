@@ -7,6 +7,24 @@
 
 #include "utils.hpp"
 
+namespace math
+{
+class Plane final
+{
+public:
+	Plane(const glm::vec3& normal, const glm::vec3& position);
+
+	glm::vec3 getNormal() const;
+	float getDistance() const;
+private:
+	glm::vec3 m_normal;
+	float m_distance;
+};
+
+glm::vec3 project(const glm::vec3& a, const glm::vec3& b);
+glm::vec3 project(const glm::vec3& vec, const Plane& plane);
+}
+
 template <typename T>
 T::value_type calcTriangleArea(const T& a, const T& b, const T& c)
 {

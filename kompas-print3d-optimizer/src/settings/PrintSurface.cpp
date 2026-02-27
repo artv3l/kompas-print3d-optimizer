@@ -330,3 +330,17 @@ Mesh copyToMesh(kapi::ksBodyPtr body)
 
 	return mesh;
 }
+
+math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction)
+{
+	auto toShift = [normDir = glm::normalize(direction)](const glm::vec3& vec)
+		{
+			return -glm::dot(vec, normDir);
+		};
+
+	auto min = std::ranges::min_element(mesh.positions, {}, toShift);
+	if (min == mesh.positions.end())
+		throw std::logic_error(""); // TODO
+
+	return math::Plane(direction, *min);
+}

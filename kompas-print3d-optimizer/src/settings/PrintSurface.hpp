@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp>
 
 #include "oglwrap/Mesh.hpp"
+#include "generic/math.hpp"
 
 
 struct PlaneEq {
@@ -41,5 +42,6 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
 OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold);
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 Mesh copyToMesh(kapi::ksBodyPtr body);
+math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction);
 
 #endif /* PRINT_SURFACE_HPP */
