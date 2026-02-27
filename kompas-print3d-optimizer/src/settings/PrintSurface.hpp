@@ -40,5 +40,6 @@ std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& p
 PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
 OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold);
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
+Mesh copyToMesh(kapi::ksBodyPtr body);
 
 #endif /* PRINT_SURFACE_HPP */

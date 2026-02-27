@@ -64,7 +64,6 @@ uniform float u_printSurfaceD;
 uniform float u_layerHeight;
 uniform float u_overhangThreshold;
 uniform float u_lineWidth;
-uniform bool u_isPrintSurface;
 uniform vec2 u_mouseCoord;
 uniform int u_mouseRadius;
 
@@ -86,10 +85,11 @@ void main() {
     vec3 color = ambient + diffuse;
 
     float angle = acos(dot(u_printSurfaceNormal, normal) / length(u_printSurfaceNormal) / length(normal));
+    bool isOnPrintSurface = (dot(u_printSurfaceNormal, position) + u_printSurfaceD) == 0;
 
     // нависания
     if (bool(u_mode & 0x04)) {
-        if ((angle < u_overhangThreshold) && !(abs(angle - u_overhangThreshold) < epsilon) && !u_isPrintSurface) {
+        if ((angle < u_overhangThreshold) && !(abs(angle - u_overhangThreshold) < epsilon) && !isOnPrintSurface) {
             color.r = 1.0f;
         }
     }

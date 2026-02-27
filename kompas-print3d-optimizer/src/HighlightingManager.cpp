@@ -119,20 +119,9 @@ kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObject
 
 void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
     kapi::ksBodyPtr body = part->GetMainBody();
-    kapi::ksFaceCollectionPtr faceCollection = body->FaceCollection();
-
-    for (long iFace = 0, count = faceCollection->GetCount(); iFace < count; iFace++) {
-        kapi::ksFaceDefinitionPtr face = faceCollection->GetByIndex(iFace);
-
-        s_shaderProgram->setUniform("u_isPrintSurface", face == printFace);
-
-        kapi::ksTessellationPtr tesselation = face->GetTessellation();
-        tesselation->refresh(); // Нужно обязательно вызывать после перестроения модели
-        
-        Mesh mesh = copyToMesh(tesselation);
-        VertexArray model(mesh);
-        model.draw(GL_TRIANGLES);
-    }
+    Mesh mesh = copyToMesh(body);
+    VertexArray model(mesh);
+    model.draw(GL_TRIANGLES);
 }
 
 bool HighlightingManager::activate() {
@@ -154,7 +143,7 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
         return true;
     }
 
-    glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

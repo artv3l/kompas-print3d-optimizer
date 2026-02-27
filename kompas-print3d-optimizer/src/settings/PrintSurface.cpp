@@ -300,3 +300,33 @@ Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
 
 	return mesh;
 }
+
+Mesh copyToMesh(kapi::ksBodyPtr body)
+{
+	auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+
+	Mesh mesh;
+
+	for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace) {
+		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
+		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
+
+		if (iFace == 0) {
+			mesh = copyToMesh(tessellation);
+		} else {
+			Mesh faceMesh = copyToMesh(tessellation);
+			const size_t pointsCount = mesh.positions.size();
+
+
+			mesh.positions.insert(mesh.positions.end(), faceMesh.positions.begin(), faceMesh.positions.end());
+			mesh.normals.insert(mesh.normals.end(), faceMesh.normals.begin(), faceMesh.normals.end());
+
+			assert(mesh.positions.size() == mesh.normals.size());
+			auto ShiftIndex = std::bind(std::plus(), pointsCount, std::placeholders::_1);
+			std::ranges::transform(faceMesh.indexes, faceMesh.indexes.begin(), ShiftIndex);
+			mesh.indexes.insert(mesh.indexes.end(), faceMesh.indexes.begin(), faceMesh.indexes.end());
+		}
+	}
+
+	return mesh;
+}
