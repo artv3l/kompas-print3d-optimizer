@@ -21,7 +21,7 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 #include "mesh.hpp"
-#include "generic/windows.hpp"
+#include "windows.hpp"
 #include "generic/math.hpp"
 #include "oglwrap/VertexArray.hpp"
 

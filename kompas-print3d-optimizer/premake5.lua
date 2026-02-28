@@ -18,6 +18,7 @@ project "kompas-print3d-optimizer"
         "src",
         "%{wks.location}/oglwrap/include",
         "%{wks.location}/kapiwrap/include",
+        "%{wks.location}/generic/include",
 
         "%{localDependencies.KompasAPI.include}",
         "%{localDependencies.KompasAPI.lib}",
@@ -28,6 +29,7 @@ project "kompas-print3d-optimizer"
     links {
         "oglwrap",
         "kapiwrap",
+        "generic",
 
         "%{localDependencies.KompasAPI.lib64}/kApi2D5.lib",
         "%{localDependencies.KompasAPI.lib64}/kAPI3D5.lib",

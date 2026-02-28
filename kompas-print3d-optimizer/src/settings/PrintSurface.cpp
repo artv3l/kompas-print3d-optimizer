@@ -11,7 +11,7 @@
 
 #include "utils.hpp"
 #include "generic/math.hpp"
-#include "generic/windows.hpp"
+#include "windows.hpp"
 #include "mesh.hpp"
 
 PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
@@ -126,6 +126,7 @@ double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double ov
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
+	const math::Plane printPlane = calcPrintPlane(mesh, direction);
 	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
 	double overhangsArea = 0.0;
 
@@ -133,19 +134,15 @@ double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double ov
 		const size_t i1 = mesh.indexes[iIndex];
 		const size_t i2 = mesh.indexes[iIndex + 1];
 		const size_t i3 = mesh.indexes[iIndex + 2];
+		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 
 		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
 		const glm::vec3 normal = mesh.normals[i1];
 		const double angleRad = calcAngleBetween(normal, direction);
 
-		/*
-		  Если угол равен нулю, то считаем что эта грань плоскость печати или печатается мостом.
-		  Что не очень правильно, т.к. нужно считать плоскостью печати ближайшую грань в
-		  направлении плоскости печати. И не учитывать только ее.
-
-		  Пока для простоты считаем что все остальные горизонтальные грани могут напечататься мостами.
-		*/
-		if (!doubleEqual(angleRad, 0.0) && (angleRad < overhangThresholdRad)) {
+		// Площадь под мостами тоже считаем за площадь нависаний
+		// TODO Возможно нужно ввести отдельный параметр или вес для мостов
+		if (!isOnPrintPlane(triangle, printPlane, 0.01, 2.0) && (angleRad < overhangThresholdRad)) {
 			overhangsArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 		}
 	}
@@ -239,22 +236,13 @@ std::vector<double> calcPrintSurfaceAreaByBodyTessellation(kapi::ksBodyPtr body,
 std::pair<double, std::vector<double>> calcOverhangsAreaByBodyTessellation(
 	kapi::ksBodyPtr body, std::span<const glm::vec3> directions, double overhangThreshold)
 {
-	auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+	Mesh mesh = copyToMesh(body);
+
+	double bodyArea = calcTotalAreaByMesh(mesh);
 
 	std::vector<double> overhangsArea(directions.size(), 0.0);
-	double bodyArea = 0.0;
-
-	for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
-	{
-		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
-		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
-		Mesh faceMesh = copyToMesh(tessellation);
-
-		bodyArea += calcTotalAreaByMesh(faceMesh);
-
-		auto calcOverhangsArea = std::bind(calcOverhangsAreaByMesh, faceMesh, std::placeholders::_1, overhangThreshold);
-		std::ranges::transform(directions, overhangsArea, overhangsArea.begin(), std::plus<double>(), calcOverhangsArea);
-	}
+	auto calcOverhangsArea = std::bind(calcOverhangsAreaByMesh, mesh, std::placeholders::_1, overhangThreshold);
+	std::ranges::transform(directions, overhangsArea, overhangsArea.begin(), std::plus<double>(), calcOverhangsArea);
 
 	return std::make_pair(bodyArea, overhangsArea);
 }

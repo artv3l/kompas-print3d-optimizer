@@ -44,4 +44,5 @@ Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 Mesh copyToMesh(kapi::ksBodyPtr body);
 math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction);
 
+
 #endif /* PRINT_SURFACE_HPP */

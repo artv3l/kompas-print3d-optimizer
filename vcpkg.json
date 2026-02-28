@@ -3,6 +3,7 @@
     "dependencies": [
         "glm",
         {"name": "glad", "features": ["gl-api-33"]},
-        "magnum"
+        "magnum",
+        "gtest"
     ]
 }
