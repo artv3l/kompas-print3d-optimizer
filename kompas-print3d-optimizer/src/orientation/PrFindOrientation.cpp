@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "settings/SettingInitializer.hpp"
+#include "generic/color.hpp"
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
 	PropertyManagerObject(kompas),
@@ -35,6 +36,13 @@ bool PrFindOrientation::buttonClick(long buttonId)
 	return true;
 }
 
+double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength)
+{
+	const double k = resultLength / baseLength;
+	const double basePos = baseValue - baseBegin;
+	return resultBegin + (basePos * k);
+}
+
 bool PrFindOrientation::changeControlValue(IDispatch* control)
 {
 	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
@@ -42,24 +50,40 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 
 		std::vector<glm::vec3> colors(stat.evalMesh.normals.size(), glm::vec3());
 
+		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
+		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
+		auto toHeatmap = std::bind(convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
+
 		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Площадь нависаний")) { // TODO
-			auto maxArea = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
-			auto toColor = [maxArea](double overhangArea) -> glm::vec3
+
+			const double maxArea = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
+			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
 				{
-					float v = 1.0f - static_cast<float>(overhangArea / maxArea);
-					return glm::vec3(1.0f - v, v, 0.0f);
+					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(maxArea - overhangArea, maxArea), 1.0, 1.0 });
+					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
 		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Площадь нижней грани")) { // TODO
 			auto maxArea = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
-			auto toColor = [maxArea](double psArea) -> glm::vec3
+			auto toColor = [&toHeatmap, maxArea](double psArea) -> glm::vec3
 				{
-					float v = static_cast<float>(psArea / maxArea);
-					return glm::vec3(1.0f - v, v, 0.0f);
+					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(psArea, maxArea), 1.0, 1.0 });
+					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(stat.printSurfacesArea, colors.begin(), toColor);
-		} else {
-			assert(false);
+		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Общая")) { // TODO
+			
+			auto maxOverhang = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
+			auto maxBottom = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
+
+			for (size_t i = 0; i < stat.evalMesh.normals.size(); ++i) {
+				const double overhangArea = stat.overhangsArea[i];
+				const double bottomArea = stat.printSurfacesArea[i];
+
+				double hue = toHeatmap((maxOverhang - overhangArea) + bottomArea, maxOverhang + maxBottom);
+				color::RGB rgb = color::toRGB(color::HSV{ hue , 1.0, 1.0 });
+				colors[i] = glm::vec3(rgb.red, rgb.green, rgb.blue);
+			}
 		}
 
 		auto mesh = std::make_shared<ColoredMesh>();
@@ -102,6 +126,7 @@ void PrFindOrientation::initControls()
 			m_metricsList->Name = L"Метрика";
 			m_metricsList->ReadOnly = true;
 
+			m_metricsList->Add(L"Общая");
 			m_metricsList->Add(L"Площадь нависаний");
 			m_metricsList->Add(L"Площадь нижней грани");
 
