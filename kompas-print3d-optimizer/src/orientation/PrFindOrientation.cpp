@@ -2,8 +2,20 @@
 
 #include <algorithm>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "kapiwrap/3d/body.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "generic/color.hpp"
+#include "utils.hpp"
+
+namespace
+{
+constexpr std::wstring_view c_commonMetricName = L"Общая";
+constexpr std::wstring_view c_overhangsMetricName = L"Площадь нависаний";
+constexpr std::wstring_view c_bottomAreaMetricName = L"Площадь нижней грани";
+}
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
 	PropertyManagerObject(kompas),
@@ -54,7 +66,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
 		auto toHeatmap = std::bind(convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
 
-		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Площадь нависаний")) { // TODO
+		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangsMetricName.data())) {
 
 			const double maxArea = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
 			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
@@ -63,7 +75,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(stat.overhangsArea, colors.begin(), toColor);
-		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Площадь нижней грани")) { // TODO
+		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_bottomAreaMetricName.data())) {
 			auto maxArea = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
 			auto toColor = [&toHeatmap, maxArea](double psArea) -> glm::vec3
 				{
@@ -71,7 +83,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(stat.printSurfacesArea, colors.begin(), toColor);
-		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(L"Общая")) { // TODO
+		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_commonMetricName.data())) {
 			
 			auto maxOverhang = *std::max_element(stat.overhangsArea.begin(), stat.overhangsArea.end());
 			auto maxBottom = *std::max_element(stat.printSurfacesArea.begin(), stat.printSurfacesArea.end());
@@ -91,6 +103,22 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		mesh->normals = stat.evalMesh.normals;
 		mesh->indexes = stat.evalMesh.indexes;
 		mesh->colors = colors;
+
+		{
+			kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
+			kapi::ksBodyPtr body = checkPtr(part)->GetMainBody();
+			const geometry::Gabarit3D gabarit = getGabarit(body);
+			const geometry::Vector3D center = gabarit.center();
+			const double radius = std::max(std::max(gabarit.x.length(), gabarit.y.length()), gabarit.z.length()) / 2.0;
+
+			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x, center.y, center.z));
+			matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
+			std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
+				{
+					glm::vec4 res = matrix * glm::vec4(pos, 1.0);
+					return glm::vec3(res.x, res.y, res.z);
+				});
+		}
 
 		auto hm = m_documentData.getHighlightingManager();
 		hm->setCustomMesh(mesh);
@@ -122,24 +150,22 @@ void PrFindOrientation::initControls()
 
 		{
 			m_metricsList = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
-			m_metricsList->Id = 1;
 			m_metricsList->Name = L"Метрика";
 			m_metricsList->ReadOnly = true;
 
-			m_metricsList->Add(L"Общая");
-			m_metricsList->Add(L"Площадь нависаний");
-			m_metricsList->Add(L"Площадь нижней грани");
+			m_metricsList->Add(c_commonMetricName.data());
+			m_metricsList->Add(c_overhangsMetricName.data());
+			m_metricsList->Add(c_bottomAreaMetricName.data());
 
 			m_metricsList->SetCurrentByIndex(0);
 		}
 		{
 			m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
-			m_visualizeCheckBox->Id = 2;
 			m_visualizeCheckBox->Name = L"Показывать визуализацию";
 		}
 		{
 			m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
-			m_recalcButton->Id = 3;
+			m_recalcButton->Id = 1;
 			m_recalcButton->Name = L"Рассчитать";
 		}
 

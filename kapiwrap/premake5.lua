@@ -15,9 +15,14 @@ project "kapiwrap"
 
     includedirs {
         "include/kapiwrap",
+        "%{wks.location}/generic/include",
 
         "%{localDependencies.KompasAPI.include}",
         "%{localDependencies.KompasAPI.lib}",
+    }
+
+    links {
+        "generic",
     }
 
     filter "configurations:Debug"

@@ -156,8 +156,6 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
     glm::mat4 projection(glm::make_mat4(matrix4));
 
     if (m_customMesh) {
-        modelview = glm::scale(modelview, glm::vec3(10.0f, 10.0f, 10.0f));
-
         s_shaderOrientationEvalMesh->use();
         s_shaderOrientationEvalMesh->setUniform("u_modelview", modelview);
         s_shaderOrientationEvalMesh->setUniform("u_projection", projection);
