@@ -10,11 +10,7 @@ TEST(generic_math, isOnPrintPlane_1)
         glm::vec3(35.249851, -2.0, 14.0), // Лежит на plane
         glm::vec3(39.711088, -10.0, 20.0) // Расстояние до plane = 0.8
     );
-    // Угол между плоскостью plane и triangle: A = 2.975471 рад. = 170.481905 град., pi - A = 0.166122 рад. = 9.518095 град.
 
-    EXPECT_TRUE(isOnPrintPlane(triangle, plane, math::toRadians(15), 1.2));
-    EXPECT_TRUE(isOnPrintPlane(triangle, plane, math::toRadians(11), 1.1));
-
-    EXPECT_FALSE(isOnPrintPlane(triangle, plane, math::toRadians(9), 1.2));
-    EXPECT_FALSE(isOnPrintPlane(triangle, plane, math::toRadians(15), 0.8));
+    EXPECT_TRUE(isOnPrintPlane(triangle, plane, 1.1));
+    EXPECT_FALSE(isOnPrintPlane(triangle, plane, 0.9));
 }

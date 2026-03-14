@@ -60,5 +60,5 @@ typename T::value_type calcAngleBetween(const T& a, const T& b)
 }
 
 // TODO Перенести в kompas-print3d-optimizer / PrintSurface.hpp. Находится тут т.к. тесты пока подключены только к generic
-// Находится ли треугольник на плоскости печати с учетом погрешностей
-bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double angleThreshold, double offsetThreshold);
+// Находится ли треугольник на плоскости печати с учетом погрешности
+bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold);

@@ -66,18 +66,10 @@ double toAcuteAngle(double angleInRadians)
 }
 }
 
-/*
-  angleThreshold - Угол в радианах
-*/
-bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double angleThreshold, double offsetThreshold)
+bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold)
 {
 	auto isDistLessThreshold = [&printPlane, offsetThreshold](const glm::vec3 & point) {
 		return std::abs(math::distance(point, printPlane)) < offsetThreshold;
 	};
-	if (!std::ranges::all_of(triangle.points, isDistLessThreshold))
-		return false;
-
-	const math::Plane trianglePlane(triangle.points[0], triangle.points[1], triangle.points[2]);
-	const double angle = calcAngleBetween(trianglePlane.getNormal(), printPlane.getNormal());
-	return math::toAcuteAngle(angle) < angleThreshold;
+	return std::ranges::all_of(triangle.points, isDistLessThreshold);
 }

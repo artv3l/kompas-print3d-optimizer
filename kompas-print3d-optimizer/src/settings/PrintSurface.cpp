@@ -105,28 +105,13 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 	return PrintSurface{face, planeEq};
 }
 
-
-// Рассчитать площадь всей сетки
-double calcTotalAreaByMesh(const Mesh& mesh)
+namespace
+{
+// Рассчитать суммарную площадь нависаний. overhangThreshold в градусах
+double calcOverhangArea(const Mesh& mesh, const math::Plane& printPlane, double overhangThreshold, double offsetThreshold)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
-	double totalArea = 0.0;
-	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
-		const size_t i1 = mesh.indexes[iIndex];
-		const size_t i2 = mesh.indexes[iIndex + 1];
-		const size_t i3 = mesh.indexes[iIndex + 2];
-		totalArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-	}
-	return totalArea;
-}
-
-// Рассчитать суммарную площадь нависаний. overhangThreshold в градусах, direction направлено вниз от печатного стола
-double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double overhangThreshold)
-{
-	assert(mesh.indexes.size() % 3 == 0);
-
-	const math::Plane printPlane = calcPrintPlane(mesh, direction);
 	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
 	double overhangsArea = 0.0;
 
@@ -138,11 +123,11 @@ double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double ov
 
 		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
 		const glm::vec3 normal = mesh.normals[i1];
-		const double angleRad = calcAngleBetween(normal, direction);
+		const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
 
 		// Площадь под мостами тоже считаем за площадь нависаний
 		// TODO Возможно нужно ввести отдельный параметр или вес для мостов
-		if (!isOnPrintPlane(triangle, printPlane, 0.01, 2.0) && (angleRad < overhangThresholdRad)) {
+		if (!isOnPrintPlane(triangle, printPlane, offsetThreshold) && (angleRad < overhangThresholdRad)) {
 			overhangsArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 		}
 	}
@@ -151,114 +136,46 @@ double calcOverhangsAreaByMesh(const Mesh & mesh, glm::vec3 direction, double ov
 }
 
 /*
-  Рассчитать площадь поверхности печати по направлению
-  
-  threshold Отклонение во сколько градусов считаем нулевым
-
-  result.first Площадь, которая будет соприкосаться с печатным столом
-  result.second Расстояние от части поверхности, которая будет соприкосаться с печатным столом,
-                до начала координат. Нужно чтобы среди всех поверхностей, которые перпендикулярны
-				направлению direction выбрать самое дальнее. Только эта поверхности и будет
-				поверхностью печати. Остальные могут быть мостами. Если площадь нулевая,
-				то это значение не имеет смысла.
+  Рассчитать площадь нижней грани
+  TODO Можно оптимизировать и объединить с calcOverhangsArea
 */
-std::pair<double, double> calcPrintSurfaceAreaByMesh(const Mesh& mesh, glm::vec3 direction, double threshold)
+double calcBottomArea(const Mesh& mesh, const math::Plane& printPlane, double offsetThreshold)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
-	double area = 0.0;
-	
-	double distSum = 0.0;
-	size_t distCount = 0;
+	double result = 0.0;
 
-	const double thresholdRad = degreeToRadian(threshold);
-	const glm::vec3 directionNorm = glm::normalize(direction);
-	const glm::vec3 zero(0.0f, 0.0f, 0.0f);
-
-	for (size_t iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
 		const size_t i1 = mesh.indexes[iIndex];
 		const size_t i2 = mesh.indexes[iIndex + 1];
 		const size_t i3 = mesh.indexes[iIndex + 2];
+		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 
-		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
-		const glm::vec3 normal = mesh.normals[i1];
-		const double angleRad = calcAngleBetween(normal, direction);
-
-		if (std::isless(angleRad, thresholdRad)) {
-			area += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-			
-			distSum += glm::dot(zero - mesh.positions[i1], directionNorm);
-			distSum += glm::dot(zero - mesh.positions[i2], directionNorm);
-			distSum += glm::dot(zero - mesh.positions[i3], directionNorm);
-			distCount += 3;
-
-			// TODO Сравнивать с предыдущей координатой и отсеивать по треугольникам
+		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
+			result += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 		}
 	}
 
-	return std::make_pair(area, (distCount != 0) ? (distSum / distCount) : 0.0);
+	return result;
+}
 }
 
-std::vector<double> calcPrintSurfaceAreaByBodyTessellation(kapi::ksBodyPtr body, std::span<const glm::vec3> directions,
-	double threshold)
+OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
 {
-	auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+	OrientationsEstimation result;
+	std::ranges::for_each(result, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
 
-	std::vector<double> areas(directions.size(), 0.0);
-	std::vector<double> distances(directions.size(), 0.0);
+	std::vector<math::Plane> printPlanes;
+	printPlanes.reserve(directions.size());
+	std::ranges::transform(directions, std::back_inserter(printPlanes), std::bind(calcPrintPlane, mesh, std::placeholders::_1));
 
-	for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace)
-	{
-		kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
-		kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
-		Mesh faceMesh = copyToMesh(tessellation);
+	auto calcOverhangArea_ = std::bind(calcOverhangArea, mesh, std::placeholders::_1, overhangThreshold, offsetThreshold);
+	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::overhangArea)].begin(), calcOverhangArea_);
 
-		for (size_t i = 0; i < directions.size(); ++i) {
-			const glm::vec3& direction = directions[i];
-			auto&& [area, distance] = calcPrintSurfaceAreaByMesh(faceMesh, direction, threshold);
-			if (doubleEqual(area, 0.0)) {
-				continue;
-			}
+	auto calcBottomArea_ = std::bind(calcBottomArea, mesh, std::placeholders::_1, offsetThreshold);
+	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::bottomArea)].begin(), calcBottomArea_);
 
-			if (doubleEqual(areas[i], 0.0) || std::isless(distance, distances[i])) {
-				areas[i] = area;
-				distances[i] = distance;
-			} else if (doubleEqual(distance, distances[i])) {
-				areas[i] += area;
-			}
-		}
-	}
-
-	return areas;
-}
-
-// Рассчитать суммарную площадь нависаний и площаь всего тела по тесселляции тела
-std::pair<double, std::vector<double>> calcOverhangsAreaByBodyTessellation(
-	kapi::ksBodyPtr body, std::span<const glm::vec3> directions, double overhangThreshold)
-{
-	Mesh mesh = copyToMesh(body);
-
-	double bodyArea = calcTotalAreaByMesh(mesh);
-
-	std::vector<double> overhangsArea(directions.size(), 0.0);
-	auto calcOverhangsArea = std::bind(calcOverhangsAreaByMesh, mesh, std::placeholders::_1, overhangThreshold);
-	std::ranges::transform(directions, overhangsArea, overhangsArea.begin(), std::plus<double>(), calcOverhangsArea);
-
-	return std::make_pair(bodyArea, overhangsArea);
-}
-
-OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold)
-{
-	Mesh icosphere = generateIcosphere();
-	auto result = calcOverhangsAreaByBodyTessellation(body, icosphere.normals, overhangThreshold);
-
-	OrientationStatByMesh stat;
-	stat.body = body;
-	stat.bodyArea = result.first;
-	stat.overhangsArea = std::move(result.second);
-	stat.printSurfacesArea = calcPrintSurfaceAreaByBodyTessellation(body, icosphere.normals, 5.0);
-	stat.evalMesh = std::move(icosphere);
-	return stat;
+	return result;
 }
 
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
@@ -331,4 +248,17 @@ math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction)
 		throw std::logic_error(""); // TODO
 
 	return math::Plane(direction, *min);
+}
+
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold)
+{
+	OrientationStatByMesh result;
+	result.evalMesh = generateIcosphere();
+	result.estimations = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, 2.0);
+	return result;
+}
+
+std::span<const double> OrientationStatByMesh::getByCriteria(OrientationCriteria criteria) const
+{
+	return estimations[enums::toUnderlying(criteria)];
 }
