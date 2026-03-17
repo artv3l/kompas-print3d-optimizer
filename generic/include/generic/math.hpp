@@ -8,11 +8,24 @@
 
 namespace math
 {
+class Triangle final
+{
+public:
+	static constexpr size_t c_numberOfPoints = 3;
+
+	Triangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
+
+	double area() const;
+
+	std::array<glm::vec3, c_numberOfPoints> points;
+};
+
 class Plane final
 {
 public:
 	Plane(const glm::vec3& normal, const glm::vec3& position);
 	Plane(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
+	Plane(const Triangle& triangle);
 
 	glm::vec3 getNormal() const;
 	float getDistance() const;
@@ -21,18 +34,9 @@ private:
 	float m_distance;
 };
 
-class Triangle final
-{
-public:
-	static constexpr size_t c_numberOfPoints = 3;
-
-	Triangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
-
-	std::array<glm::vec3, c_numberOfPoints> points;
-};
-
 glm::vec3 project(const glm::vec3& a, const glm::vec3& b);
 glm::vec3 project(const glm::vec3& vec, const Plane& plane);
+Triangle project(const Triangle& triangle, const Plane& plane);
 double distance(const glm::dvec3& point, const Plane& plane);
 bool equal(double a, double b, double epsilon = 0.00001);
 double toRadians(double angleInDegrees);
@@ -59,6 +63,8 @@ typename T::value_type calcAngleBetween(const T& a, const T& b)
 	return std::acos(std::clamp(dot / len, T::value_type(-1), T::value_type(1)));
 }
 
-// TODO Перенести в kompas-print3d-optimizer / PrintSurface.hpp. Находится тут т.к. тесты пока подключены только к generic
+// TODO Все функции ниже перенести в kompas-print3d-optimizer / PrintSurface.hpp. Находится тут т.к. тесты пока подключены только к generic
 // Находится ли треугольник на плоскости печати с учетом погрешности
 bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold);
+// Рассчитать объем нависания (объем  между треугольником overhang и его проекцией на плоскость printPlane)
+double volumeUnderOverhang(const math::Plane& printPlane, math::Triangle overhang);
