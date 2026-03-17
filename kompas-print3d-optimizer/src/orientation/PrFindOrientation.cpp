@@ -13,8 +13,9 @@
 namespace
 {
 constexpr std::wstring_view c_commonMetricName = L"Общая";
-constexpr std::wstring_view c_overhangsMetricName = L"Площадь нависаний";
-constexpr std::wstring_view c_bottomAreaMetricName = L"Площадь нижней грани";
+constexpr std::wstring_view c_overhangAreaMetricName = L"Площадь нависающих элементов";
+constexpr std::wstring_view c_overhangVolumeMetricName = L"Объем поддерживающих структур";
+constexpr std::wstring_view c_bottomAreaMetricName = L"Площадь нижней поверхности";
 }
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
@@ -59,6 +60,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 {
 	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
 		auto overhangsArea = m_stat->getByCriteria(OrientationCriteria::overhangArea);
+		auto overhangsVolume = m_stat->getByCriteria(OrientationCriteria::overhangVolume);
 		auto bottomAreas = m_stat->getByCriteria(OrientationCriteria::bottomArea);
 
 		std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
@@ -67,7 +69,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
 		auto toHeatmap = std::bind(convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
 
-		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangsMetricName.data())) {
+		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangAreaMetricName.data())) {
 			const double maxArea = *std::max_element(overhangsArea.begin(), overhangsArea.end());
 			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
 				{
@@ -75,7 +77,16 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(overhangsArea, colors.begin(), toColor);
-		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_bottomAreaMetricName.data())) {
+		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangVolumeMetricName.data())) {
+			const double maxArea = *std::max_element(overhangsVolume.begin(), overhangsVolume.end());
+			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
+				{
+					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(maxArea - overhangArea, maxArea), 1.0, 1.0 });
+					return glm::vec3(rgb.red, rgb.green, rgb.blue);
+				};
+			std::ranges::transform(overhangsVolume, colors.begin(), toColor);
+		}
+		else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_bottomAreaMetricName.data())) {
 			auto maxArea = *std::max_element(bottomAreas.begin(), bottomAreas.end());
 			auto toColor = [&toHeatmap, maxArea](double psArea) -> glm::vec3
 				{
@@ -154,7 +165,8 @@ void PrFindOrientation::initControls()
 			m_metricsList->ReadOnly = true;
 
 			m_metricsList->Add(c_commonMetricName.data());
-			m_metricsList->Add(c_overhangsMetricName.data());
+			m_metricsList->Add(c_overhangAreaMetricName.data());
+			m_metricsList->Add(c_overhangVolumeMetricName.data());
 			m_metricsList->Add(c_bottomAreaMetricName.data());
 
 			m_metricsList->SetCurrentByIndex(0);

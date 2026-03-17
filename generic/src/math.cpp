@@ -41,11 +41,9 @@ Triangle::Triangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c) :
 
 double Triangle::area() const
 {
-	const double a = glm::length(points[0] - points[1]);
-	const double b = glm::length(points[0] - points[2]);
-	const double c = glm::length(points[1] - points[2]);
-	const double s = (a + b + c) / 2.0;
-	return std::sqrt(s * (s - a) * (s - b) * (s - c));
+	auto ab = points[1] - points[0];
+	auto ac = points[2] - points[0];
+	return glm::length(glm::cross(ab, ac)) / 2.0;
 }
 
 glm::vec3 project(const glm::vec3& a, const glm::vec3& b)
@@ -99,8 +97,9 @@ bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlan
 	return std::ranges::all_of(triangle.points, isDistLessThreshold);
 }
 
-double volumeUnderOverhang(const math::Plane& printPlane, math::Triangle overhang)
+double volumeUnderOverhang(const math::Plane& printPlane, const math::Triangle& overhang_)
 {
+	math::Triangle overhang(overhang_);
 	const math::Triangle base = math::project(overhang, printPlane);
 
 	auto toDistance = std::bind(math::distance, std::placeholders::_1, printPlane);

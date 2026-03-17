@@ -107,8 +107,11 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 
 namespace
 {
-// Рассчитать суммарную площадь нависаний. overhangThreshold в градусах
-double calcOverhangArea(const Mesh& mesh, const math::Plane& printPlane, double overhangThreshold, double offsetThreshold)
+// Функция расчета критерия для треугольника нависания
+using OverhangFunc = std::function<double(const math::Triangle&)>;
+
+// Рассчитать критерий навсианий (площадь или объем). overhangThreshold в градусах
+double calcOverhangCriteria(const Mesh& mesh, const math::Plane& printPlane, double overhangThreshold, double offsetThreshold, const OverhangFunc& overhangFunc)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
@@ -128,7 +131,7 @@ double calcOverhangArea(const Mesh& mesh, const math::Plane& printPlane, double 
 		// Площадь под мостами тоже считаем за площадь нависаний
 		// TODO Возможно нужно ввести отдельный параметр или вес для мостов
 		if (!isOnPrintPlane(triangle, printPlane, offsetThreshold) && (angleRad < overhangThresholdRad)) {
-			overhangsArea += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+			overhangsArea += overhangFunc(triangle);
 		}
 	}
 
@@ -169,11 +172,17 @@ OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<co
 	printPlanes.reserve(directions.size());
 	std::ranges::transform(directions, std::back_inserter(printPlanes), std::bind(calcPrintPlane, mesh, std::placeholders::_1));
 
-	auto calcOverhangArea_ = std::bind(calcOverhangArea, mesh, std::placeholders::_1, overhangThreshold, offsetThreshold);
+	auto calcOverhangArea_ = std::bind(calcOverhangCriteria, mesh, std::placeholders::_1, overhangThreshold, offsetThreshold, std::mem_fn(&math::Triangle::area));
 	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::overhangArea)].begin(), calcOverhangArea_);
 
 	auto calcBottomArea_ = std::bind(calcBottomArea, mesh, std::placeholders::_1, offsetThreshold);
 	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::bottomArea)].begin(), calcBottomArea_);
+
+	auto calcOverhangVolume_ = [&](const math::Plane& printPlane)
+	{
+		return calcOverhangCriteria(mesh, printPlane, overhangThreshold, offsetThreshold, std::bind(volumeUnderOverhang, printPlane, std::placeholders::_1));
+	};
+	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::overhangVolume)].begin(), calcOverhangVolume_);
 
 	return result;
 }

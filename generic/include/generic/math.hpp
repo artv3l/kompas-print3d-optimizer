@@ -67,4 +67,4 @@ typename T::value_type calcAngleBetween(const T& a, const T& b)
 // Находится ли треугольник на плоскости печати с учетом погрешности
 bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold);
 // Рассчитать объем нависания (объем  между треугольником overhang и его проекцией на плоскость printPlane)
-double volumeUnderOverhang(const math::Plane& printPlane, math::Triangle overhang);
+double volumeUnderOverhang(const math::Plane& printPlane, const math::Triangle& overhang);
