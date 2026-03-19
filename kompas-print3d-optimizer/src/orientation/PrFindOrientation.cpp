@@ -49,13 +49,6 @@ bool PrFindOrientation::buttonClick(long buttonId)
 	return true;
 }
 
-double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength)
-{
-	const double k = resultLength / baseLength;
-	const double basePos = baseValue - baseBegin;
-	return resultBegin + (basePos * k);
-}
-
 bool PrFindOrientation::changeControlValue(IDispatch* control)
 {
 	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
@@ -67,7 +60,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 
 		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
 		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
-		auto toHeatmap = std::bind(convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
+		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
 
 		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangAreaMetricName.data())) {
 			const double maxArea = *std::max_element(overhangsArea.begin(), overhangsArea.end());

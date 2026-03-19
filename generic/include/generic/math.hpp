@@ -42,14 +42,8 @@ bool equal(double a, double b, double epsilon = 0.00001);
 double toRadians(double angleInDegrees);
 // Получить острый угол от 0 до pi/2
 double toAcuteAngle(double angleInRadians);
-}
-
-template <typename T>
-typename T::value_type calcTriangleArea(const T& a, const T& b, const T& c)
-{
-	auto ab = b - a;
-	auto ac = c - a;
-	return glm::length(glm::cross(ab, ac)) / static_cast<T::value_type>(2.0);
+// Привести значение baseValue из промежутка [baseBegin, baseBegin + baseLength] в промежуток [resultBegin, resultBegin + resultLength]
+double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength);
 }
 
 // Угол между векторами в радианах

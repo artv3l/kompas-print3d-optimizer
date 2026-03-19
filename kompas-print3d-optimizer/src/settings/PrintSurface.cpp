@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <ranges>
 
 #include <glm/glm.hpp>
 
@@ -105,84 +106,70 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 	return PrintSurface{face, planeEq};
 }
 
-namespace
-{
-// Функция расчета критерия для треугольника нависания
-using OverhangFunc = std::function<double(const math::Triangle&)>;
-
-// Рассчитать критерий навсианий (площадь или объем). overhangThreshold в градусах
-double calcOverhangCriteria(const Mesh& mesh, const math::Plane& printPlane, double overhangThreshold, double offsetThreshold, const OverhangFunc& overhangFunc)
+OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
 	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
-	double overhangsArea = 0.0;
 
-	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
-		const size_t i1 = mesh.indexes[iIndex];
-		const size_t i2 = mesh.indexes[iIndex + 1];
-		const size_t i3 = mesh.indexes[iIndex + 2];
-		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+	OrientationsEstimation result;
+	std::ranges::for_each(result, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
 
-		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
-		const glm::vec3 normal = mesh.normals[i1];
-		const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
+	for (size_t i = 0; i < directions.size(); ++i) {
+		const auto& direction = directions[i];
+		const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
 
-		// Площадь под мостами тоже считаем за площадь нависаний
-		// TODO Возможно нужно ввести отдельный параметр или вес для мостов
-		if (!isOnPrintPlane(triangle, printPlane, offsetThreshold) && (angleRad < overhangThresholdRad)) {
-			overhangsArea += overhangFunc(triangle);
+		for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+			const size_t i1 = mesh.indexes[iIndex];
+			const size_t i2 = mesh.indexes[iIndex + 1];
+			const size_t i3 = mesh.indexes[iIndex + 2];
+			const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+
+			// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
+			const glm::vec3 normal = mesh.normals[i1];
+			const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
+			const double triangleArea = triangle.area();
+
+			if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
+				result[enums::toUnderlying(OrientationCriteria::bottomArea)][i] += triangleArea;
+			} else if (angleRad < overhangThresholdRad) {
+				// Площадь под мостами тоже считаем за площадь нависаний
+				result[enums::toUnderlying(OrientationCriteria::overhangArea)][i] += triangleArea;
+				result[enums::toUnderlying(OrientationCriteria::overhangVolume)][i] += volumeUnderOverhang(printPlane, triangle);
+			}
+
+			// TODO Convex hull
 		}
-	}
 
-	return overhangsArea;
-}
-
-/*
-  Рассчитать площадь нижней грани
-  TODO Можно оптимизировать и объединить с calcOverhangsArea
-*/
-double calcBottomArea(const Mesh& mesh, const math::Plane& printPlane, double offsetThreshold)
-{
-	assert(mesh.indexes.size() % 3 == 0);
-
-	double result = 0.0;
-
-	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
-		const size_t i1 = mesh.indexes[iIndex];
-		const size_t i2 = mesh.indexes[iIndex + 1];
-		const size_t i3 = mesh.indexes[iIndex + 2];
-		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-
-		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
-			result += calcTriangleArea(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-		}
+		result[enums::toUnderlying(OrientationCriteria::modelHeight)][i] = height;
 	}
 
 	return result;
 }
+
+namespace
+{
+// Преобразовать абсолюные значения в относительные [0, 1]
+std::vector<double> toRelative(std::span<const double> absoluteValues)
+{
+	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
+
+	const auto [min, max] = std::ranges::minmax_element(absoluteValues);
+	if (min == absoluteValues.end() || max == absoluteValues.end())
+		throw std::logic_error(""); // TODO
+
+	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
+	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
+
+	return relativeValues;
+}
 }
 
-OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
+OrientationsComplexEstimation calcOrientationsComplexEstimation(const OrientationsEstimation& estimation)
 {
-	OrientationsEstimation result;
-	std::ranges::for_each(result, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
-
-	std::vector<math::Plane> printPlanes;
-	printPlanes.reserve(directions.size());
-	std::ranges::transform(directions, std::back_inserter(printPlanes), std::bind(calcPrintPlane, mesh, std::placeholders::_1));
-
-	auto calcOverhangArea_ = std::bind(calcOverhangCriteria, mesh, std::placeholders::_1, overhangThreshold, offsetThreshold, std::mem_fn(&math::Triangle::area));
-	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::overhangArea)].begin(), calcOverhangArea_);
-
-	auto calcBottomArea_ = std::bind(calcBottomArea, mesh, std::placeholders::_1, offsetThreshold);
-	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::bottomArea)].begin(), calcBottomArea_);
-
-	auto calcOverhangVolume_ = [&](const math::Plane& printPlane)
-	{
-		return calcOverhangCriteria(mesh, printPlane, overhangThreshold, offsetThreshold, std::bind(volumeUnderOverhang, printPlane, std::placeholders::_1));
-	};
-	std::ranges::transform(printPlanes, result[enums::toUnderlying(OrientationCriteria::overhangVolume)].begin(), calcOverhangVolume_);
+	OrientationsComplexEstimation result;
+	result[enums::toUnderlying(OrientationComplexCriteria::modelHeight)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::modelHeight)]);
+	result[enums::toUnderlying(OrientationComplexCriteria::overhangArea)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)]);
 
 	return result;
 }
@@ -245,18 +232,19 @@ Mesh copyToMesh(kapi::ksBodyPtr body)
 	return mesh;
 }
 
-math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction)
+std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const glm::vec3& direction)
 {
 	auto toShift = [normDir = glm::normalize(direction)](const glm::vec3& vec)
 		{
 			return -glm::dot(vec, normDir);
 		};
 
-	auto min = std::ranges::min_element(mesh.positions, {}, toShift);
-	if (min == mesh.positions.end())
+	const auto [min, max] = std::ranges::minmax_element(mesh.positions, {}, toShift);
+	if (min == mesh.positions.end() || max == mesh.positions.end())
 		throw std::logic_error(""); // TODO
 
-	return math::Plane(direction, *min);
+	const math::Plane printPlane(direction, *min);
+	return std::make_pair(printPlane, math::distance(*max, printPlane));
 }
 
 OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold)
@@ -264,10 +252,17 @@ OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double ove
 	OrientationStatByMesh result;
 	result.evalMesh = generateIcosphere();
 	result.estimations = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, 2.0);
+	result.complexEstimations = calcOrientationsComplexEstimation(result.estimations);
 	return result;
 }
 
 std::span<const double> OrientationStatByMesh::getByCriteria(OrientationCriteria criteria) const
 {
 	return estimations[enums::toUnderlying(criteria)];
+}
+
+std::vector<glm::vec3> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
+{
+
+	return std::vector<glm::vec3>();
 }

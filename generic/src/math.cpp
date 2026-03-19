@@ -87,6 +87,13 @@ double toAcuteAngle(double angleInRadians)
 	angleInRadians = std::fmod(std::abs(angleInRadians), std::numbers::pi); // 0..pi
 	return std::min(angleInRadians, std::numbers::pi - angleInRadians); // 0..pi/2
 }
+
+double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength)
+{
+	const double k = resultLength / baseLength;
+	const double basePos = baseValue - baseBegin;
+	return resultBegin + (basePos * k);
+}
 }
 
 bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold)

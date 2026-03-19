@@ -30,23 +30,43 @@ struct PrintSurface {
 // Критерий оценки ориентации детали
 enum class OrientationCriteria : uint8_t
 {
-	overhangArea,   // Площадь нависаний
-	overhangVolume, // Объем под нависаниями
-	bottomArea,     // Площадь нижней грани
-	count,          // Кол-во критериев
+	overhangArea,         // Площадь нависающих элементов
+	overhangVolume,       // Объем поддерживающих структур
+	bottomArea,           // Площадь нижней поверхности
+	bottomConvexHullArea, // Площадь выпуклого многоугольника нижней поверхности
+	modelHeight,          // Высота модели
+	count,                // Кол-во критериев
 };
 
-// Результаты оценки нескольких вариантов ориентации по всем критериям
+// Составной критерий ориентации детали
+enum class OrientationComplexCriteria : uint8_t
+{
+	overhangArea,          // Площадь нависающих элементов
+	overhangAreaAndVolume, // Площадь нависающих элементов и объем поддерживающих структур
+	modelHeight,           // Высота модели
+	bottomQuality,         // Качество нижней поверхности
+	count,                 // Кол-во критериев
+};
+
+// Результаты оценки нескольких вариантов ориентации по всем критериям в абсолютных значениях этого критерия
 using OrientationsEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationCriteria::count)>;
+
+// Результаты оценки нескольких вариантов ориентации по всем составным критериям в относительных значениях этого критерия
+using OrientationsComplexEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 // Рассчитать все критерии для нескольких вариантов ориентации
 OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold);
+// Рассчитать все составные критерии
+OrientationsComplexEstimation calcOrientationsComplexEstimation(const OrientationsEstimation& estimation);
 
 struct OrientationStatByMesh final {
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
-	OrientationsEstimation estimations;
+	OrientationsEstimation estimations; // Оценки каждого критерия в абсолютных величинах
+	OrientationsComplexEstimation complexEstimations; // Оценки составного каждого критерия в относительных величинах
 
 	std::span<const double> getByCriteria(OrientationCriteria criteria) const;
+	// Найти count лучших ориентаций по критерию
+	std::vector<glm::vec3> findBest(OrientationComplexCriteria criteria, size_t count) const;
 };
 
 std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
@@ -54,7 +74,9 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
 OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold);
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 Mesh copyToMesh(kapi::ksBodyPtr body);
-math::Plane calcPrintPlane(const Mesh& mesh, const glm::vec3& direction);
+
+// Найти плоскость печати и высоту модели
+std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const glm::vec3& direction);
 
 
 #endif /* PRINT_SURFACE_HPP */
