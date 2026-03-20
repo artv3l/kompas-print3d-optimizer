@@ -253,11 +253,11 @@ std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const g
 	return std::make_pair(printPlane, math::distance(*max, printPlane));
 }
 
-OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold)
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold)
 {
 	OrientationStatByMesh result;
 	result.evalMesh = generateIcosphere();
-	result.estimations = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, 2.0);
+	result.estimations = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, offsetThreshold);
 	result.complexEstimations = calcOrientationsComplexEstimation(result.estimations);
 	return result;
 }

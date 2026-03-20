@@ -34,4 +34,7 @@ private:
     void fillSettingsToEdits();
 };
 
+// Создать контрол для параметра, синхронизируемого с переменными документа
+kapi::IPropertyEditPtr createSettingEdit(kapi::IPropertyControlsPtr controls, const DoubleSettingInitializer& settingInitializer, kapi::ControlTypeEnum type, _bstr_t editName);
+
 #endif /* SETTINGS_MANAGER_HPP */

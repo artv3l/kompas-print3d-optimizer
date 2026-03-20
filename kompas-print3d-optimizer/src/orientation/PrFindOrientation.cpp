@@ -10,6 +10,7 @@
 #include "settings/SettingInitializer.hpp"
 #include "generic/color.hpp"
 #include "utils.hpp"
+#include "settings/SettingsManager.hpp"
 
 namespace
 {
@@ -32,6 +33,8 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 	m_propertyManager->SpecToolbar = kapi::SpecPropertyToolBarEnum::pnEnterEscHelp;
 	m_propertyManager->Caption = L"Поиск плоскости печати";
 
+	m_overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
+
 	initControls();
 	updateControls();
 }
@@ -43,6 +46,7 @@ bool PrFindOrientation::buttonClick(long buttonId)
 
 	switch (buttonId) {
 	case kapi::SpecPropertyButtonEnum::pbEnter:
+		// TODO Синхронизация максимального угла нависаний с переменными
 		hide();
 		break;
 	case kapi::SpecPropertyButtonEnum::pbHelp:
@@ -63,7 +67,120 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		}
 	}
 
-	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
+	m_isShowHeatmap = static_cast<bool>(m_visualizeCheckBox->Value);
+
+	m_overhangThreshold = m_ctrls.overhangThreshold->Value;
+	m_bottomThreshold = m_ctrls.bottomThreshold->Value;
+
+	updateControls();
+
+	return false; /* unused */
+}
+
+bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
+{
+	if (buttonId == m_recalcButton->Id) {
+		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
+		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(), m_overhangThreshold, m_bottomThreshold));
+
+		updateControls();
+	}
+
+	return false; /* unused */
+}
+
+void PrFindOrientation::initControls()
+{
+	{
+		m_ctrls.overhangThreshold = createSettingEdit(m_controls, si::overhangThreshold, kapi::ControlTypeEnum::ksControlEditInt, "Максимальный угол нависаний");
+	}
+	{
+		m_ctrls.bottomThreshold = m_controls->Add(kapi::ControlTypeEnum::ksControlEditInt);
+	}
+	{
+		m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
+		m_recalcButton->Id = 1;
+		m_recalcButton->Name = L"Рассчитать";
+	}
+	{
+		m_metricsList = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
+		m_metricsList->Name = L"Метрика";
+		m_metricsList->ReadOnly = true;
+
+		for (size_t i = 0; i < enums::toUnderlying(OrientationComplexCriteria::count); ++i) {
+			m_metricsList->Add(c_metricNames.at(static_cast<OrientationComplexCriteria>(i)).data());
+		}
+	}
+	{
+		m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
+		m_visualizeCheckBox->Name = L"Показывать тепловую карту";
+	}
+	{
+		m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
+		m_resultGrid->Name = L"Результаты";
+		m_resultGrid->ColumnCount = 6;
+		m_resultGrid->CellText[0][0] = L"№";
+		m_resultGrid->CellText[0][1] = L"Площадь нависаний";
+		m_resultGrid->CellText[0][2] = L"Объем поддержек";
+		m_resultGrid->CellText[0][3] = L"Площадь нижней поверхности";
+		m_resultGrid->CellText[0][4] = L"Площадь выпуклого многоугольника нижней поверхности";
+		m_resultGrid->CellText[0][5] = L"Высота модели";
+	}
+}
+
+void PrFindOrientation::updateControls()
+{
+	m_ctrls.overhangThreshold->Value = m_overhangThreshold;
+	m_ctrls.bottomThreshold->Value = m_bottomThreshold;
+
+	if (m_stat) {
+		m_metricsList->Visible = true;
+		m_visualizeCheckBox->Visible = true;
+		m_resultGrid->Visible = true;
+
+		m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
+		m_visualizeCheckBox->Value = m_isShowHeatmap;
+		refillGrid(m_stat->findBest(m_criteria, 5));
+		updateHeatmap();
+	} else {
+		m_metricsList->Visible = false;
+		m_visualizeCheckBox->Visible = false;
+		m_resultGrid->Visible = false;
+	}
+}
+
+void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
+{
+	if (!m_stat) {
+		assert(false);
+		return;
+	}
+
+	auto toStr = [](auto num)
+	{
+		return _bstr_t(std::format(L"{}", num).c_str());;
+	};
+	auto estimationByIndex = [&](OrientationCriteria criteria, size_t index)
+	{
+		return m_stat->getByCriteria(criteria)[indexes[index]];
+	};
+
+	m_resultGrid->RowCount = indexes.size() + 1;
+	for (size_t i = 0; i < indexes.size(); ++i) {
+		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
+		m_resultGrid->CellText[i + 1][1] = toStr(estimationByIndex(OrientationCriteria::overhangArea, i));
+		m_resultGrid->CellText[i + 1][2] = toStr(estimationByIndex(OrientationCriteria::overhangVolume, i));
+		m_resultGrid->CellText[i + 1][3] = toStr(estimationByIndex(OrientationCriteria::bottomArea, i));
+		m_resultGrid->CellText[i + 1][4] = toStr(estimationByIndex(OrientationCriteria::bottomConvexHullArea, i));
+		m_resultGrid->CellText[i + 1][5] = toStr(estimationByIndex(OrientationCriteria::modelHeight, i));
+	}
+
+	m_resultGrid->UpdateParam();
+}
+
+void PrFindOrientation::updateHeatmap()
+{
+	if (m_isShowHeatmap && m_stat) {
 		auto overhangsArea = m_stat->getByCriteria(OrientationCriteria::overhangArea);
 		auto overhangsVolume = m_stat->getByCriteria(OrientationCriteria::overhangVolume);
 		auto bottomAreas = m_stat->getByCriteria(OrientationCriteria::bottomArea);
@@ -99,7 +216,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 				};
 			std::ranges::transform(bottomAreas, colors.begin(), toColor);
 		} else if (m_criteria == OrientationComplexCriteria::common) {
-			
+
 			auto maxOverhang = *std::max_element(overhangsArea.begin(), overhangsArea.end());
 			auto maxBottom = *std::max_element(bottomAreas.begin(), bottomAreas.end());
 
@@ -141,104 +258,4 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		auto hm = m_documentData.getHighlightingManager();
 		hm->setCustomMesh(nullptr);
 	}
-
-	updateControls();
-
-	return false; /* unused */
-}
-
-bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
-{
-	if (buttonId == m_recalcButton->Id) {
-		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		const double overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
-		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(), overhangThreshold));
-
-		updateControls();
-	}
-
-	return false; /* unused */
-}
-
-void PrFindOrientation::initControls()
-{
-	{
-		kapi::IPropertyGroupBeginPtr visualizationGroupBegin = m_controls->Add(kapi::ControlTypeEnum::ksControlGroupBegin);
-		visualizationGroupBegin->Name = "Визуализация";
-		visualizationGroupBegin->Expanding = true;
-
-		{
-			m_metricsList = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
-			m_metricsList->Name = L"Метрика";
-			m_metricsList->ReadOnly = true;
-
-			for (size_t i = 0; i < enums::toUnderlying(OrientationComplexCriteria::count); ++i) {
-				m_metricsList->Add(c_metricNames.at(static_cast<OrientationComplexCriteria>(i)).data());
-			}
-		}
-		{
-			m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
-			m_visualizeCheckBox->Name = L"Показывать визуализацию";
-		}
-		{
-			m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
-			m_recalcButton->Id = 1;
-			m_recalcButton->Name = L"Рассчитать";
-		}
-		{
-			m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
-			m_resultGrid->Name = L"Результаты";
-			m_resultGrid->ColumnCount = 6;
-			m_resultGrid->CellText[0][0] = L"№";
-			m_resultGrid->CellText[0][1] = L"Площадь нависаний";
-			m_resultGrid->CellText[0][2] = L"Объем поддержек";
-			m_resultGrid->CellText[0][3] = L"Площадь нижней поверхности";
-			m_resultGrid->CellText[0][4] = L"Площадь выпуклого многоугольника нижней поверхности";
-			m_resultGrid->CellText[0][5] = L"Высота модели";
-		}
-
-		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd);
-	}
-}
-
-void PrFindOrientation::updateControls()
-{
-	if (m_stat) {
-		m_resultGrid->Visible = true;
-
-		refillGrid(m_stat->findBest(m_criteria, 5));
-	} else {
-		m_resultGrid->Visible = false;
-	}
-
-	m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
-}
-
-void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
-{
-	if (!m_stat) {
-		assert(false);
-		return;
-	}
-
-	auto toStr = [](auto num)
-	{
-		return _bstr_t(std::format(L"{}", num).c_str());;
-	};
-	auto estimationByIndex = [&](OrientationCriteria criteria, size_t index)
-	{
-		return m_stat->getByCriteria(criteria)[indexes[index]];
-	};
-
-	m_resultGrid->RowCount = indexes.size() + 1;
-	for (size_t i = 0; i < indexes.size(); ++i) {
-		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
-		m_resultGrid->CellText[i + 1][1] = toStr(estimationByIndex(OrientationCriteria::overhangArea, i));
-		m_resultGrid->CellText[i + 1][2] = toStr(estimationByIndex(OrientationCriteria::overhangVolume, i));
-		m_resultGrid->CellText[i + 1][3] = toStr(estimationByIndex(OrientationCriteria::bottomArea, i));
-		m_resultGrid->CellText[i + 1][4] = toStr(estimationByIndex(OrientationCriteria::bottomConvexHullArea, i));
-		m_resultGrid->CellText[i + 1][5] = toStr(estimationByIndex(OrientationCriteria::modelHeight, i));
-	}
-
-	m_resultGrid->UpdateParam();
 }

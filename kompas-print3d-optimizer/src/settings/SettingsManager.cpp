@@ -47,12 +47,8 @@ bool SettingsManager::buttonClick(long buttonId) {
 }
 
 void SettingsManager::createEdit(const DoubleSettingInitializer& settingInitializer, kapi::ControlTypeEnum type, _bstr_t editName) {
-    kapi::IPropertyEditPtr edit = m_controls->Add(type);
-    m_editMap.insert(std::make_pair(settingInitializer.name, edit));
-    edit->Name = editName;
-    edit->SetValueRange(settingInitializer.range.first, settingInitializer.range.second);
-    edit->Step = settingInitializer.step;
-    edit->Value = settingInitializer.defaultValue;
+    kapi::IPropertyEditPtr edit = createSettingEdit(m_controls, settingInitializer, type, editName);
+    m_editMap.insert(std::make_pair(settingInitializer.name, edit));  
 }
 
 void SettingsManager::createEdit(const StringSettingInitializer& settingInitializer, _bstr_t editName) {
@@ -126,4 +122,14 @@ void SettingsManager::fillSettingsToEdits() {
         Setting::Ptr setting = m_shownSettings->getSetting(kv.first);
         kv.second->Value = setting->getVariantValue();
     }
+}
+
+kapi::IPropertyEditPtr createSettingEdit(kapi::IPropertyControlsPtr controls, const DoubleSettingInitializer& settingInitializer, kapi::ControlTypeEnum type, _bstr_t editName)
+{
+    kapi::IPropertyEditPtr edit = controls->Add(type);
+    edit->Name = editName;
+    edit->SetValueRange(settingInitializer.range.first, settingInitializer.range.second);
+    edit->Step = settingInitializer.step;
+    edit->Value = settingInitializer.defaultValue;
+    return edit;
 }
