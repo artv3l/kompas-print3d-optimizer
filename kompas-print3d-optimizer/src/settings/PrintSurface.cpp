@@ -7,6 +7,7 @@
 #include <iterator>
 #include <optional>
 #include <ranges>
+#include <numeric>
 
 #include <glm/glm.hpp>
 
@@ -171,6 +172,11 @@ OrientationsComplexEstimation calcOrientationsComplexEstimation(const Orientatio
 	result[enums::toUnderlying(OrientationComplexCriteria::modelHeight)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::modelHeight)]);
 	result[enums::toUnderlying(OrientationComplexCriteria::overhangArea)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)]);
 
+	// TODO
+	result[enums::toUnderlying(OrientationComplexCriteria::overhangAreaAndVolume)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
+	result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
+	result[enums::toUnderlying(OrientationComplexCriteria::common)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
+
 	return result;
 }
 
@@ -261,8 +267,17 @@ std::span<const double> OrientationStatByMesh::getByCriteria(OrientationCriteria
 	return estimations[enums::toUnderlying(criteria)];
 }
 
-std::vector<glm::vec3> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
+std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
 {
+	const auto& complexEstimation = complexEstimations[enums::toUnderlying(criteria)];
+	std::vector<size_t> indexes(complexEstimation.size());
+	std::iota(indexes.begin(), indexes.end(), 0);
 
-	return std::vector<glm::vec3>();
+	auto indexToElem = [&complexEstimation, criteria](size_t index)
+	{
+		return complexEstimation[index];
+	};
+	std::ranges::partial_sort(indexes, indexes.begin() + count, {}, indexToElem);
+
+	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
 }

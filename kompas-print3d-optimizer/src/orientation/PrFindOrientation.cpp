@@ -1,6 +1,7 @@
 #include "PrFindOrientation.hpp"
 
 #include <algorithm>
+#include <format>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,10 +13,13 @@
 
 namespace
 {
-constexpr std::wstring_view c_commonMetricName = L"Общая";
-constexpr std::wstring_view c_overhangAreaMetricName = L"Площадь нависающих элементов";
-constexpr std::wstring_view c_overhangVolumeMetricName = L"Объем поддерживающих структур";
-constexpr std::wstring_view c_bottomAreaMetricName = L"Площадь нижней поверхности";
+const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metricNames = {
+	{OrientationComplexCriteria::overhangArea, L"Площадь нависающих элементов"},
+	{OrientationComplexCriteria::overhangAreaAndVolume, L"Площадь и объем нависающих элементов"},
+	{OrientationComplexCriteria::bottomQuality, L"Нижняя поверхность"},
+	{OrientationComplexCriteria::modelHeight, L"Высота модели"},
+	{OrientationComplexCriteria::common, L"Общий"}
+};
 }
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
@@ -29,6 +33,7 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 	m_propertyManager->Caption = L"Поиск плоскости печати";
 
 	initControls();
+	updateControls();
 }
 
 bool PrFindOrientation::buttonClick(long buttonId)
@@ -51,6 +56,13 @@ bool PrFindOrientation::buttonClick(long buttonId)
 
 bool PrFindOrientation::changeControlValue(IDispatch* control)
 {
+	for (size_t i = 0; i < enums::toUnderlying(OrientationComplexCriteria::count); ++i) {
+		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_metricNames.at(static_cast<OrientationComplexCriteria>(i)).data())) {
+			m_criteria = static_cast<OrientationComplexCriteria>(i);
+			break;
+		}
+	}
+
 	if (static_cast<bool>(m_visualizeCheckBox->Value) && m_stat) {
 		auto overhangsArea = m_stat->getByCriteria(OrientationCriteria::overhangArea);
 		auto overhangsVolume = m_stat->getByCriteria(OrientationCriteria::overhangVolume);
@@ -62,7 +74,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
 		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
 
-		if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangAreaMetricName.data())) {
+		if (m_criteria == OrientationComplexCriteria::overhangArea) {
 			const double maxArea = *std::max_element(overhangsArea.begin(), overhangsArea.end());
 			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
 				{
@@ -70,7 +82,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(overhangsArea, colors.begin(), toColor);
-		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_overhangVolumeMetricName.data())) {
+		} else if (m_criteria == OrientationComplexCriteria::overhangAreaAndVolume) {
 			const double maxArea = *std::max_element(overhangsVolume.begin(), overhangsVolume.end());
 			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
 				{
@@ -78,8 +90,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(overhangsVolume, colors.begin(), toColor);
-		}
-		else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_bottomAreaMetricName.data())) {
+		} else if (m_criteria == OrientationComplexCriteria::bottomQuality) {
 			auto maxArea = *std::max_element(bottomAreas.begin(), bottomAreas.end());
 			auto toColor = [&toHeatmap, maxArea](double psArea) -> glm::vec3
 				{
@@ -87,7 +98,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 					return glm::vec3(rgb.red, rgb.green, rgb.blue);
 				};
 			std::ranges::transform(bottomAreas, colors.begin(), toColor);
-		} else if (static_cast<_bstr_t>(m_metricsList->Value) == _bstr_t(c_commonMetricName.data())) {
+		} else if (m_criteria == OrientationComplexCriteria::common) {
 			
 			auto maxOverhang = *std::max_element(overhangsArea.begin(), overhangsArea.end());
 			auto maxBottom = *std::max_element(bottomAreas.begin(), bottomAreas.end());
@@ -131,6 +142,8 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 		hm->setCustomMesh(nullptr);
 	}
 
+	updateControls();
+
 	return false; /* unused */
 }
 
@@ -140,6 +153,8 @@ bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
 		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
 		const double overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
 		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(), overhangThreshold));
+
+		updateControls();
 	}
 
 	return false; /* unused */
@@ -157,12 +172,9 @@ void PrFindOrientation::initControls()
 			m_metricsList->Name = L"Метрика";
 			m_metricsList->ReadOnly = true;
 
-			m_metricsList->Add(c_commonMetricName.data());
-			m_metricsList->Add(c_overhangAreaMetricName.data());
-			m_metricsList->Add(c_overhangVolumeMetricName.data());
-			m_metricsList->Add(c_bottomAreaMetricName.data());
-
-			m_metricsList->SetCurrentByIndex(0);
+			for (size_t i = 0; i < enums::toUnderlying(OrientationComplexCriteria::count); ++i) {
+				m_metricsList->Add(c_metricNames.at(static_cast<OrientationComplexCriteria>(i)).data());
+			}
 		}
 		{
 			m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
@@ -173,7 +185,60 @@ void PrFindOrientation::initControls()
 			m_recalcButton->Id = 1;
 			m_recalcButton->Name = L"Рассчитать";
 		}
+		{
+			m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
+			m_resultGrid->Name = L"Результаты";
+			m_resultGrid->ColumnCount = 6;
+			m_resultGrid->CellText[0][0] = L"№";
+			m_resultGrid->CellText[0][1] = L"Площадь нависаний";
+			m_resultGrid->CellText[0][2] = L"Объем поддержек";
+			m_resultGrid->CellText[0][3] = L"Площадь нижней поверхности";
+			m_resultGrid->CellText[0][4] = L"Площадь выпуклого многоугольника нижней поверхности";
+			m_resultGrid->CellText[0][5] = L"Высота модели";
+		}
 
 		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd);
 	}
+}
+
+void PrFindOrientation::updateControls()
+{
+	if (m_stat) {
+		m_resultGrid->Visible = true;
+
+		refillGrid(m_stat->findBest(m_criteria, 5));
+	} else {
+		m_resultGrid->Visible = false;
+	}
+
+	m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
+}
+
+void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
+{
+	if (!m_stat) {
+		assert(false);
+		return;
+	}
+
+	auto toStr = [](auto num)
+	{
+		return _bstr_t(std::format(L"{}", num).c_str());;
+	};
+	auto estimationByIndex = [&](OrientationCriteria criteria, size_t index)
+	{
+		return m_stat->getByCriteria(criteria)[indexes[index]];
+	};
+
+	m_resultGrid->RowCount = indexes.size() + 1;
+	for (size_t i = 0; i < indexes.size(); ++i) {
+		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
+		m_resultGrid->CellText[i + 1][1] = toStr(estimationByIndex(OrientationCriteria::overhangArea, i));
+		m_resultGrid->CellText[i + 1][2] = toStr(estimationByIndex(OrientationCriteria::overhangVolume, i));
+		m_resultGrid->CellText[i + 1][3] = toStr(estimationByIndex(OrientationCriteria::bottomArea, i));
+		m_resultGrid->CellText[i + 1][4] = toStr(estimationByIndex(OrientationCriteria::bottomConvexHullArea, i));
+		m_resultGrid->CellText[i + 1][5] = toStr(estimationByIndex(OrientationCriteria::modelHeight, i));
+	}
+
+	m_resultGrid->UpdateParam();
 }

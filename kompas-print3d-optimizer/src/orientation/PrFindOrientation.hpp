@@ -15,6 +15,8 @@ private:
 
 private:
 	void initControls();
+	void updateControls();
+	void refillGrid(std::span<const size_t> indexes);
 
 	DocumentData& m_documentData;
 
@@ -24,6 +26,9 @@ private:
 	kapi::IPropertyListPtr m_metricsList;
 	kapi::IPropertyCheckBoxPtr m_visualizeCheckBox;
 	kapi::IPropertyTextButtonPtr m_recalcButton;
+	kapi::IPropertyGridPtr m_resultGrid;
+
+	OrientationComplexCriteria m_criteria = OrientationComplexCriteria::common;
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;
 };

@@ -45,13 +45,17 @@ enum class OrientationComplexCriteria : uint8_t
 	overhangAreaAndVolume, // Площадь нависающих элементов и объем поддерживающих структур
 	modelHeight,           // Высота модели
 	bottomQuality,         // Качество нижней поверхности
+	common,                // Общий критерий
 	count,                 // Кол-во критериев
 };
 
 // Результаты оценки нескольких вариантов ориентации по всем критериям в абсолютных значениях этого критерия
 using OrientationsEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationCriteria::count)>;
 
-// Результаты оценки нескольких вариантов ориентации по всем составным критериям в относительных значениях этого критерия
+/*
+  Результаты оценки нескольких вариантов ориентации по всем составным критериям в относительных значениях этого критерия.
+  Относительные величины это значения в промежутке [0, 1], где минимальное значение соответствует более лучшей ориентации.
+*/
 using OrientationsComplexEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 // Рассчитать все критерии для нескольких вариантов ориентации
@@ -65,8 +69,8 @@ struct OrientationStatByMesh final {
 	OrientationsComplexEstimation complexEstimations; // Оценки составного каждого критерия в относительных величинах
 
 	std::span<const double> getByCriteria(OrientationCriteria criteria) const;
-	// Найти count лучших ориентаций по критерию
-	std::vector<glm::vec3> findBest(OrientationComplexCriteria criteria, size_t count) const;
+	// Найти count лучших ориентаций по критерию, возвращает индексы
+	std::vector<size_t> findBest(OrientationComplexCriteria criteria, size_t count) const;
 };
 
 std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
