@@ -5,7 +5,7 @@ project "kompas-print3d-optimizer"
 
     targetextension (".rtw")
     characterset ("Unicode")
-    flags { "MFC" }
+    mfc "On"
 
     pchheader "stdafx.h"
 	pchsource "src/stdafx.cpp"

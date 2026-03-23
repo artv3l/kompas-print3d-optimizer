@@ -4,7 +4,7 @@ project "kapiwrap"
     cppdialect "C++17"
 
     characterset ("Unicode")
-    flags { "MFC" }
+    mfc "On"
 
     pchheader "stdafx.h"
 	pchsource "src/stdafx.cpp"
