@@ -53,6 +53,16 @@ Placement::Placement(const glm::vec3& origin, const glm::vec3& axisX, const glm:
 	m_axisZ(axisZ)
 {}
 
+glm::mat4 Placement::matrixToWorld() const
+{
+	glm::mat4 placementMat;
+	placementMat[0] = glm::vec4(m_axisX, 0.0f);
+	placementMat[1] = glm::vec4(m_axisY, 0.0f);
+	placementMat[2] = glm::vec4(m_axisZ, 0.0f);
+	placementMat[3] = glm::vec4(m_origin, 1.0f);
+	return placementMat;
+}
+
 Placement Placement::createByAxisZ(const glm::vec3& origin, const glm::vec3& axisZ)
 {
 	constexpr glm::vec3 c_axisX(1.0f, 0.0f, 0.0);
@@ -117,12 +127,7 @@ double convertRanges(double baseValue, double baseBegin, double baseLength, doub
 
 glm::mat4 worldToLocal(const math::Placement& placement)
 {
-	glm::mat4 placementMat;
-	placementMat[0] = glm::vec4(placement.m_axisX, 0.0f);
-	placementMat[1] = glm::vec4(placement.m_axisY, 0.0f);
-	placementMat[2] = glm::vec4(placement.m_axisZ, 0.0f);
-	placementMat[3] = glm::vec4(placement.m_origin, 1.0f);
-	return glm::inverse(placementMat);
+	return glm::inverse(placement.matrixToWorld());
 }
 }
 

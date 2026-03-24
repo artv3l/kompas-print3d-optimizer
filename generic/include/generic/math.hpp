@@ -44,6 +44,9 @@ public:
 
 	Placement(const glm::vec3& origin, const glm::vec3& axisX, const glm::vec3& axisY, const glm::vec3& axisZ);
 
+	// Матрица перехода из локальной системы координат плейсмента в глобальную (мировую)
+	glm::mat4 matrixToWorld() const;
+
 	static Placement createByAxisZ(const glm::vec3& origin, const glm::vec3& axisZ);
 };
 

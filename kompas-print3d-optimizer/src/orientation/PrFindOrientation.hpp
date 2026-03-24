@@ -12,6 +12,7 @@ private:
 	virtual bool buttonClick(long buttonId) override;
 	virtual bool changeControlValue(IDispatch* control);
 	virtual bool controlCommand(IDispatch* control, long buttonId);
+	virtual bool selectItem(IDispatch* control, long index, bool select);
 
 private:
 	void initControls();

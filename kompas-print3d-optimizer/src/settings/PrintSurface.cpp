@@ -107,14 +107,16 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 	return PrintSurface{face, planeEq};
 }
 
-OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
+OrientationsData calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
 	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
 
-	OrientationsEstimation result;
-	std::ranges::for_each(result, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
+	OrientationsData result;
+
+	result.bottomContours.resize(directions.size());
+	std::ranges::for_each(result.estimations, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
 
 	for (size_t i = 0; i < directions.size(); ++i) {
 		const auto& direction = directions[i];
@@ -123,6 +125,7 @@ OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<co
 		const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
 			math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
 		);
+		const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
 		const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
 
 		std::vector<glm::vec2> convexHullPoints;
@@ -140,25 +143,34 @@ OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<co
 			const double triangleArea = triangle.area();
 
 			if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
-				result[enums::toUnderlying(OrientationCriteria::bottomArea)][i] += triangleArea;
-
-				for (auto&& pnt : triangle.points) {
-					const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
-					convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
-				}
-
+				result.estimations[enums::toUnderlying(OrientationCriteria::bottomArea)][i] += triangleArea;
 			} else if (angleRad < overhangThresholdRad) {
 				// Площадь под мостами тоже считаем за площадь нависаний
-				result[enums::toUnderlying(OrientationCriteria::overhangArea)][i] += triangleArea;
-				result[enums::toUnderlying(OrientationCriteria::overhangVolume)][i] += volumeUnderOverhang(printPlane, triangle);
+				result.estimations[enums::toUnderlying(OrientationCriteria::overhangArea)][i] += triangleArea;
+				result.estimations[enums::toUnderlying(OrientationCriteria::overhangVolume)][i] += volumeUnderOverhang(printPlane, triangle);
+			}
+
+			for (auto&& pnt : triangle.points) {
+				const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
+				if (std::abs(pntLocal.z) < offsetThreshold) {
+					convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
+				}
 			}
 		}
 
-		result[enums::toUnderlying(OrientationCriteria::modelHeight)][i] = height;
+		result.estimations[enums::toUnderlying(OrientationCriteria::modelHeight)][i] = height;
 
-		if (convexHullPoints.size() > 0) {
+		if (convexHullPoints.size() >= 3) {
 			geometry::Polygon hullPolygon = convexHull(convexHullPoints);
-			result[enums::toUnderlying(OrientationCriteria::bottomConvexHullArea)][i] = hullPolygon.area();
+			result.estimations[enums::toUnderlying(OrientationCriteria::bottomConvexHullArea)][i] = hullPolygon.area();
+
+			for (auto&& pnt : hullPolygon.m_points) {
+				result.bottomContours[i].push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+			}
+		} else {
+			for (auto&& pnt : convexHullPoints) {
+				result.bottomContours[i].push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+			}
 		}
 	}
 
@@ -274,7 +286,13 @@ OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double ove
 {
 	OrientationStatByMesh result;
 	result.evalMesh = generateIcosphere();
-	result.estimations = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, offsetThreshold);
+
+	OrientationsData data = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, offsetThreshold);
+	result.estimations = std::move(data.estimations);
+	data.estimations = {};
+	result.bottomContours = std::move(data.bottomContours);
+	data.bottomContours = {};
+
 	result.complexEstimations = calcOrientationsComplexEstimation(result.estimations);
 	return result;
 }

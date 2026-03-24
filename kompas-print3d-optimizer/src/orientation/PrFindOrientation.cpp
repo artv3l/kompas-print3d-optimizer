@@ -89,6 +89,14 @@ bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
 	return false; /* unused */
 }
 
+bool PrFindOrientation::selectItem(IDispatch* control, long index, bool select)
+{
+	const int row = static_cast<int>(index & 0xFFFF);
+	const int column = static_cast<int>(index >> 16);
+
+	return false;
+}
+
 void PrFindOrientation::initControls()
 {
 	{

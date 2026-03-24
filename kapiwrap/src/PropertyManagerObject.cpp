@@ -40,6 +40,10 @@ bool PropertyManagerObject::commandHelp(long buttonId) {
     return false;
 }
 
+bool PropertyManagerObject::selectItem(IDispatch* control, long index, bool select) {
+    return false;
+}
+
 void PropertyManagerObject::show() {
     m_propertyManager->ShowTabs();
 }

@@ -52,6 +52,15 @@ enum class OrientationComplexCriteria : uint8_t
 // Результаты оценки нескольких вариантов ориентации по всем критериям в абсолютных значениях этого критерия
 using OrientationsEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationCriteria::count)>;
 
+// Контур нижней поверхности: точка, отрезок или convex_hull
+using BottomContour = std::vector<glm::vec3>;
+
+struct OrientationsData final
+{
+	OrientationsEstimation estimations;
+	std::vector<BottomContour> bottomContours;
+};
+
 /*
   Результаты оценки нескольких вариантов ориентации по всем составным критериям в относительных значениях этого критерия.
   Относительные величины это значения в промежутке [0, 1], где минимальное значение соответствует более лучшей ориентации.
@@ -59,13 +68,14 @@ using OrientationsEstimation = std::array<std::vector<double>, enums::toUnderlyi
 using OrientationsComplexEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 // Рассчитать все критерии для нескольких вариантов ориентации
-OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold);
+OrientationsData calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold);
 // Рассчитать все составные критерии
 OrientationsComplexEstimation calcOrientationsComplexEstimation(const OrientationsEstimation& estimation);
 
 struct OrientationStatByMesh final {
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
 	OrientationsEstimation estimations; // Оценки каждого критерия в абсолютных величинах
+	std::vector<BottomContour> bottomContours; // Контуры нижних поверхностей 
 	OrientationsComplexEstimation complexEstimations; // Оценки составного каждого критерия в относительных величинах
 
 	std::span<const double> getByCriteria(OrientationCriteria criteria) const;

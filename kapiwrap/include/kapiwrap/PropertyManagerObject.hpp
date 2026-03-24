@@ -17,6 +17,7 @@ public:
     virtual bool processActivate();
     virtual bool processDeactivate();
     virtual bool commandHelp(long buttonId);
+    virtual bool selectItem(IDispatch* control, long index, bool select);
 
     virtual void show();
     virtual void hide();

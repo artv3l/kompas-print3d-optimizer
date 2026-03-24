@@ -17,6 +17,7 @@ public:
     afx_msg bool processActivate();
     afx_msg bool processDeactivate();
     afx_msg bool commandHelp(long buttonId);
+    afx_msg bool selectItem(IDispatch* control, long index, bool select);
 
     DECLARE_EVENTSINK_MAP();
 

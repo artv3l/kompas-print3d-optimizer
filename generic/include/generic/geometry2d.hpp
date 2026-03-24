@@ -20,7 +20,6 @@ public:
 	void setPoint(size_t index, const Vector2D& point);
 	double area() const;
 
-private:
 	std::vector<Vector2D> m_points;
 };
 }
