@@ -120,6 +120,14 @@ OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<co
 		const auto& direction = directions[i];
 		const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
 
+		const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
+			math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
+		);
+		const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
+
+		std::vector<glm::vec2> convexHullPoints;
+		convexHullPoints.reserve(mesh.positions.size());
+
 		for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
 			const size_t i1 = mesh.indexes[iIndex];
 			const size_t i2 = mesh.indexes[iIndex + 1];
@@ -133,16 +141,25 @@ OrientationsEstimation calcOrientationsEstimation(const Mesh& mesh, std::span<co
 
 			if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
 				result[enums::toUnderlying(OrientationCriteria::bottomArea)][i] += triangleArea;
+
+				for (auto&& pnt : triangle.points) {
+					const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
+					convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
+				}
+
 			} else if (angleRad < overhangThresholdRad) {
 				// Площадь под мостами тоже считаем за площадь нависаний
 				result[enums::toUnderlying(OrientationCriteria::overhangArea)][i] += triangleArea;
 				result[enums::toUnderlying(OrientationCriteria::overhangVolume)][i] += volumeUnderOverhang(printPlane, triangle);
 			}
-
-			// TODO Convex hull
 		}
 
 		result[enums::toUnderlying(OrientationCriteria::modelHeight)][i] = height;
+
+		if (convexHullPoints.size() > 0) {
+			geometry::Polygon hullPolygon = convexHull(convexHullPoints);
+			result[enums::toUnderlying(OrientationCriteria::bottomConvexHullArea)][i] = hullPolygon.area();
+		}
 	}
 
 	return result;

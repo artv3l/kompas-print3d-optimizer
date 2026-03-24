@@ -46,6 +46,26 @@ double Triangle::area() const
 	return glm::length(glm::cross(ab, ac)) / 2.0;
 }
 
+Placement::Placement(const glm::vec3& origin, const glm::vec3& axisX, const glm::vec3& axisY, const glm::vec3& axisZ):
+	m_origin(origin),
+	m_axisX(axisX),
+	m_axisY(axisY),
+	m_axisZ(axisZ)
+{}
+
+Placement Placement::createByAxisZ(const glm::vec3& origin, const glm::vec3& axisZ)
+{
+	constexpr glm::vec3 c_axisX(1.0f, 0.0f, 0.0);
+	constexpr glm::vec3 c_axisY(0.0f, 1.0f, 0.0);
+
+	const bool isUseAxisX = math::toAcuteAngle(calcAngleBetween(axisZ, c_axisX)) > toRadians(10);
+
+	const glm::vec3 axisX = isUseAxisX ? glm::cross(axisZ, c_axisX) : glm::cross(axisZ, c_axisY);
+	const glm::vec3 axisY = glm::cross(axisX, axisZ);
+
+	return Placement(origin, glm::normalize(axisX), glm::normalize(axisY), glm::normalize(axisZ));
+}
+
 glm::vec3 project(const glm::vec3& a, const glm::vec3& b)
 {
 	return (glm::dot(a, b) / glm::dot(b, b)) * b;
@@ -93,6 +113,16 @@ double convertRanges(double baseValue, double baseBegin, double baseLength, doub
 	const double k = resultLength / baseLength;
 	const double basePos = baseValue - baseBegin;
 	return resultBegin + (basePos * k);
+}
+
+glm::mat4 worldToLocal(const math::Placement& placement)
+{
+	glm::mat4 placementMat;
+	placementMat[0] = glm::vec4(placement.m_axisX, 0.0f);
+	placementMat[1] = glm::vec4(placement.m_axisY, 0.0f);
+	placementMat[2] = glm::vec4(placement.m_axisZ, 0.0f);
+	placementMat[3] = glm::vec4(placement.m_origin, 1.0f);
+	return glm::inverse(placementMat);
 }
 }
 

@@ -57,3 +57,26 @@ TEST(generic_math, volumeUnderOverhang_1)
 
     EXPECT_TRUE(math::equal(volumeUnderOverhang(printPlane, overhang), 1715913.984499, 0.5));
 }
+
+TEST(generic_math, worldToLocal_1)
+{
+    const glm::vec3 origin = glm::vec3(39.0f, -33.0f, 47.0);
+    const math::Placement local(
+        origin,
+        glm::vec3(0.926979, 0.124504, 0.353849),
+        glm::vec3(0.309146, 0.280714, -0.908641),
+        glm::vec3(-0.212460, 0.951682, 0.221726)
+    );
+    const glm::mat4 mat = math::worldToLocal(local);
+
+    const glm::vec4 point(70.000389, -37.081360, 26.571628, 1.0f);
+    const glm::vec4 pointExpected(21.0, 27.0, -15.0, 1.0f);
+    const glm::vec4 pointActual = mat * point;
+
+    EXPECT_TRUE(
+        math::equal(pointActual.x, pointExpected.x, 0.01) &&
+        math::equal(pointActual.y, pointExpected.y, 0.01) &&
+        math::equal(pointActual.z, pointExpected.z, 0.01) &&
+        math::equal(pointActual.w, pointExpected.w, 0.01)
+    );
+}

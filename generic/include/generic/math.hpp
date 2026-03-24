@@ -34,6 +34,19 @@ private:
 	float m_distance;
 };
 
+class Placement final
+{
+public:
+	glm::vec3 m_origin;
+	glm::vec3 m_axisX;
+	glm::vec3 m_axisY;
+	glm::vec3 m_axisZ;
+
+	Placement(const glm::vec3& origin, const glm::vec3& axisX, const glm::vec3& axisY, const glm::vec3& axisZ);
+
+	static Placement createByAxisZ(const glm::vec3& origin, const glm::vec3& axisZ);
+};
+
 glm::vec3 project(const glm::vec3& a, const glm::vec3& b);
 glm::vec3 project(const glm::vec3& vec, const Plane& plane);
 Triangle project(const Triangle& triangle, const Plane& plane);
@@ -44,6 +57,8 @@ double toRadians(double angleInDegrees);
 double toAcuteAngle(double angleInRadians);
 // Привести значение baseValue из промежутка [baseBegin, baseBegin + baseLength] в промежуток [resultBegin, resultBegin + resultLength]
 double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength);
+// Получить матрицу перехода из мировых координат в локальные координаты placement
+glm::mat4 worldToLocal(const math::Placement& placement);
 }
 
 // Угол между векторами в радианах

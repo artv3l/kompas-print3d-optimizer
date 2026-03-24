@@ -1,10 +1,12 @@
-#ifndef MESH_HPP
-#define MESH_HPP
+#pragma once
 
 #include <vector>
+#include <span>
+
 #include <glm/glm.hpp>
+
 #include "oglwrap/Mesh.hpp"
+#include "generic/geometry2d.hpp"
 
 Mesh generateIcosphere();
-
-#endif /* MESH_HPP */
+geometry::Polygon convexHull(std::span<glm::vec2> points);
