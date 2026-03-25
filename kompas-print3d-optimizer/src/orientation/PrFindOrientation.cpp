@@ -15,10 +15,8 @@
 namespace
 {
 const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metricNames = {
-	{OrientationComplexCriteria::overhangArea, L"Площадь нависающих элементов"},
-	{OrientationComplexCriteria::overhangAreaAndVolume, L"Площадь и объем нависающих элементов"},
+	{OrientationComplexCriteria::overhangs, L"Количество поддержек"},
 	{OrientationComplexCriteria::bottomQuality, L"Нижняя поверхность"},
-	{OrientationComplexCriteria::modelHeight, L"Высота модели"},
 	{OrientationComplexCriteria::common, L"Общий"}
 };
 }
@@ -168,19 +166,15 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 	{
 		return _bstr_t(std::format(L"{}", num).c_str());;
 	};
-	auto estimationByIndex = [&](OrientationCriteria criteria, size_t index)
-	{
-		return m_stat->getByCriteria(criteria)[indexes[index]];
-	};
 
 	m_resultGrid->RowCount = indexes.size() + 1;
 	for (size_t i = 0; i < indexes.size(); ++i) {
 		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
-		m_resultGrid->CellText[i + 1][1] = toStr(estimationByIndex(OrientationCriteria::overhangArea, i));
-		m_resultGrid->CellText[i + 1][2] = toStr(estimationByIndex(OrientationCriteria::overhangVolume, i));
-		m_resultGrid->CellText[i + 1][3] = toStr(estimationByIndex(OrientationCriteria::bottomArea, i));
-		m_resultGrid->CellText[i + 1][4] = toStr(estimationByIndex(OrientationCriteria::bottomConvexHullArea, i));
-		m_resultGrid->CellText[i + 1][5] = toStr(estimationByIndex(OrientationCriteria::modelHeight, i));
+		m_resultGrid->CellText[i + 1][1] = toStr(m_stat->infos[i].overhangArea);
+		m_resultGrid->CellText[i + 1][2] = toStr(m_stat->infos[i].overhangVolume);
+		m_resultGrid->CellText[i + 1][3] = toStr(m_stat->infos[i].bottomArea);
+		m_resultGrid->CellText[i + 1][4] = toStr(m_stat->infos[i].bottomConvexHullArea);
+		m_resultGrid->CellText[i + 1][5] = toStr(m_stat->infos[i].modelHeight);
 	}
 
 	m_resultGrid->UpdateParam();
@@ -189,53 +183,28 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 void PrFindOrientation::updateHeatmap()
 {
 	if (m_isShowHeatmap && m_stat) {
-		auto overhangsArea = m_stat->getByCriteria(OrientationCriteria::overhangArea);
-		auto overhangsVolume = m_stat->getByCriteria(OrientationCriteria::overhangVolume);
-		auto bottomAreas = m_stat->getByCriteria(OrientationCriteria::bottomArea);
 
 		std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
 
 		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
 		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
-		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, std::placeholders::_2, red.hue, green.hue - red.hue);
+		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
 
-		if (m_criteria == OrientationComplexCriteria::overhangArea) {
-			const double maxArea = *std::max_element(overhangsArea.begin(), overhangsArea.end());
-			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
-				{
-					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(maxArea - overhangArea, maxArea), 1.0, 1.0 });
-					return glm::vec3(rgb.red, rgb.green, rgb.blue);
-				};
-			std::ranges::transform(overhangsArea, colors.begin(), toColor);
-		} else if (m_criteria == OrientationComplexCriteria::overhangAreaAndVolume) {
-			const double maxArea = *std::max_element(overhangsVolume.begin(), overhangsVolume.end());
-			auto toColor = [&toHeatmap, maxArea](double overhangArea) -> glm::vec3
-				{
-					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(maxArea - overhangArea, maxArea), 1.0, 1.0 });
-					return glm::vec3(rgb.red, rgb.green, rgb.blue);
-				};
-			std::ranges::transform(overhangsVolume, colors.begin(), toColor);
+		// value [0, 1] -> HSV color
+		auto toColor = [&toHeatmap](double value) -> glm::vec3
+		{
+			color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
+			return glm::vec3(rgb.red, rgb.green, rgb.blue);
+		};
+
+		if (m_criteria == OrientationComplexCriteria::overhangs) {
+			auto overhangs = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
+			std::ranges::transform(overhangs, colors.begin(), toColor);
 		} else if (m_criteria == OrientationComplexCriteria::bottomQuality) {
-			auto maxArea = *std::max_element(bottomAreas.begin(), bottomAreas.end());
-			auto toColor = [&toHeatmap, maxArea](double psArea) -> glm::vec3
-				{
-					color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(psArea, maxArea), 1.0, 1.0 });
-					return glm::vec3(rgb.red, rgb.green, rgb.blue);
-				};
+			auto bottomAreas = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
 			std::ranges::transform(bottomAreas, colors.begin(), toColor);
 		} else if (m_criteria == OrientationComplexCriteria::common) {
 
-			auto maxOverhang = *std::max_element(overhangsArea.begin(), overhangsArea.end());
-			auto maxBottom = *std::max_element(bottomAreas.begin(), bottomAreas.end());
-
-			for (size_t i = 0; i < m_stat->evalMesh.normals.size(); ++i) {
-				const double overhangArea = overhangsArea[i];
-				const double bottomArea = bottomAreas[i];
-
-				double hue = toHeatmap((maxOverhang - overhangArea) + bottomArea, maxOverhang + maxBottom);
-				color::RGB rgb = color::toRGB(color::HSV{ hue , 1.0, 1.0 });
-				colors[i] = glm::vec3(rgb.red, rgb.green, rgb.blue);
-			}
 		}
 
 		auto mesh = std::make_shared<ColoredMesh>();

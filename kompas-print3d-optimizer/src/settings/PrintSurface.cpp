@@ -107,80 +107,87 @@ PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d) {
 	return PrintSurface{face, planeEq};
 }
 
-OrientationsData calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
+namespace
 {
-	assert(mesh.indexes.size() % 3 == 0);
+OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction, double overhangThreshold, double offsetThreshold)
+{
+	OrientationInfo info;
 
 	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
+	const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
 
-	OrientationsData result;
+	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
+		math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
+	);
+	const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
+	const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
 
-	result.bottomContours.resize(directions.size());
-	std::ranges::for_each(result.estimations, [&directions](std::vector<double>& vector) { vector.resize(directions.size(), 0.0); });
+	std::vector<glm::vec2> convexHullPoints;
+	convexHullPoints.reserve(mesh.positions.size());
 
-	for (size_t i = 0; i < directions.size(); ++i) {
-		const auto& direction = directions[i];
-		const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
+	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+		const size_t i1 = mesh.indexes[iIndex];
+		const size_t i2 = mesh.indexes[iIndex + 1];
+		const size_t i3 = mesh.indexes[iIndex + 2];
+		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
 
-		const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
-			math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
-		);
-		const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
-		const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
+		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
+		const glm::vec3 normal = mesh.normals[i1];
+		const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
+		const double triangleArea = triangle.area();
 
-		std::vector<glm::vec2> convexHullPoints;
-		convexHullPoints.reserve(mesh.positions.size());
-
-		for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
-			const size_t i1 = mesh.indexes[iIndex];
-			const size_t i2 = mesh.indexes[iIndex + 1];
-			const size_t i3 = mesh.indexes[iIndex + 2];
-			const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-
-			// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
-			const glm::vec3 normal = mesh.normals[i1];
-			const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
-			const double triangleArea = triangle.area();
-
-			if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
-				result.estimations[enums::toUnderlying(OrientationCriteria::bottomArea)][i] += triangleArea;
-			} else if (angleRad < overhangThresholdRad) {
-				// Площадь под мостами тоже считаем за площадь нависаний
-				result.estimations[enums::toUnderlying(OrientationCriteria::overhangArea)][i] += triangleArea;
-				result.estimations[enums::toUnderlying(OrientationCriteria::overhangVolume)][i] += volumeUnderOverhang(printPlane, triangle);
-			}
-
-			for (auto&& pnt : triangle.points) {
-				const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
-				if (std::abs(pntLocal.z) < offsetThreshold) {
-					convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
-				}
-			}
+		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
+			info.bottomArea += triangleArea;
+		}
+		else if (angleRad < overhangThresholdRad) {
+			// Площадь под мостами тоже считаем за площадь нависаний
+			info.overhangArea += triangleArea;
+		    info.overhangVolume += volumeUnderOverhang(printPlane, triangle);
 		}
 
-		result.estimations[enums::toUnderlying(OrientationCriteria::modelHeight)][i] = height;
-
-		if (convexHullPoints.size() >= 3) {
-			geometry::Polygon hullPolygon = convexHull(convexHullPoints);
-			result.estimations[enums::toUnderlying(OrientationCriteria::bottomConvexHullArea)][i] = hullPolygon.area();
-
-			for (auto&& pnt : hullPolygon.m_points) {
-				result.bottomContours[i].push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
-			}
-		} else {
-			for (auto&& pnt : convexHullPoints) {
-				result.bottomContours[i].push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		for (auto&& pnt : triangle.points) {
+			const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
+			if (std::abs(pntLocal.z) < offsetThreshold) {
+				convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
 			}
 		}
 	}
 
+	info.modelHeight = height;
+
+	if (convexHullPoints.size() >= 3) {
+		geometry::Polygon hullPolygon = convexHull(convexHullPoints);
+		info.bottomConvexHullArea = hullPolygon.area();
+
+		for (auto&& pnt : hullPolygon.m_points) {
+			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		}
+	}
+	else {
+		for (auto&& pnt : convexHullPoints) {
+			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		}
+	}
+
+	return info;
+}
+
+// Рассчитать все критерии для нескольких вариантов ориентации
+std::vector<OrientationInfo> calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
+{
+	assert(mesh.indexes.size() % 3 == 0);
+
+	std::vector<OrientationInfo> result;
+	result.resize(directions.size());
+	for (size_t i = 0; i < directions.size(); ++i) {
+		result[i] = calcOrientationInfo(mesh, directions[i], overhangThreshold, offsetThreshold);
+	}
 	return result;
 }
 
-namespace
-{
 // Преобразовать абсолюные значения в относительные [0, 1]
-std::vector<double> toRelative(std::span<const double> absoluteValues)
+template <std::ranges::range R>
+std::vector<double> toRelative(R absoluteValues, bool invert)
 {
 	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
 
@@ -191,22 +198,24 @@ std::vector<double> toRelative(std::span<const double> absoluteValues)
 	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
 	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
 
+	if (invert)
+		std::ranges::transform(relativeValues, relativeValues.begin(), [](auto value) {return 1.0 - value;});
+
 	return relativeValues;
 }
-}
 
-OrientationsComplexEstimation calcOrientationsComplexEstimation(const OrientationsEstimation& estimation)
+// Рассчитать все составные критерии
+OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
 {
-	OrientationsComplexEstimation result;
-	result[enums::toUnderlying(OrientationComplexCriteria::modelHeight)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::modelHeight)]);
-	result[enums::toUnderlying(OrientationComplexCriteria::overhangArea)] = toRelative(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)]);
+	OrientationComplexInfos result;
 
 	// TODO
-	result[enums::toUnderlying(OrientationComplexCriteria::overhangAreaAndVolume)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
-	result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
-	result[enums::toUnderlying(OrientationComplexCriteria::common)] = std::vector<double>(estimation[enums::toUnderlying(OrientationCriteria::overhangArea)].size(), 0.0);
+	result[enums::toUnderlying(OrientationComplexCriteria::overhangs)] = toRelative(infos | std::views::transform(&OrientationInfo::overhangArea), false);
+	result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)] = toRelative(infos | std::views::transform(&OrientationInfo::bottomArea), true);
+	result[enums::toUnderlying(OrientationComplexCriteria::common)] = std::vector<double>(infos.size(), 0.0);
 
 	return result;
+}
 }
 
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
@@ -286,25 +295,14 @@ OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double ove
 {
 	OrientationStatByMesh result;
 	result.evalMesh = generateIcosphere();
-
-	OrientationsData data = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, offsetThreshold);
-	result.estimations = std::move(data.estimations);
-	data.estimations = {};
-	result.bottomContours = std::move(data.bottomContours);
-	data.bottomContours = {};
-
-	result.complexEstimations = calcOrientationsComplexEstimation(result.estimations);
+	result.infos = calcOrientationsEstimation(copyToMesh(body), result.evalMesh.normals, overhangThreshold, offsetThreshold);
+	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
 	return result;
-}
-
-std::span<const double> OrientationStatByMesh::getByCriteria(OrientationCriteria criteria) const
-{
-	return estimations[enums::toUnderlying(criteria)];
 }
 
 std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
 {
-	const auto& complexEstimation = complexEstimations[enums::toUnderlying(criteria)];
+	const auto& complexEstimation = complexInfos[enums::toUnderlying(criteria)];
 	std::vector<size_t> indexes(complexEstimation.size());
 	std::iota(indexes.begin(), indexes.end(), 0);
 

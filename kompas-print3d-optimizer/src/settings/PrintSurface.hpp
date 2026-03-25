@@ -27,58 +27,40 @@ struct PrintSurface {
 	PlaneEq eq;
 };
 
-// Критерий оценки ориентации детали
-enum class OrientationCriteria : uint8_t
-{
-	overhangArea,         // Площадь нависающих элементов
-	overhangVolume,       // Объем поддерживающих структур
-	bottomArea,           // Площадь нижней поверхности
-	bottomConvexHullArea, // Площадь выпуклого многоугольника нижней поверхности
-	modelHeight,          // Высота модели
-	count,                // Кол-во критериев
-};
-
-// Составной критерий ориентации детали
 enum class OrientationComplexCriteria : uint8_t
 {
-	overhangArea,          // Площадь нависающих элементов
-	overhangAreaAndVolume, // Площадь нависающих элементов и объем поддерживающих структур
-	modelHeight,           // Высота модели
-	bottomQuality,         // Качество нижней поверхности
-	common,                // Общий критерий
-	count,                 // Кол-во критериев
+	overhangs,     // Количество поддержек
+	bottomQuality, // Качество нижней поверхности
+	common,        // Общий критерий
+	count,         // Кол-во критериев
 };
-
-// Результаты оценки нескольких вариантов ориентации по всем критериям в абсолютных значениях этого критерия
-using OrientationsEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationCriteria::count)>;
 
 // Контур нижней поверхности: точка, отрезок или convex_hull
 using BottomContour = std::vector<glm::vec3>;
 
-struct OrientationsData final
+// Измерения для одной ориентации
+struct OrientationInfo final
 {
-	OrientationsEstimation estimations;
-	std::vector<BottomContour> bottomContours;
+	double overhangArea = 0.0;         // Площадь нависающих элементов
+	double overhangVolume = 0.0;       // Объем поддерживающих структур
+	double bottomArea = 0.0;           // Площадь нижней поверхности
+	double bottomConvexHullArea = 0.0; // Площадь выпуклого многоугольника нижней поверхности
+	double modelHeight = 0.0;          // Высота модели
+	BottomContour bottomContour;
 };
 
 /*
   Результаты оценки нескольких вариантов ориентации по всем составным критериям в относительных значениях этого критерия.
   Относительные величины это значения в промежутке [0, 1], где минимальное значение соответствует более лучшей ориентации.
+  Относительные критерии существуют только в контексте сравнения нескольких вариантов ориенатции, поэтому тут массивы.
 */
-using OrientationsComplexEstimation = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
-
-// Рассчитать все критерии для нескольких вариантов ориентации
-OrientationsData calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold);
-// Рассчитать все составные критерии
-OrientationsComplexEstimation calcOrientationsComplexEstimation(const OrientationsEstimation& estimation);
+using OrientationComplexInfos = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 struct OrientationStatByMesh final {
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
-	OrientationsEstimation estimations; // Оценки каждого критерия в абсолютных величинах
-	std::vector<BottomContour> bottomContours; // Контуры нижних поверхностей 
-	OrientationsComplexEstimation complexEstimations; // Оценки составного каждого критерия в относительных величинах
+	std::vector<OrientationInfo> infos; // Измерения для всех ориентаций
+	OrientationComplexInfos complexInfos;
 
-	std::span<const double> getByCriteria(OrientationCriteria criteria) const;
 	// Найти count лучших ориентаций по критерию, возвращает индексы
 	std::vector<size_t> findBest(OrientationComplexCriteria criteria, size_t count) const;
 };
