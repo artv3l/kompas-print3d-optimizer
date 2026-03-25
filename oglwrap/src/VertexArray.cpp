@@ -1,5 +1,10 @@
 #include "VertexArray.hpp"
 
+VertexArray::VertexArray()
+{
+    glGenVertexArrays(1, &m_id);
+}
+
 VertexArray::VertexArray(const Mesh& mesh) {
     glGenVertexArrays(1, &m_id);
 
@@ -53,4 +58,10 @@ void VertexArray::addVertexBuffer(const VertexBuffer::Ptr& vertexBuffer) {
 void VertexArray::draw(GLenum mode) const {
     auto lock = bind();
     glDrawElements(mode, static_cast<GLsizei>(m_elementBuffer->getCount()), GL_UNSIGNED_INT, 0);
+}
+
+void VertexArray::draw(GLenum mode, size_t count) const
+{
+    auto lock = bind();
+    glDrawElements(mode, static_cast<GLsizei>(count), GL_UNSIGNED_INT, 0);
 }

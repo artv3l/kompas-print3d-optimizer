@@ -8,7 +8,12 @@ project "oglwrap"
     includedirs {
         "include/oglwrap",
 
+        "%{wks.location}/generic/include",
         "%{vcpkg.include}",
+    }
+
+    links {
+        "generic"
     }
 
     filter "configurations:Debug"

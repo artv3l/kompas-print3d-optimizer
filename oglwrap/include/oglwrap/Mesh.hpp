@@ -4,18 +4,24 @@
 
 #include <glm/glm.hpp>
 
+#include "generic/geometry2d.hpp"
+
 using Index = unsigned int;
 
-struct Mesh
+class Mesh : public geometry::IObject
 {
-    virtual ~Mesh() = default;
+public:
+    ~Mesh() override = default;
 
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
     std::vector<Index> indexes;
 };
 
-struct ColoredMesh : public Mesh
+class ColoredMesh : public Mesh
 {
+public:
+    ~ColoredMesh() override = default;
+
     std::vector<glm::vec3> colors;
 };

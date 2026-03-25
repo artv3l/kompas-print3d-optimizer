@@ -40,7 +40,7 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 bool PrFindOrientation::buttonClick(long buttonId)
 {
 	auto hm = m_documentData.getHighlightingManager();
-	hm->setCustomMesh(nullptr);
+	hm->cleanObjects();
 
 	switch (buttonId) {
 	case kapi::SpecPropertyButtonEnum::pbEnter:
@@ -230,9 +230,10 @@ void PrFindOrientation::updateHeatmap()
 		}
 
 		auto hm = m_documentData.getHighlightingManager();
-		hm->setCustomMesh(mesh);
+		hm->addObject(mesh);
 	} else {
 		auto hm = m_documentData.getHighlightingManager();
-		hm->setCustomMesh(nullptr);
+		hm->cleanObjects();
+	}
 	}
 }

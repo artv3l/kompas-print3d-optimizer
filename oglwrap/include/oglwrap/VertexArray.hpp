@@ -14,6 +14,7 @@ public:
     using Ptr = std::shared_ptr<VertexArray>;
 
 public:
+    VertexArray();
     VertexArray(const Mesh& mesh);
 
     [[nodiscard]] ActionLock bind() const;
@@ -21,6 +22,7 @@ public:
     void addVertexBuffer(const VertexBuffer::Ptr& vertexBuffer);
 
     void draw(GLenum mode) const;
+    void draw(GLenum mode, size_t count) const;
 
 private:
     GLuint m_id;

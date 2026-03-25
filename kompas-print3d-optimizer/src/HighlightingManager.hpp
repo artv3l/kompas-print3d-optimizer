@@ -14,14 +14,13 @@ class Settings;
 class DrawableMesh
 {
 public:
-    DrawableMesh(std::shared_ptr<Mesh> mesh);
+    DrawableMesh(std::shared_ptr<geometry::IObject> object, std::shared_ptr<ShaderProgram> shaderProgram);
     virtual ~DrawableMesh() = default;
-
     void draw() const;
-
+    std::shared_ptr<ShaderProgram> m_shaderProgram;
 protected:
-    std::weak_ptr<Mesh> m_mesh;
     VertexArray m_vao;
+    size_t m_count; // РљРѕР»-РІРѕ РёРЅРґРµРєСЃРѕРІ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё
 };
 
 class HighlightingManager : public DocumentFrameEvent {
@@ -38,7 +37,8 @@ public:
     void toggleMode(Mode mode);
     void refreshWindow() const;
 
-    void setCustomMesh(std::shared_ptr<Mesh> customMesh);
+    void addObject(std::shared_ptr<geometry::IObject> object);
+    void cleanObjects();
 
 private:
     kapi::ksDocument3DPtr m_document3d;
@@ -46,11 +46,11 @@ private:
     uint8_t m_mode;
     glm::vec2 m_mouseCoord;
 
-    std::unique_ptr<DrawableMesh> m_customMesh;
+    std::vector<DrawableMesh> m_objects;
 
 private: /* static */
-    static std::unique_ptr<ShaderProgram> s_shaderProgram;
-    static std::unique_ptr<ShaderProgram> s_shaderOrientationEvalMesh;
+    static std::shared_ptr<ShaderProgram> s_shaderProgram;
+    static std::shared_ptr<ShaderProgram> s_shaderOrientationEvalMesh;
     static bool s_isGladInited;
     static short s_framesCount;
     

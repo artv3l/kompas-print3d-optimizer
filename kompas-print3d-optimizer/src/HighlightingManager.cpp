@@ -24,6 +24,7 @@
 #include "windows.hpp"
 #include "generic/math.hpp"
 #include "oglwrap/VertexArray.hpp"
+#include "generic/geometry2d.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);
@@ -34,33 +35,43 @@ void* GetAnyGLFuncAddress(const char* name) {
     return p;
 }
 
-std::unique_ptr<ShaderProgram> HighlightingManager::s_shaderProgram = nullptr;
-std::unique_ptr<ShaderProgram> HighlightingManager::s_shaderOrientationEvalMesh = nullptr;
+std::shared_ptr<ShaderProgram> HighlightingManager::s_shaderProgram = nullptr;
+std::shared_ptr<ShaderProgram> HighlightingManager::s_shaderOrientationEvalMesh = nullptr;
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
-DrawableMesh::DrawableMesh(std::shared_ptr<Mesh> mesh) :
-    m_mesh(mesh),
-    m_vao(*mesh)
+DrawableMesh::DrawableMesh(std::shared_ptr<geometry::IObject> object, std::shared_ptr<ShaderProgram> shaderProgram) :
+    m_shaderProgram(shaderProgram),
+    m_vao()
 {
-    if (ColoredMesh* coloredMesh = dynamic_cast<ColoredMesh*>(mesh.get())) {
+    if (ColoredMesh* coloredMesh = dynamic_cast<ColoredMesh*>(object.get())) {
+        m_vao = VertexArray(*coloredMesh);
         VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
             coloredMesh->colors.data(),
             static_cast<GLsizeiptr>(coloredMesh->colors.size() * sizeof(glm::vec3))
         );
         vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
         m_vao.addVertexBuffer(vb);
-    }
+        m_count = coloredMesh->indexes.size();
+    } /*else if (geometry::Polygon* polyline = dynamic_cast<geometry::Polygon*>(object.get())) {
+        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
+            polyline->m_points.data(),
+            static_cast<GLsizeiptr>(polyline->m_points.size() * sizeof(glm::vec3))
+        );
+        vb->addLayout(Layout{ 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
+        m_vao.addVertexBuffer(vb);
+        m_count = polyline->m_points.size();
+    }*/
 }
 
 void DrawableMesh::draw() const
 {
-    m_vao.draw(GL_TRIANGLES);
+    m_vao.draw(GL_TRIANGLES, m_count);
 }
 
 HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings) :
     DocumentFrameEvent(getDocumentFrame(kompas, document3d)), m_document3d(document3d), m_settings(settings),
-    m_mode(0x00), m_mouseCoord(0, 0), m_customMesh()
+    m_mode(0x00), m_mouseCoord(0, 0)
 {
     // GLAD нужно инициализировать когда открыт документ
     if (!s_isGladInited) {
@@ -96,18 +107,23 @@ void HighlightingManager::refreshWindow() const {
     m_documentFrame->RefreshWindow();
 }
 
-void HighlightingManager::setCustomMesh(std::shared_ptr<Mesh> customMesh)
+void HighlightingManager::addObject(std::shared_ptr<geometry::IObject> object)
 {
-    if (customMesh) {
-        m_customMesh = std::make_unique<DrawableMesh>(customMesh);
-    } else {
-        m_customMesh = nullptr;
-    }
+    std::shared_ptr<ShaderProgram> prog;
+    if (ColoredMesh* coloredMesh = dynamic_cast<ColoredMesh*>(object.get()))
+        prog = s_shaderOrientationEvalMesh;
+    
+    m_objects.emplace_back(object, prog);
+}
+
+void HighlightingManager::cleanObjects()
+{
+    m_objects.clear();
 }
 
 void HighlightingManager::initShaders() {
-    s_shaderProgram = std::make_unique<ShaderProgram>(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
-    s_shaderOrientationEvalMesh = std::make_unique<ShaderProgram>(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION);
+    s_shaderProgram = std::make_shared<ShaderProgram>(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
+    s_shaderOrientationEvalMesh = std::make_shared<ShaderProgram>(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION);
 }
 
 kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d) {
@@ -139,7 +155,7 @@ bool HighlightingManager::closeFrame() {
 }
 
 bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode) {
-    if (m_mode == Mode::off && !m_customMesh) {
+    if (m_mode == Mode::off && m_objects.empty()) {
         return true;
     }
 
@@ -155,13 +171,14 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
     glGetFloatv(GL_PROJECTION_MATRIX, matrix4);
     glm::mat4 projection(glm::make_mat4(matrix4));
 
-    if (m_customMesh) {
-        s_shaderOrientationEvalMesh->use();
-        s_shaderOrientationEvalMesh->setUniform("u_modelview", modelview);
-        s_shaderOrientationEvalMesh->setUniform("u_projection", projection);
+    if (!m_objects.empty()) {
+        for (const auto& obj : m_objects) {
+            obj.m_shaderProgram->use();
+            obj.m_shaderProgram->setUniform("u_modelview", modelview);
+            obj.m_shaderProgram->setUniform("u_projection", projection);
 
-        m_customMesh->draw();
-
+            obj.draw();
+        }
         glUseProgram(0);
     } else if (m_settings->isPrintSurfaceSelected()) {
         /*
