@@ -63,5 +63,8 @@ void VertexArray::draw(GLenum mode) const {
 void VertexArray::draw(GLenum mode, size_t count) const
 {
     auto lock = bind();
-    glDrawElements(mode, static_cast<GLsizei>(count), GL_UNSIGNED_INT, 0);
+    if (m_elementBuffer)
+        glDrawElements(mode, static_cast<GLsizei>(count), GL_UNSIGNED_INT, 0);
+    else
+        glDrawArrays(mode, 0, static_cast<GLsizei>(count));
 }

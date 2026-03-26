@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "kapiwrap/PropertyManagerObject.hpp"
 #include "settings/DocumentData.hpp"
 
@@ -19,6 +21,7 @@ private:
 	void updateControls();
 	void refillGrid(std::span<const size_t> indexes);
 	void updateHeatmap();
+	void updateScene();
 
 	DocumentData& m_documentData;
 
@@ -40,6 +43,8 @@ private:
 	bool m_isShowHeatmap = false;
 	double m_overhangThreshold = 0.0;
 	double m_bottomThreshold = 0.0;
+	std::optional<size_t> m_selectedOrientation = 0;
+	std::vector<size_t> m_orientationsInGrid;
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;
 };

@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <span>
+#include <memory>
 
 #include <glm/vec3.hpp>
 
@@ -57,6 +58,7 @@ struct OrientationInfo final
 using OrientationComplexInfos = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 struct OrientationStatByMesh final {
+	std::shared_ptr<Mesh> model; // Оцениваемая модель
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
 	std::vector<OrientationInfo> infos; // Измерения для всех ориентаций
 	OrientationComplexInfos complexInfos;

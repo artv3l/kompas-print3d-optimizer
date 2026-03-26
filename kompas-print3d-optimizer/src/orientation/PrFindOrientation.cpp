@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <format>
+#include <ranges>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -92,6 +93,9 @@ bool PrFindOrientation::selectItem(IDispatch* control, long index, bool select)
 	const int row = static_cast<int>(index & 0xFFFF);
 	const int column = static_cast<int>(index >> 16);
 
+	m_selectedOrientation = (row == 0) ? std::nullopt : std::make_optional(m_orientationsInGrid[row - 1]);
+	updateScene();
+
 	return false;
 }
 
@@ -146,7 +150,8 @@ void PrFindOrientation::updateControls()
 
 		m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
 		m_visualizeCheckBox->Value = m_isShowHeatmap;
-		refillGrid(m_stat->findBest(m_criteria, 5));
+		m_orientationsInGrid = m_stat->findBest(m_criteria, 5);
+		refillGrid(m_orientationsInGrid);
 		updateHeatmap();
 	} else {
 		m_metricsList->Visible = false;
@@ -169,12 +174,12 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 
 	m_resultGrid->RowCount = indexes.size() + 1;
 	for (size_t i = 0; i < indexes.size(); ++i) {
-		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
-		m_resultGrid->CellText[i + 1][1] = toStr(m_stat->infos[i].overhangArea);
-		m_resultGrid->CellText[i + 1][2] = toStr(m_stat->infos[i].overhangVolume);
-		m_resultGrid->CellText[i + 1][3] = toStr(m_stat->infos[i].bottomArea);
-		m_resultGrid->CellText[i + 1][4] = toStr(m_stat->infos[i].bottomConvexHullArea);
-		m_resultGrid->CellText[i + 1][5] = toStr(m_stat->infos[i].modelHeight);
+		m_resultGrid->CellText[i + 1][0] = toStr(indexes[i] + 1);
+		m_resultGrid->CellText[i + 1][1] = toStr(m_stat->infos[indexes[i]].overhangArea);
+		m_resultGrid->CellText[i + 1][2] = toStr(m_stat->infos[indexes[i]].overhangVolume);
+		m_resultGrid->CellText[i + 1][3] = toStr(m_stat->infos[indexes[i]].bottomArea);
+		m_resultGrid->CellText[i + 1][4] = toStr(m_stat->infos[indexes[i]].bottomConvexHullArea);
+		m_resultGrid->CellText[i + 1][5] = toStr(m_stat->infos[indexes[i]].modelHeight);
 	}
 
 	m_resultGrid->UpdateParam();
@@ -231,9 +236,25 @@ void PrFindOrientation::updateHeatmap()
 
 		auto hm = m_documentData.getHighlightingManager();
 		hm->addObject(mesh);
-	} else {
-		auto hm = m_documentData.getHighlightingManager();
-		hm->cleanObjects();
 	}
+}
+
+void PrFindOrientation::updateScene()
+{
+	auto hm = m_documentData.getHighlightingManager();
+	hm->cleanObjects();
+
+	if (m_selectedOrientation && !m_isShowHeatmap) {
+		//hm->addObject(m_stat->model);
+
+		BottomContour contour = m_stat->infos[*m_selectedOrientation].bottomContour;
+		if (contour.size() >= 3) {
+			auto polyline = std::make_shared<geometry::Polyline3D>();
+			polyline->m_points = contour;
+
+			hm->addObject(polyline);
+		}
 	}
+
+	updateHeatmap();
 }

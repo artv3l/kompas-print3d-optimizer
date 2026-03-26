@@ -37,6 +37,7 @@ void* GetAnyGLFuncAddress(const char* name) {
 
 std::shared_ptr<ShaderProgram> HighlightingManager::s_shaderProgram = nullptr;
 std::shared_ptr<ShaderProgram> HighlightingManager::s_shaderOrientationEvalMesh = nullptr;
+std::shared_ptr<ShaderProgram> HighlightingManager::s_shaderPolyline = nullptr;
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
@@ -53,7 +54,8 @@ DrawableMesh::DrawableMesh(std::shared_ptr<geometry::IObject> object, std::share
         vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
         m_vao.addVertexBuffer(vb);
         m_count = coloredMesh->indexes.size();
-    } /*else if (geometry::Polygon* polyline = dynamic_cast<geometry::Polygon*>(object.get())) {
+        m_mode = GL_TRIANGLES;
+    } else if (geometry::Polyline3D* polyline = dynamic_cast<geometry::Polyline3D*>(object.get())) {
         VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
             polyline->m_points.data(),
             static_cast<GLsizeiptr>(polyline->m_points.size() * sizeof(glm::vec3))
@@ -61,12 +63,13 @@ DrawableMesh::DrawableMesh(std::shared_ptr<geometry::IObject> object, std::share
         vb->addLayout(Layout{ 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
         m_vao.addVertexBuffer(vb);
         m_count = polyline->m_points.size();
-    }*/
+        m_mode = GL_LINE_LOOP;
+    }
 }
 
 void DrawableMesh::draw() const
 {
-    m_vao.draw(GL_TRIANGLES, m_count);
+    m_vao.draw(m_mode, m_count);
 }
 
 HighlightingManager::HighlightingManager(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d, Settings* settings) :
@@ -110,8 +113,11 @@ void HighlightingManager::refreshWindow() const {
 void HighlightingManager::addObject(std::shared_ptr<geometry::IObject> object)
 {
     std::shared_ptr<ShaderProgram> prog;
-    if (ColoredMesh* coloredMesh = dynamic_cast<ColoredMesh*>(object.get()))
+    if (dynamic_cast<ColoredMesh*>(object.get()))
         prog = s_shaderOrientationEvalMesh;
+    else if (dynamic_cast<geometry::Polyline3D*>(object.get())) {
+        prog = s_shaderPolyline;
+    }
     
     m_objects.emplace_back(object, prog);
 }
@@ -124,6 +130,7 @@ void HighlightingManager::cleanObjects()
 void HighlightingManager::initShaders() {
     s_shaderProgram = std::make_shared<ShaderProgram>(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
     s_shaderOrientationEvalMesh = std::make_shared<ShaderProgram>(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION);
+    s_shaderPolyline = std::make_shared<ShaderProgram>(POLYLINE_VERT_SHADER_CODE, POLYLINE_FRAG_SHADER_CODE);
 }
 
 kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d) {
@@ -149,6 +156,7 @@ bool HighlightingManager::closeFrame() {
     if (s_framesCount == 0) {
         s_shaderProgram = nullptr;
         s_shaderOrientationEvalMesh = nullptr;
+        s_shaderPolyline = nullptr;
     }
     global::documentsManager->remove(m_document3d);
     return true;

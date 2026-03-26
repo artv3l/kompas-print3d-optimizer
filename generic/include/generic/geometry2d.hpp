@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <vector>
 
 namespace geometry
@@ -28,5 +30,13 @@ public:
 	double area() const;
 
 	std::vector<Vector2D> m_points;
+};
+
+class Polyline3D : public IObject
+{
+public:
+	~Polyline3D() override = default;
+
+	std::vector<glm::vec3> m_points;
 };
 }

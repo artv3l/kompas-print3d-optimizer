@@ -1,5 +1,4 @@
-#ifndef SHADERS_HPP
-#define SHADERS_HPP
+#pragma once
 
 #include <string>
 
@@ -175,4 +174,25 @@ void main() {
 
 )glsl";
 
-#endif /* SHADERS_HPP */
+inline const std::string POLYLINE_VERT_SHADER_CODE = R"glsl(
+#version 330
+
+layout (location = 0) in vec3 a_position;
+
+uniform mat4 u_modelview;
+uniform mat4 u_projection;
+
+void main() {
+    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
+}
+)glsl";
+
+inline const std::string POLYLINE_FRAG_SHADER_CODE = R"glsl(
+#version 330
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+)glsl";
