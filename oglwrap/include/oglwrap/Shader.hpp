@@ -30,11 +30,11 @@ class ShaderProgram {
 public:
     ShaderProgram(std::string vertexSrc, std::string fragmentSrc);
     ShaderProgram(const ShaderProgram& obj) = delete;
-    ShaderProgram(ShaderProgram&& obj) noexcept = delete;
+    ShaderProgram(ShaderProgram&& obj) noexcept = default;
     ~ShaderProgram();
 
     ShaderProgram& operator=(const ShaderProgram& obj) = delete;
-    ShaderProgram& operator=(ShaderProgram&& obj) noexcept = delete;
+    ShaderProgram& operator=(ShaderProgram&& obj) noexcept = default;
 
     void use() const;
     void setUniform(const std::string& name, float value) const;

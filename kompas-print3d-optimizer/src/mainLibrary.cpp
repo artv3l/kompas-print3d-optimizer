@@ -92,6 +92,15 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     }
 
     if (comm >= 30) { // Подсветка элементов
+
+        // TODO Не работает отключение подсветок
+
+        kapi::ksPartPtr part = document3d->GetPart(kapi::Part_Type::pTop_Part);
+        kapi::ksBodyPtr body = part->GetMainBody();
+        auto mesh = std::make_shared<Mesh>(copyToMesh(body));
+        highlightingManager->cleanObjects();
+        highlightingManager->addObject(mesh, Visualizer::meshHighlight3dp);
+
         switch (comm) {
         case 30:
             highlightingManager->toggleMode(HighlightingManager::Mode::layersEverywhere);

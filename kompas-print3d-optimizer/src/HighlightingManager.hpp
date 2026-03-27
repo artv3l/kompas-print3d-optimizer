@@ -11,13 +11,21 @@
 
 class Settings;
 
+// Р РµР¶РёРј РІРёР·СѓР°Р»РёР·Р°С†РёРё РјРѕРґРµР»Рё. РџРѕ СЃСѓС‚Рё С€РµР№РґРµСЂРЅР°СЏ РїСЂРѕРіСЂР°РјРјР°
+enum class Visualizer : uint8_t
+{
+    meshHighlight3dp, // РЎРµС‚РєР° СЃ РїРѕРґСЃРІРµС‚РєР°РјРё РґР»СЏ 3D РїРµС‡Р°С‚Рё
+    colorMesh,        // Р¦РІРµС‚РЅР°СЏ СЃРµС‚РєР°
+    grayMesh,         // РЎРµС‚РєР° TODO
+    polyline,         // РџРѕР»РёР»РёРЅРёСЏ
+};
+
 class DrawableMesh
 {
 public:
-    DrawableMesh(std::shared_ptr<geometry::IObject> object, std::shared_ptr<ShaderProgram> shaderProgram);
+    DrawableMesh(std::shared_ptr<geometry::IObject> object);
     virtual ~DrawableMesh() = default;
     void draw() const;
-    std::shared_ptr<ShaderProgram> m_shaderProgram;
 protected:
     VertexArray m_vao;
     size_t m_count; // РљРѕР»-РІРѕ РёРЅРґРµРєСЃРѕРІ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё
@@ -38,7 +46,7 @@ public:
     void toggleMode(Mode mode);
     void refreshWindow() const;
 
-    void addObject(std::shared_ptr<geometry::IObject> object);
+    void addObject(std::shared_ptr<geometry::IObject> object, Visualizer visualizer);
     void cleanObjects();
 
 private:
@@ -47,12 +55,10 @@ private:
     uint8_t m_mode;
     glm::vec2 m_mouseCoord;
 
-    std::vector<DrawableMesh> m_objects;
+    std::unordered_map<Visualizer, std::vector<DrawableMesh>> m_objects;
 
 private: /* static */
-    static std::shared_ptr<ShaderProgram> s_shaderProgram;
-    static std::shared_ptr<ShaderProgram> s_shaderOrientationEvalMesh;
-    static std::shared_ptr<ShaderProgram> s_shaderPolyline;
+    static std::unordered_map<Visualizer, ShaderProgram> m_shaders;
     static bool s_isGladInited;
     static short s_framesCount;
     

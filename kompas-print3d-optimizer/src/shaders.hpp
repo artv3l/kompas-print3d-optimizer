@@ -196,3 +196,67 @@ void main() {
     FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 )glsl";
+
+inline const std::string grayMesh_vert = R"glsl(
+#version 330
+
+layout (location = 0) in vec3 a_position;
+layout (location = 1) in vec3 a_normal;
+
+uniform mat4 u_modelview;
+uniform mat4 u_projection;
+
+out vec3 normal;
+
+void main() {
+    normal = a_normal;
+
+    gl_Position = u_projection * u_modelview * vec4(a_position, 1.0f);
+}
+)glsl";
+
+inline const std::string grayMesh_frag = R"glsl(
+#version 330
+
+struct Light {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+};
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+};
+
+const Light c_defaultLight = Light(
+    vec3(0.3f, -0.3f, -1.0f),
+    vec3(0.2f, 0.2f, 0.2f),
+    vec3(0.5f, 0.5f, 0.5f)
+);
+
+const Material c_defaultMaterial = Material(
+    vec3(0.8f, 0.8f, 0.8f),
+    vec3(0.8f, 0.8f, 0.8f)
+);
+
+in vec3 normal;
+
+uniform mat4 u_modelview;
+
+out vec4 FragColor;
+
+void main() {
+    // ambient
+    vec3 ambient = c_defaultLight.ambient * c_defaultMaterial.ambient;
+
+    // diffuse
+    mat3 normalMatrix = mat3(transpose(inverse(u_modelview)));
+    vec3 norm = normalize(normalMatrix * normal);
+    vec3 lightDir = normalize(-c_defaultLight.direction);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = c_defaultLight.diffuse * (diff * c_defaultMaterial.diffuse);
+
+    FragColor = vec4(ambient + diffuse, 1.0f);
+}
+)glsl";

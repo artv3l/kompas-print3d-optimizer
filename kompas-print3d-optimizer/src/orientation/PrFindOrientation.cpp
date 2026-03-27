@@ -33,6 +33,7 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 	m_propertyManager->Caption = L"Поиск плоскости печати";
 
 	m_overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
+	m_bottomThreshold = 0.2;
 
 	initControls();
 	updateControls();
@@ -105,7 +106,8 @@ void PrFindOrientation::initControls()
 		m_ctrls.overhangThreshold = createSettingEdit(m_controls, si::overhangThreshold, kapi::ControlTypeEnum::ksControlEditInt, "Максимальный угол нависаний");
 	}
 	{
-		m_ctrls.bottomThreshold = m_controls->Add(kapi::ControlTypeEnum::ksControlEditInt);
+		m_ctrls.bottomThreshold = m_controls->Add(kapi::ControlTypeEnum::ksControlEditReal);
+		m_ctrls.bottomThreshold->Name = "Погрешность нижней повехрности";
 	}
 	{
 		m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
@@ -174,7 +176,7 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 
 	m_resultGrid->RowCount = indexes.size() + 1;
 	for (size_t i = 0; i < indexes.size(); ++i) {
-		m_resultGrid->CellText[i + 1][0] = toStr(indexes[i] + 1);
+		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
 		m_resultGrid->CellText[i + 1][1] = toStr(m_stat->infos[indexes[i]].overhangArea);
 		m_resultGrid->CellText[i + 1][2] = toStr(m_stat->infos[indexes[i]].overhangVolume);
 		m_resultGrid->CellText[i + 1][3] = toStr(m_stat->infos[indexes[i]].bottomArea);
@@ -235,7 +237,7 @@ void PrFindOrientation::updateHeatmap()
 		}
 
 		auto hm = m_documentData.getHighlightingManager();
-		hm->addObject(mesh);
+		hm->addObject(mesh, Visualizer::colorMesh);
 	}
 }
 
@@ -245,14 +247,14 @@ void PrFindOrientation::updateScene()
 	hm->cleanObjects();
 
 	if (m_selectedOrientation && !m_isShowHeatmap) {
-		//hm->addObject(m_stat->model);
+		hm->addObject(m_stat->model, Visualizer::grayMesh);
 
 		BottomContour contour = m_stat->infos[*m_selectedOrientation].bottomContour;
 		if (contour.size() >= 3) {
 			auto polyline = std::make_shared<geometry::Polyline3D>();
 			polyline->m_points = contour;
 
-			hm->addObject(polyline);
+			hm->addObject(polyline, Visualizer::polyline);
 		}
 	}
 
