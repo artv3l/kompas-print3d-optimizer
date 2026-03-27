@@ -43,7 +43,7 @@ private:
 	bool m_isShowHeatmap = false;
 	double m_overhangThreshold = 0.0;
 	double m_bottomThreshold = 0.0;
-	std::optional<size_t> m_selectedOrientation = 0;
+	size_t m_currentGridRow = 0; // 0 - СЃС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
 	std::vector<size_t> m_orientationsInGrid;
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;

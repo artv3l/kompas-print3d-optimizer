@@ -94,7 +94,8 @@ bool PrFindOrientation::selectItem(IDispatch* control, long index, bool select)
 	const int row = static_cast<int>(index & 0xFFFF);
 	const int column = static_cast<int>(index >> 16);
 
-	m_selectedOrientation = (row == 0) ? std::nullopt : std::make_optional(m_orientationsInGrid[row - 1]);
+	m_currentGridRow = m_resultGrid->CurrentRow;
+	
 	updateScene();
 
 	return false;
@@ -184,60 +185,71 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 		m_resultGrid->CellText[i + 1][5] = toStr(m_stat->infos[indexes[i]].modelHeight);
 	}
 
+	m_resultGrid->CurrentRow = m_currentGridRow;
+
 	m_resultGrid->UpdateParam();
 }
 
 void PrFindOrientation::updateHeatmap()
 {
-	if (m_isShowHeatmap && m_stat) {
+	if (!m_isShowHeatmap || !m_stat)
+		return;
 
-		std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
+	std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
 
-		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
-		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
-		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
+	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
+	const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
+	auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
 
-		// value [0, 1] -> HSV color
-		auto toColor = [&toHeatmap](double value) -> glm::vec3
+	// value [0, 1] -> HSV color
+	auto toColor = [&toHeatmap](double value) -> glm::vec3
+	{
+		color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
+		return glm::vec3(rgb.red, rgb.green, rgb.blue);
+	};
+
+	if (m_criteria == OrientationComplexCriteria::overhangs) {
+		auto overhangs = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
+		std::ranges::transform(overhangs, colors.begin(), toColor);
+	} else if (m_criteria == OrientationComplexCriteria::bottomQuality) {
+		auto bottomAreas = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
+		std::ranges::transform(bottomAreas, colors.begin(), toColor);
+	} else if (m_criteria == OrientationComplexCriteria::common) {
+
+	}
+
+	auto mesh = std::make_shared<ColoredMesh>();
+	mesh->positions = m_stat->evalMesh.positions;
+	mesh->normals = m_stat->evalMesh.normals;
+	mesh->indexes = m_stat->evalMesh.indexes;
+	mesh->colors = colors;
+
+	// Масштабирование икосферы по габариту детали
+	kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
+	kapi::ksBodyPtr body = checkPtr(part)->GetMainBody();
+	const geometry::Gabarit3D gabarit = getGabarit(body);
+	const geometry::Vector3D center = gabarit.center();
+	const double radius = std::max(std::max(gabarit.x.length(), gabarit.y.length()), gabarit.z.length()) / 2.0;
+
+	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x, center.y, center.z));
+	matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
+	std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
 		{
-			color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
-			return glm::vec3(rgb.red, rgb.green, rgb.blue);
-		};
+			glm::vec4 res = matrix * glm::vec4(pos, 1.0);
+			return glm::vec3(res.x, res.y, res.z);
+		});
+	
+	auto hm = m_documentData.getHighlightingManager();
+	hm->addObject(mesh, Visualizer::colorMesh);
 
-		if (m_criteria == OrientationComplexCriteria::overhangs) {
-			auto overhangs = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
-			std::ranges::transform(overhangs, colors.begin(), toColor);
-		} else if (m_criteria == OrientationComplexCriteria::bottomQuality) {
-			auto bottomAreas = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
-			std::ranges::transform(bottomAreas, colors.begin(), toColor);
-		} else if (m_criteria == OrientationComplexCriteria::common) {
+	if (m_currentGridRow != 0) {
+		const glm::vec3 point = mesh->positions[m_orientationsInGrid[m_currentGridRow - 1]];
+		const glm::vec3 normal = glm::normalize(mesh->normals[m_orientationsInGrid[m_currentGridRow - 1]]);
+		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
-		}
-
-		auto mesh = std::make_shared<ColoredMesh>();
-		mesh->positions = m_stat->evalMesh.positions;
-		mesh->normals = m_stat->evalMesh.normals;
-		mesh->indexes = m_stat->evalMesh.indexes;
-		mesh->colors = colors;
-
-		{
-			kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-			kapi::ksBodyPtr body = checkPtr(part)->GetMainBody();
-			const geometry::Gabarit3D gabarit = getGabarit(body);
-			const geometry::Vector3D center = gabarit.center();
-			const double radius = std::max(std::max(gabarit.x.length(), gabarit.y.length()), gabarit.z.length()) / 2.0;
-
-			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x, center.y, center.z));
-			matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
-			std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
-				{
-					glm::vec4 res = matrix * glm::vec4(pos, 1.0);
-					return glm::vec3(res.x, res.y, res.z);
-				});
-		}
-
-		auto hm = m_documentData.getHighlightingManager();
-		hm->addObject(mesh, Visualizer::colorMesh);
+		auto line = std::make_shared<geometry::Polyline3D>();
+		line->m_points = { point, point2 };
+		hm->addObject(line, Visualizer::polyline);
 	}
 }
 
@@ -246,10 +258,10 @@ void PrFindOrientation::updateScene()
 	auto hm = m_documentData.getHighlightingManager();
 	hm->cleanObjects();
 
-	if (m_selectedOrientation && !m_isShowHeatmap) {
+	if (m_currentGridRow != 0 && !m_isShowHeatmap) {
 		hm->addObject(m_stat->model, Visualizer::grayMesh);
 
-		BottomContour contour = m_stat->infos[*m_selectedOrientation].bottomContour;
+		BottomContour contour = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {
 			auto polyline = std::make_shared<geometry::Polyline3D>();
 			polyline->m_points = contour;
