@@ -125,6 +125,8 @@ OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction
 	std::vector<glm::vec2> convexHullPoints;
 	convexHullPoints.reserve(mesh.positions.size());
 
+	info.triangleProperties.resize(mesh.indexes.size() / 3);
+
 	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
 		const size_t i1 = mesh.indexes[iIndex];
 		const size_t i2 = mesh.indexes[iIndex + 1];
@@ -138,11 +140,13 @@ OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction
 
 		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
 			info.bottomArea += triangleArea;
+			info.triangleProperties[iIndex / 3] = TriangleProperties::bottom;
 		}
 		else if (angleRad < overhangThresholdRad) {
 			// Площадь под мостами тоже считаем за площадь нависаний
 			info.overhangArea += triangleArea;
 		    info.overhangVolume += volumeUnderOverhang(printPlane, triangle);
+			info.triangleProperties[iIndex / 3] = TriangleProperties::overhang;
 		}
 
 		for (auto&& pnt : triangle.points) {
@@ -293,8 +297,16 @@ std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const g
 
 OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold)
 {
+	Mesh mesh = copyToMesh(body);
+
 	OrientationStatByMesh result;
-	result.model = std::make_shared<Mesh>(copyToMesh(body));
+	
+	result.model = std::make_shared<ColoredMesh>();
+	result.model->positions = std::move(mesh.positions);
+	result.model->normals = std::move(mesh.normals);
+	result.model->indexes = std::move(mesh.indexes);
+	result.model->colors = std::vector<glm::vec3>(result.model->positions.size(), glm::vec3(0.8f, 0.8f, 0.8f));
+
 	result.evalMesh = generateIcosphere();
 	result.infos = calcOrientationsEstimation(*result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
 	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
@@ -314,4 +326,28 @@ std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria c
 	std::ranges::partial_sort(indexes, indexes.begin() + count, {}, indexToElem);
 
 	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
+}
+
+void OrientationStatByMesh::updateMeshColors(size_t index)
+{
+	const auto& props = infos[index].triangleProperties;
+	assert(props.size() == (model->indexes.size() / 3));
+	
+	for (size_t i = 0; i < props.size(); ++i) {
+		const size_t i1 = model->indexes[i * 3];
+		const size_t i2 = model->indexes[i * 3 + 1];
+		const size_t i3 = model->indexes[i * 3 + 2];
+
+		glm::vec3 color(0.8f, 0.8f, 0.8f);
+		if (props[i] == TriangleProperties::overhang) {
+			color = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+		else if (props[i] == TriangleProperties::bottom) {
+			color = glm::vec3(0.0f, 0.0f, 1.0f);
+		}
+
+		model->colors[i1] = color;
+		model->colors[i2] = color;
+		model->colors[i3] = color;
+	}
 }

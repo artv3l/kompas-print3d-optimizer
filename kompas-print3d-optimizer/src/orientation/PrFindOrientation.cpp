@@ -259,7 +259,8 @@ void PrFindOrientation::updateScene()
 	hm->cleanObjects();
 
 	if (m_currentGridRow != 0 && !m_isShowHeatmap) {
-		hm->addObject(m_stat->model, Visualizer::grayMesh);
+		m_stat->updateMeshColors(m_orientationsInGrid[m_currentGridRow - 1]);
+		hm->addObject(m_stat->model, Visualizer::colorMesh);
 
 		BottomContour contour = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {

@@ -39,6 +39,13 @@ enum class OrientationComplexCriteria : uint8_t
 // Контур нижней поверхности: точка, отрезок или convex_hull
 using BottomContour = std::vector<glm::vec3>;
 
+enum class TriangleProperties : uint8_t
+{
+	none,     // Обычный треугольник
+	overhang, // Нависающий
+	bottom,   // Принадлежит нижней повехрности
+};
+
 // Измерения для одной ориентации
 struct OrientationInfo final
 {
@@ -47,7 +54,8 @@ struct OrientationInfo final
 	double bottomArea = 0.0;           // Площадь нижней поверхности
 	double bottomConvexHullArea = 0.0; // Площадь выпуклого многоугольника нижней поверхности
 	double modelHeight = 0.0;          // Высота модели
-	BottomContour bottomContour;
+	BottomContour bottomContour;       // Контур нижней поверхности (convex hull)
+	std::vector<TriangleProperties> triangleProperties; // Свойства всех треугольников модели
 };
 
 /*
@@ -58,13 +66,15 @@ struct OrientationInfo final
 using OrientationComplexInfos = std::array<std::vector<double>, enums::toUnderlying(OrientationComplexCriteria::count)>;
 
 struct OrientationStatByMesh final {
-	std::shared_ptr<Mesh> model; // Оцениваемая модель
+	std::shared_ptr<ColoredMesh> model; // Оцениваемая модель
 	Mesh evalMesh; // Сетка, каждая нормаль которой это оцениваемая ориентация детали
 	std::vector<OrientationInfo> infos; // Измерения для всех ориентаций
 	OrientationComplexInfos complexInfos;
 
 	// Найти count лучших ориентаций по критерию, возвращает индексы
 	std::vector<size_t> findBest(OrientationComplexCriteria criteria, size_t count) const;
+	// Обновить закраску модели по индексу ориентации
+	void updateMeshColors(size_t index);
 };
 
 std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
