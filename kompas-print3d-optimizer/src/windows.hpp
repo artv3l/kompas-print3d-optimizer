@@ -29,3 +29,23 @@ std::pair<std::span<T>, ActionLock> getSafeArrayData(const _variant_t& variant)
 	ActionLock lock([&variant]() { SafeArrayUnaccessData(variant.parray); });
 	return std::make_pair(span, std::move(lock));
 }
+
+inline _variant_t toVariant(std::span<double> span)
+{
+    SAFEARRAYBOUND bound;
+    bound.lLbound = 0;
+    bound.cElements = span.size();
+
+    SAFEARRAY* sa = SafeArrayCreate(VT_R8, 1, &bound);
+
+    double* data = nullptr;
+    SafeArrayAccessData(sa, (void**)&data);
+    std::ranges::copy(span, data);
+    SafeArrayUnaccessData(sa);
+
+    _variant_t var;
+    var.vt = VT_ARRAY | VT_R8;
+    var.parray = sa;
+
+    return var;
+}

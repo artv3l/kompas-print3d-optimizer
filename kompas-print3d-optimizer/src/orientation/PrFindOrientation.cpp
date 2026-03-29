@@ -12,6 +12,8 @@
 #include "generic/color.hpp"
 #include "utils.hpp"
 #include "settings/SettingsManager.hpp"
+#include "global.hpp"
+#include "windows.hpp"
 
 namespace
 {
@@ -20,6 +22,28 @@ const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metric
 	{OrientationComplexCriteria::bottomQuality, L"Нижняя поверхность"},
 	{OrientationComplexCriteria::common, L"Общий"}
 };
+
+void createLocalCS(kapi::ksPartPtr part, const math::Plane & plane)
+{
+	kapi::IPart7Ptr part7 = global::kompas->TransferInterface(part, kapi::ksAPITypeEnum::ksAPI7Dual, 0);
+	kapi::IAuxiliaryGeomContainerPtr auxGeomCont(part7);
+	kapi::ILocalCoordinateSystemsPtr localCSs(auxGeomCont->LocalCoordinateSystems);
+
+	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
+		math::project(glm::vec3(0, 0, 0), plane), plane.getNormal());
+	const glm::mat4 matrix = printPlanePlacement.matrixToWorld();
+
+	std::vector<double> matrixVector;
+	for (size_t row = 0; row < 4; ++row) {
+		for (size_t col = 0; col < 4; ++col) {
+			matrixVector.push_back(static_cast<double>(matrix[row][col]));
+		}
+	}
+
+	kapi::ILocalCoordinateSystemPtr localCS(localCSs->Add());
+	localCS->InitByMatrix3D(toVariant(matrixVector));
+	localCS->Update();
+}
 }
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
@@ -46,9 +70,19 @@ bool PrFindOrientation::buttonClick(long buttonId)
 
 	switch (buttonId) {
 	case kapi::SpecPropertyButtonEnum::pbEnter:
+	{
 		// TODO Синхронизация максимального угла нависаний с переменными
+
+		// Создание ЛСК плоскости печати
+		const glm::vec3 normal = m_stat->evalMesh.normals[m_orientationsInGrid[m_currentGridRow - 1]];
+		const glm::vec3 point = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour[0];
+		const math::Plane plane(normal, point);
+		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
+		createLocalCS(part, plane);
+
 		hide();
 		break;
+	}
 	case kapi::SpecPropertyButtonEnum::pbHelp:
 		break;
 	case kapi::SpecPropertyButtonEnum::pbEsc:
@@ -95,7 +129,9 @@ bool PrFindOrientation::selectItem(IDispatch* control, long index, bool select)
 	const int column = static_cast<int>(index >> 16);
 
 	m_currentGridRow = m_resultGrid->CurrentRow;
-	
+
+	m_propertyManager->SpecToolbar = (m_currentGridRow != 0) ? kapi::SpecPropertyToolBarEnum::pnEnterEscHelp : kapi::SpecPropertyToolBarEnum::pnEscHelp;
+
 	updateScene();
 
 	return false;
