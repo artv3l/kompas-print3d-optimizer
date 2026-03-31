@@ -58,6 +58,7 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 
 	m_overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
 	m_bottomThreshold = 0.2;
+	m_resultCount = 5;
 
 	initControls();
 	updateControls();
@@ -105,6 +106,7 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 
 	m_overhangThreshold = m_ctrls.overhangThreshold->Value;
 	m_bottomThreshold = m_ctrls.bottomThreshold->Value;
+	m_resultCount = m_ctrls.resultCount->Value;
 
 	updateControls();
 
@@ -165,6 +167,10 @@ void PrFindOrientation::initControls()
 		m_visualizeCheckBox->Name = L"Показывать тепловую карту";
 	}
 	{
+		m_ctrls.resultCount = m_controls->Add(kapi::ControlTypeEnum::ksControlEditReal);
+		m_ctrls.resultCount->Name = "Кол-во вариантов ориентаций";
+	}
+	{
 		m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
 		m_resultGrid->Name = L"Результаты";
 		m_resultGrid->ColumnCount = 6;
@@ -185,16 +191,19 @@ void PrFindOrientation::updateControls()
 	if (m_stat) {
 		m_metricsList->Visible = true;
 		m_visualizeCheckBox->Visible = true;
+		m_ctrls.resultCount->Visible = true;
 		m_resultGrid->Visible = true;
 
 		m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
 		m_visualizeCheckBox->Value = m_isShowHeatmap;
-		m_orientationsInGrid = m_stat->findBest(m_criteria, 5);
+		m_ctrls.resultCount->Value = m_resultCount;
+		m_orientationsInGrid = m_stat->findBest(m_criteria, m_resultCount);
 		refillGrid(m_orientationsInGrid);
 		updateHeatmap();
 	} else {
 		m_metricsList->Visible = false;
 		m_visualizeCheckBox->Visible = false;
+		m_ctrls.resultCount->Visible = false;
 		m_resultGrid->Visible = false;
 	}
 }

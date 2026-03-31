@@ -32,6 +32,7 @@ private:
 	{
 		kapi::IPropertyEditPtr overhangThreshold;
 		kapi::IPropertyEditPtr bottomThreshold;
+		kapi::IPropertyEditPtr resultCount;
 	} m_ctrls;
 
 	kapi::IPropertyListPtr m_metricsList;
@@ -45,6 +46,7 @@ private:
 	double m_bottomThreshold = 0.0;
 	size_t m_currentGridRow = 0; // 0 - СЃС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
 	std::vector<size_t> m_orientationsInGrid;
+	size_t m_resultCount = 0; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;
 };
