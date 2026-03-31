@@ -5,6 +5,14 @@
 #include "kapiwrap/PropertyManagerObject.hpp"
 #include "settings/DocumentData.hpp"
 
+enum class Accuracy : uint8_t
+{
+	low,
+	medium,
+	high,
+	count
+};
+
 class PrFindOrientation : public PropertyManagerObject
 {
 public:
@@ -33,6 +41,7 @@ private:
 		kapi::IPropertyEditPtr overhangThreshold;
 		kapi::IPropertyEditPtr bottomThreshold;
 		kapi::IPropertyEditPtr resultCount;
+		kapi::IPropertyListPtr accuracy;
 	} m_ctrls;
 
 	kapi::IPropertyListPtr m_metricsList;
@@ -47,6 +56,7 @@ private:
 	size_t m_currentGridRow = 0; // 0 - СЃС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
 	std::vector<size_t> m_orientationsInGrid;
 	size_t m_resultCount = 0; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ
+	Accuracy m_accuracy;
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;
 };

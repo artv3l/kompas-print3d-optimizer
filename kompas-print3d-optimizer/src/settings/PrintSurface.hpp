@@ -79,7 +79,7 @@ struct OrientationStatByMesh final {
 
 std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& planeEq);
 PrintSurface getSelectedPrintSurface(kapi::ksDocument3DPtr document3d);
-OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold);
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold, size_t subdivisionsCount);
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
 Mesh copyToMesh(kapi::ksBodyPtr body);
 

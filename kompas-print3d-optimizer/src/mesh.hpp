@@ -8,5 +8,5 @@
 #include "oglwrap/Mesh.hpp"
 #include "generic/geometry2d.hpp"
 
-Mesh generateIcosphere();
+Mesh generateIcosphere(size_t subdivisionsCount);
 geometry::Polygon convexHull(std::span<glm::vec2> points);

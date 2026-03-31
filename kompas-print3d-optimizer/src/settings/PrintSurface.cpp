@@ -295,7 +295,7 @@ std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const g
 	return std::make_pair(printPlane, math::distance(*max, printPlane));
 }
 
-OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold)
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold, size_t subdivisionsCount)
 {
 	Mesh mesh = copyToMesh(body);
 
@@ -307,7 +307,7 @@ OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double ove
 	result.model->indexes = std::move(mesh.indexes);
 	result.model->colors = std::vector<glm::vec3>(result.model->positions.size(), glm::vec3(0.8f, 0.8f, 0.8f));
 
-	result.evalMesh = generateIcosphere();
+	result.evalMesh = generateIcosphere(subdivisionsCount);
 	result.infos = calcOrientationsEstimation(*result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
 	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
 	return result;

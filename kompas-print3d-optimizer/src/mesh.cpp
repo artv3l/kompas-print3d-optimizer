@@ -10,9 +10,9 @@
 #include <Magnum/Magnum.h>
 #include <Magnum/Math/Vector3.h>
 
-Mesh generateIcosphere()
+Mesh generateIcosphere(size_t subdivisionsCount)
 {
-    auto icosphere = Magnum::Primitives::icosphereSolid(2);
+    auto icosphere = Magnum::Primitives::icosphereSolid(subdivisionsCount);
     
     auto positions = icosphere.positions3DAsArray();
     auto normals = icosphere.normalsAsArray();

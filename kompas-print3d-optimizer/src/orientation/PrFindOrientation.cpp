@@ -17,6 +17,17 @@
 
 namespace
 {
+const std::unordered_map<Accuracy, std::wstring_view> c_accuracyNames = {
+	{Accuracy::low, L"Низкая"},
+	{Accuracy::medium, L"Средняя"},
+	{Accuracy::high, L"Высокая"}
+};
+
+size_t getSubdivisionsCount(Accuracy accuracy)
+{
+	return enums::toUnderlying(accuracy) + 1;
+}
+
 const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metricNames = {
 	{OrientationComplexCriteria::overhangs, L"Количество поддержек"},
 	{OrientationComplexCriteria::bottomQuality, L"Нижняя поверхность"},
@@ -59,6 +70,7 @@ PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData&
 	m_overhangThreshold = m_documentData.getSettings()->getDoubleSetting(si::overhangThreshold.name)->getValue();
 	m_bottomThreshold = 0.2;
 	m_resultCount = 5;
+	m_accuracy = Accuracy::medium;
 
 	initControls();
 	updateControls();
@@ -101,6 +113,12 @@ bool PrFindOrientation::changeControlValue(IDispatch* control)
 			break;
 		}
 	}
+	for (size_t i = 0; i < enums::toUnderlying(Accuracy::count); ++i) {
+		if (static_cast<_bstr_t>(m_ctrls.accuracy->Value) == _bstr_t(c_accuracyNames.at(static_cast<Accuracy>(i)).data())) {
+			m_accuracy = static_cast<Accuracy>(i);
+			break;
+		}
+	}
 
 	m_isShowHeatmap = static_cast<bool>(m_visualizeCheckBox->Value);
 
@@ -117,7 +135,9 @@ bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
 {
 	if (buttonId == m_recalcButton->Id) {
 		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(), m_overhangThreshold, m_bottomThreshold));
+		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(),
+			m_overhangThreshold, m_bottomThreshold, getSubdivisionsCount(m_accuracy)
+		));
 
 		updateControls();
 	}
@@ -147,6 +167,15 @@ void PrFindOrientation::initControls()
 	{
 		m_ctrls.bottomThreshold = m_controls->Add(kapi::ControlTypeEnum::ksControlEditReal);
 		m_ctrls.bottomThreshold->Name = "Погрешность нижней повехрности";
+	}
+	{
+		m_ctrls.accuracy = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
+		m_ctrls.accuracy->Name = L"Точность";
+		m_ctrls.accuracy->ReadOnly = true;
+
+		for (size_t i = 0; i < enums::toUnderlying(Accuracy::count); ++i) {
+			m_ctrls.accuracy->Add(c_accuracyNames.at(static_cast<Accuracy>(i)).data());
+		}
 	}
 	{
 		m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
@@ -187,6 +216,7 @@ void PrFindOrientation::updateControls()
 {
 	m_ctrls.overhangThreshold->Value = m_overhangThreshold;
 	m_ctrls.bottomThreshold->Value = m_bottomThreshold;
+	m_ctrls.accuracy->SetCurrentByIndex(enums::toUnderlying(m_accuracy));
 
 	if (m_stat) {
 		m_metricsList->Visible = true;
