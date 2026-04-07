@@ -206,11 +206,11 @@ void PrFindOrientation::initControls()
 		m_resultGrid->Name = L"Результаты";
 		m_resultGrid->ColumnCount = 6;
 		m_resultGrid->CellText[0][0] = L"№";
-		m_resultGrid->CellText[0][1] = L"Площадь нависаний";
-		m_resultGrid->CellText[0][2] = L"Объем поддержек";
-		m_resultGrid->CellText[0][3] = L"Площадь нижней поверхности";
-		m_resultGrid->CellText[0][4] = L"Площадь выпуклого многоугольника нижней поверхности";
-		m_resultGrid->CellText[0][5] = L"Высота модели";
+		m_resultGrid->CellText[0][1] = L"S_o, мм2"; // Площадь нависаний
+		m_resultGrid->CellText[0][2] = L"V_o, мм3"; // Объем поддержек
+		m_resultGrid->CellText[0][3] = L"S_b, мм2"; // Площадь нижней поверхности
+		m_resultGrid->CellText[0][4] = L"S_ch, мм2"; // Площадь выпуклого многоугольника нижней поверхности
+		m_resultGrid->CellText[0][5] = L"H, мм"; // Высота модели
 
 		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd); /*results*/
 	}
@@ -249,19 +249,17 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 		return;
 	}
 
-	auto toStr = [](auto num)
-	{
-		return _bstr_t(std::format(L"{}", num).c_str());;
-	};
+	auto toStr_d = [](double num) { return _bstr_t(std::format("{:.2f}", num).c_str()); };
+	auto toStr_i = [](size_t num) { return _bstr_t(std::format("{}", num).c_str()); };
 
 	m_resultGrid->RowCount = indexes.size() + 1;
 	for (size_t i = 0; i < indexes.size(); ++i) {
-		m_resultGrid->CellText[i + 1][0] = toStr(i + 1);
-		m_resultGrid->CellText[i + 1][1] = toStr(m_stat->infos[indexes[i]].overhangArea);
-		m_resultGrid->CellText[i + 1][2] = toStr(m_stat->infos[indexes[i]].overhangVolume);
-		m_resultGrid->CellText[i + 1][3] = toStr(m_stat->infos[indexes[i]].bottomArea);
-		m_resultGrid->CellText[i + 1][4] = toStr(m_stat->infos[indexes[i]].bottomConvexHullArea);
-		m_resultGrid->CellText[i + 1][5] = toStr(m_stat->infos[indexes[i]].modelHeight);
+		m_resultGrid->CellText[i + 1][0] = toStr_i(i + 1);
+		m_resultGrid->CellText[i + 1][1] = toStr_d(m_stat->infos[indexes[i]].overhangArea);
+		m_resultGrid->CellText[i + 1][2] = toStr_d(m_stat->infos[indexes[i]].overhangVolume);
+		m_resultGrid->CellText[i + 1][3] = toStr_d(m_stat->infos[indexes[i]].bottomArea);
+		m_resultGrid->CellText[i + 1][4] = toStr_d(m_stat->infos[indexes[i]].bottomConvexHullArea);
+		m_resultGrid->CellText[i + 1][5] = toStr_d(m_stat->infos[indexes[i]].modelHeight);
 	}
 
 	m_resultGrid->CurrentRow = m_currentGridRow;
