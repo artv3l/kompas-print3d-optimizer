@@ -162,44 +162,46 @@ bool PrFindOrientation::selectItem(IDispatch* control, long index, bool select)
 void PrFindOrientation::initControls()
 {
 	{
+		kapi::IPropertyGroupBeginPtr settingsGroupBegin = m_controls->Add(kapi::ControlTypeEnum::ksControlGroupBegin);
+		settingsGroupBegin->Name = "Параметры";
+		settingsGroupBegin->Expanding = true;
+
 		m_ctrls.overhangThreshold = createSettingEdit(m_controls, si::overhangThreshold, kapi::ControlTypeEnum::ksControlEditInt, "Максимальный угол нависаний");
-	}
-	{
+
 		m_ctrls.bottomThreshold = m_controls->Add(kapi::ControlTypeEnum::ksControlEditReal);
 		m_ctrls.bottomThreshold->Name = "Погрешность нижней повехрности";
-	}
-	{
+
 		m_ctrls.accuracy = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
 		m_ctrls.accuracy->Name = L"Точность";
 		m_ctrls.accuracy->ReadOnly = true;
-
 		for (size_t i = 0; i < enums::toUnderlying(Accuracy::count); ++i) {
 			m_ctrls.accuracy->Add(c_accuracyNames.at(static_cast<Accuracy>(i)).data());
 		}
-	}
-	{
+
 		m_recalcButton = m_controls->Add(kapi::ControlTypeEnum::ksControlTextButton);
 		m_recalcButton->Id = 1;
 		m_recalcButton->Name = L"Рассчитать";
+
+		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd); /*settings*/
 	}
 	{
+		kapi::IPropertyGroupBeginPtr resultsGroupBegin = m_controls->Add(kapi::ControlTypeEnum::ksControlGroupBegin);
+		resultsGroupBegin->Name = "Результаты";
+		resultsGroupBegin->Expanding = true;
+
 		m_metricsList = m_controls->Add(kapi::ControlTypeEnum::ksControlListStr);
 		m_metricsList->Name = L"Метрика";
 		m_metricsList->ReadOnly = true;
-
 		for (size_t i = 0; i < enums::toUnderlying(OrientationComplexCriteria::count); ++i) {
 			m_metricsList->Add(c_metricNames.at(static_cast<OrientationComplexCriteria>(i)).data());
 		}
-	}
-	{
+
 		m_visualizeCheckBox = m_controls->Add(kapi::ControlTypeEnum::ksControlCheckBox);
 		m_visualizeCheckBox->Name = L"Показывать тепловую карту";
-	}
-	{
+
 		m_ctrls.resultCount = m_controls->Add(kapi::ControlTypeEnum::ksControlEditReal);
 		m_ctrls.resultCount->Name = "Кол-во вариантов ориентаций";
-	}
-	{
+
 		m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
 		m_resultGrid->Name = L"Результаты";
 		m_resultGrid->ColumnCount = 6;
@@ -209,6 +211,8 @@ void PrFindOrientation::initControls()
 		m_resultGrid->CellText[0][3] = L"Площадь нижней поверхности";
 		m_resultGrid->CellText[0][4] = L"Площадь выпуклого многоугольника нижней поверхности";
 		m_resultGrid->CellText[0][5] = L"Высота модели";
+
+		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd); /*results*/
 	}
 }
 
