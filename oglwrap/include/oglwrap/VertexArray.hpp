@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-#include "ActionLock.hpp"
+#include "generic/ActionLock.hpp"
 #include "VertexBuffer.hpp"
 #include "Mesh.hpp"
 

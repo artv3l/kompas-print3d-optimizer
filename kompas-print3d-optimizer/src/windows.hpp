@@ -5,7 +5,7 @@
 
 #include <comutil.h>
 
-#include <oglwrap/ActionLock.hpp>
+#include <generic/ActionLock.hpp>
 
 template <typename T>
 std::pair<std::span<T>, ActionLock> getSafeArrayData(const _variant_t& variant)
