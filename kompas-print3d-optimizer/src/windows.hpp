@@ -34,7 +34,7 @@ inline _variant_t toVariant(std::span<double> span)
 {
     SAFEARRAYBOUND bound;
     bound.lLbound = 0;
-    bound.cElements = span.size();
+    bound.cElements = static_cast<ULONG>(span.size());
 
     SAFEARRAY* sa = SafeArrayCreate(VT_R8, 1, &bound);
 

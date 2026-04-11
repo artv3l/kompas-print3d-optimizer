@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <format>
 #include <ranges>
+#include <numeric>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,7 +24,7 @@ const std::unordered_map<Accuracy, std::wstring_view> c_accuracyNames = {
 	{Accuracy::high, L"Высокая"}
 };
 
-size_t getSubdivisionsCount(Accuracy accuracy)
+uint8_t getSubdivisionsCount(Accuracy accuracy)
 {
 	return enums::toUnderlying(accuracy) + 1;
 }
@@ -45,8 +46,8 @@ void createLocalCS(kapi::ksPartPtr part, const math::Plane & plane)
 	const glm::mat4 matrix = printPlanePlacement.matrixToWorld();
 
 	std::vector<double> matrixVector;
-	for (size_t row = 0; row < 4; ++row) {
-		for (size_t col = 0; col < 4; ++col) {
+	for (uint8_t row = 0; row < 4; ++row) {
+		for (uint8_t col = 0; col < 4; ++col) {
 			matrixVector.push_back(static_cast<double>(matrix[row][col]));
 		}
 	}
@@ -55,6 +56,191 @@ void createLocalCS(kapi::ksPartPtr part, const math::Plane & plane)
 	localCS->InitByMatrix3D(toVariant(matrixVector));
 	localCS->Update();
 }
+
+// Найти плоскость печати и высоту модели
+std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const glm::vec3& direction)
+{
+	auto toShift = [normDir = glm::normalize(direction)](const glm::vec3& vec)
+		{
+			return -glm::dot(vec, normDir);
+		};
+
+	const auto [min, max] = std::ranges::minmax_element(mesh.positions, {}, toShift);
+	if (min == mesh.positions.end() || max == mesh.positions.end())
+		throw std::logic_error(""); // TODO
+
+	const math::Plane printPlane(direction, *min);
+	return std::make_pair(printPlane, math::distance(*max, printPlane));
+}
+
+OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction, double overhangThreshold, double offsetThreshold)
+{
+	OrientationInfo info;
+
+	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
+	const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
+
+	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
+		math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
+	);
+	const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
+	const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
+
+	std::vector<glm::vec2> convexHullPoints;
+	convexHullPoints.reserve(mesh.positions.size());
+
+	info.triangleProperties.resize(mesh.indexes.size() / 3);
+
+	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
+		const size_t i1 = mesh.indexes[iIndex];
+		const size_t i2 = mesh.indexes[iIndex + 1];
+		const size_t i3 = mesh.indexes[iIndex + 2];
+		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
+
+		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
+		const glm::vec3 normal = mesh.normals[i1];
+		const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
+		const double triangleArea = triangle.area();
+
+		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
+			info.bottomArea += triangleArea;
+			info.triangleProperties[iIndex / 3] = TriangleProperties::bottom;
+		}
+		else if (angleRad < overhangThresholdRad) {
+			// Площадь под мостами тоже считаем за площадь нависаний
+			info.overhangArea += triangleArea;
+			info.overhangVolume += volumeUnderOverhang(printPlane, triangle);
+			info.triangleProperties[iIndex / 3] = TriangleProperties::overhang;
+		}
+
+		for (auto&& pnt : triangle.points) {
+			const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
+			if (std::abs(pntLocal.z) < offsetThreshold) {
+				convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
+			}
+		}
+	}
+
+	info.modelHeight = height;
+
+	if (convexHullPoints.size() >= 3) {
+		geometry::Polygon hullPolygon = convexHull(convexHullPoints);
+		info.bottomConvexHullArea = hullPolygon.area();
+
+		for (auto&& pnt : hullPolygon.m_points) {
+			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		}
+	}
+	else {
+		for (auto&& pnt : convexHullPoints) {
+			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		}
+	}
+
+	return info;
+}
+
+// Рассчитать все критерии для нескольких вариантов ориентации
+std::vector<OrientationInfo> calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
+{
+	assert(mesh.indexes.size() % 3 == 0);
+
+	std::vector<OrientationInfo> result;
+	result.resize(directions.size());
+	for (size_t i = 0; i < directions.size(); ++i) {
+		result[i] = calcOrientationInfo(mesh, directions[i], overhangThreshold, offsetThreshold);
+	}
+	return result;
+}
+
+// Преобразовать абсолюные значения в относительные [0, 1]
+template <std::ranges::range R>
+std::vector<double> toRelative(R absoluteValues, bool invert)
+{
+	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
+
+	const auto [min, max] = std::ranges::minmax_element(absoluteValues);
+	if (min == absoluteValues.end() || max == absoluteValues.end())
+		throw std::logic_error(""); // TODO
+
+	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
+	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
+
+	if (invert)
+		std::ranges::transform(relativeValues, relativeValues.begin(), [](auto value) {return 1.0 - value;});
+
+	return relativeValues;
+}
+
+// Рассчитать все составные критерии
+OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
+{
+	OrientationComplexInfos result;
+
+	// TODO
+	result[enums::toUnderlying(OrientationComplexCriteria::overhangs)] = toRelative(infos | std::views::transform(&OrientationInfo::overhangArea), false);
+	result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)] = toRelative(infos | std::views::transform(&OrientationInfo::bottomArea), true);
+	result[enums::toUnderlying(OrientationComplexCriteria::common)] = std::vector<double>(infos.size(), 0.0);
+
+	return result;
+}
+
+OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold, uint8_t subdivisionsCount)
+{
+	Mesh mesh = copyToMesh(body);
+
+	OrientationStatByMesh result;
+
+	result.model = std::make_shared<ColoredMesh>();
+	result.model->positions = std::move(mesh.positions);
+	result.model->normals = std::move(mesh.normals);
+	result.model->indexes = std::move(mesh.indexes);
+	result.model->colors = std::vector<glm::vec3>(result.model->positions.size(), glm::vec3(0.8f, 0.8f, 0.8f));
+
+	result.evalMesh = generateIcosphere(subdivisionsCount);
+	result.infos = calcOrientationsEstimation(*result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
+	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
+	return result;
+}
+}
+
+std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
+{
+	const auto& complexEstimation = complexInfos[enums::toUnderlying(criteria)];
+	std::vector<size_t> indexes(complexEstimation.size());
+	std::iota(indexes.begin(), indexes.end(), 0);
+
+	auto indexToElem = [&complexEstimation, criteria](size_t index)
+		{
+			return complexEstimation[index];
+		};
+	std::ranges::partial_sort(indexes, indexes.begin() + count, {}, indexToElem);
+
+	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
+}
+
+void OrientationStatByMesh::updateMeshColors(size_t index)
+{
+	const auto& props = infos[index].triangleProperties;
+	assert(props.size() == (model->indexes.size() / 3));
+
+	for (size_t i = 0; i < props.size(); ++i) {
+		const size_t i1 = model->indexes[i * 3];
+		const size_t i2 = model->indexes[i * 3 + 1];
+		const size_t i3 = model->indexes[i * 3 + 2];
+
+		glm::vec3 color(0.8f, 0.8f, 0.8f);
+		if (props[i] == TriangleProperties::overhang) {
+			color = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+		else if (props[i] == TriangleProperties::bottom) {
+			color = glm::vec3(0.0f, 0.0f, 1.0f);
+		}
+
+		model->colors[i1] = color;
+		model->colors[i2] = color;
+		model->colors[i3] = color;
+	}
 }
 
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
@@ -250,10 +436,10 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 	}
 
 	auto toStr_d = [](double num) { return _bstr_t(std::format("{:.2f}", num).c_str()); };
-	auto toStr_i = [](size_t num) { return _bstr_t(std::format("{}", num).c_str()); };
+	auto toStr_i = [](long num) { return _bstr_t(std::format("{}", num).c_str()); };
 
-	m_resultGrid->RowCount = indexes.size() + 1;
-	for (size_t i = 0; i < indexes.size(); ++i) {
+	m_resultGrid->RowCount = static_cast<long>(indexes.size() + 1);
+	for (long i = 0; i < indexes.size(); ++i) {
 		m_resultGrid->CellText[i + 1][0] = toStr_i(i + 1);
 		m_resultGrid->CellText[i + 1][1] = toStr_d(m_stat->infos[indexes[i]].overhangArea);
 		m_resultGrid->CellText[i + 1][2] = toStr_d(m_stat->infos[indexes[i]].overhangVolume);
@@ -262,7 +448,7 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 		m_resultGrid->CellText[i + 1][5] = toStr_d(m_stat->infos[indexes[i]].modelHeight);
 	}
 
-	m_resultGrid->CurrentRow = m_currentGridRow;
+	m_resultGrid->CurrentRow = static_cast<long>(m_currentGridRow);
 
 	m_resultGrid->UpdateParam();
 }

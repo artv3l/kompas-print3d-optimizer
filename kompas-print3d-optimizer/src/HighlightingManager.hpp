@@ -16,7 +16,6 @@ enum class Visualizer : uint8_t
 {
     meshHighlight3dp, // РЎРµС‚РєР° СЃ РїРѕРґСЃРІРµС‚РєР°РјРё РґР»СЏ 3D РїРµС‡Р°С‚Рё
     colorMesh,        // Р¦РІРµС‚РЅР°СЏ СЃРµС‚РєР°
-    grayMesh,         // РЎРµС‚РєР° TODO
     polyline,         // РџРѕР»РёР»РёРЅРёСЏ
 };
 
@@ -64,7 +63,6 @@ private: /* static */
     
     static void initShaders();
     static kapi::IDocumentFramePtr getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d);
-    static void drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace);
     
 private: /* events */
     bool activate() override;

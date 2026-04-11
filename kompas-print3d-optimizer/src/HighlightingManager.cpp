@@ -127,8 +127,6 @@ void HighlightingManager::initShaders() {
         std::forward_as_tuple(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION));
     m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::polyline),
         std::forward_as_tuple(POLYLINE_VERT_SHADER_CODE, POLYLINE_FRAG_SHADER_CODE));
-    m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::grayMesh),
-        std::forward_as_tuple(grayMesh_vert, grayMesh_frag));
 }
 
 kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d) {
@@ -136,13 +134,6 @@ kapi::IDocumentFramePtr HighlightingManager::getDocumentFrame(kapi::KompasObject
     kapi::IDocumentFramesPtr documentFrames = document7->DocumentFrames;
     kapi::IDocumentFramePtr documentFrame = documentFrames->GetItem(0);
     return documentFrame;
-}
-
-void HighlightingManager::drawTriangulation(kapi::ksPartPtr part, kapi::ksFaceDefinitionPtr printFace) {
-    kapi::ksBodyPtr body = part->GetMainBody();
-    Mesh mesh = copyToMesh(body);
-    VertexArray model(mesh);
-    model.draw(GL_TRIANGLES);
 }
 
 bool HighlightingManager::activate() {

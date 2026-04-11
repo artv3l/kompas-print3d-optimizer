@@ -10,7 +10,10 @@
 #include <Magnum/Magnum.h>
 #include <Magnum/Math/Vector3.h>
 
-Mesh generateIcosphere(size_t subdivisionsCount)
+#include "windows.hpp"
+#include "utils.hpp"
+
+Mesh generateIcosphere(uint8_t subdivisionsCount)
 {
     auto icosphere = Magnum::Primitives::icosphereSolid(subdivisionsCount);
     
@@ -63,7 +66,7 @@ double cross_product(Point O, Point A, Point B)
 // Function to return a list of points on the convex hull in counterclockwise order
 std::vector<Point> convex_hull(std::vector<Point> A)
 {
-    int n = A.size(), k = 0;
+    int n = static_cast<int>(A.size()), k = 0;
 
     // If there are 3 or fewer points, return them as the convex hull
     if (n <= 3)
@@ -115,4 +118,61 @@ geometry::Polygon convexHull(std::span<glm::vec2> points)
         polygon.setPoint(i, geometry::Vector2D(result[i].x, result[i].y));
     }
     return polygon;
+}
+
+Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
+{
+    checkPtr(tessellation);
+
+    tessellation->refresh();
+
+    _variant_t pointsVariant, indexesVariant, normalsVariant;
+    tessellation->GetFacetPoints(&pointsVariant, &indexesVariant);
+    tessellation->GetFacetNormals(&normalsVariant);
+    auto&& [points, pointsLock] = getSafeArrayData<glm::dvec3>(pointsVariant);
+    auto&& [normals, normalsLock] = getSafeArrayData<glm::dvec3>(normalsVariant);
+    auto&& [indexes, indexesLock] = getSafeArrayData<int>(indexesVariant);
+
+    auto toFloatVec = [](const glm::dvec3& dvec3) { return glm::vec3(dvec3); };
+
+    Mesh mesh;
+
+    mesh.positions.reserve(points.size());
+    std::transform(points.begin(), points.end(), std::back_inserter(mesh.positions), toFloatVec);
+
+    mesh.normals.reserve(normals.size());
+    std::transform(normals.begin(), normals.end(), std::back_inserter(mesh.normals), toFloatVec);
+
+    std::copy(indexes.begin(), indexes.end(), std::back_inserter(mesh.indexes));
+
+    return mesh;
+}
+
+Mesh copyToMesh(kapi::ksBodyPtr body)
+{
+    auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+
+    Mesh mesh;
+
+    for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace) {
+        kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
+        kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
+
+        if (iFace == 0) {
+            mesh = copyToMesh(tessellation);
+        } else {
+            Mesh faceMesh = copyToMesh(tessellation);
+            const Index pointsCount = static_cast<Index>(mesh.positions.size());
+
+            mesh.positions.insert(mesh.positions.end(), faceMesh.positions.begin(), faceMesh.positions.end());
+            mesh.normals.insert(mesh.normals.end(), faceMesh.normals.begin(), faceMesh.normals.end());
+
+            assert(mesh.positions.size() == mesh.normals.size());
+            auto ShiftIndex = std::bind(std::plus(), pointsCount, std::placeholders::_1);
+            std::ranges::transform(faceMesh.indexes, faceMesh.indexes.begin(), ShiftIndex);
+            mesh.indexes.insert(mesh.indexes.end(), faceMesh.indexes.begin(), faceMesh.indexes.end());
+        }
+    }
+
+    return mesh;
 }

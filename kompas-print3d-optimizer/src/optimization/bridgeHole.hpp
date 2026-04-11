@@ -56,8 +56,8 @@ void bridgeHoleBuildCircleDrawSketch1(Sketch sketch, kapi::ICirclePtr innerCircl
 void closeContour(kapi::ILineSegmentsPtr lineSegments, std::list<MergePointInfo> points);
 std::pair<kapi::ILinePtr, kapi::ILinePtr> drawBasicLines(Sketch sketch, kapi::ICirclePtr innerCircle, double angle);
 bool pointInsideInterval(kapi::ksMathematic2DPtr math2d, double x, double y, kapi::ILinePtr line1, kapi::ILinePtr line2);
-void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment);
-void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc);
+void processLineSegment(kapi::KompasObjectPtr kompas, Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment);
+void processArc(kapi::KompasObjectPtr kompas, Sketch1NotCircleInfo info, kapi::IArcPtr arc);
 void bridgeHoleBuildNotCircleDrawSketch1(kapi::KompasObjectPtr kompas, Sketch sketch, kapi::ICirclePtr innerCircle, BridgeHoleBuildTarget target);
 void bridgeHoleBuildDrawSketch2(kapi::KompasObjectPtr kompas, Sketch sketch, BridgeHoleBuildTarget target, int angleCount);
 kapi::ksEntityPtr buildBridgeHoles(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, std::list<BridgeHoleBuildTarget> bridgeHoleTargets, Settings& settings);

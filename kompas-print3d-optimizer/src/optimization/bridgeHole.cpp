@@ -15,7 +15,7 @@
 #include "concaveAngle.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
-#include "global.hpp"
+#include "settings/SettingInitializer.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";
@@ -507,11 +507,11 @@ bool pointInsideInterval(kapi::ksMathematic2DPtr math2d, double x, double y, kap
 	return doubleEqual(distance1 + distance2, intervalLength);
 }
 
-void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment) {
-	kapi::ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+void processLineSegment(kapi::KompasObjectPtr kompas, Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment) {
+	kapi::ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 	
-	kapi::ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
-	kapi::ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr1(kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr2(kompas->GetDynamicArray(2));
 	int res1 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line1->Reference, dynArr1);
 	int res2 = math2d->ksIntersectCurvCurv(lineSegment->Reference, info.line2->Reference, dynArr2);
 
@@ -541,9 +541,9 @@ void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSeg
 
 	kapi::ILineSegmentsPtr lineSegments(info.sketch.drawingContainer->LineSegments);
 	if ((res1 == 1) && (res2 == 1)) { // найдено 2 пересечения
-		kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
+		kapi::ksMathPointParamPtr point1 = kompas->GetParamStruct(kapi::ko_MathPointParam);
 		dynArr1->ksGetArrayItem(0, point1);
-		kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
+		kapi::ksMathPointParamPtr point2 = kompas->GetParamStruct(kapi::ko_MathPointParam);
 		dynArr2->ksGetArrayItem(0, point2);
 
 		kapi::ILineSegmentPtr newLineSegment(lineSegments->Add());
@@ -569,7 +569,7 @@ void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSeg
 			partnerIndex = 1;
 		}
 
-		kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam);
+		kapi::ksMathPointParamPtr point = kompas->GetParamStruct(kapi::ko_MathPointParam);
 		if (res1 == 1) {
 			dynArr1->ksGetArrayItem(0, point);
 		} else {
@@ -594,11 +594,11 @@ void processLineSegment(Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSeg
 	}
 }
 
-void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
-	kapi::ksMathematic2DPtr math2d = global::kompas->GetMathematic2D();
+void processArc(kapi::KompasObjectPtr kompas, Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
+	kapi::ksMathematic2DPtr math2d = kompas->GetMathematic2D();
 
-	kapi::ksDynamicArrayPtr dynArr1(global::kompas->GetDynamicArray(2));
-	kapi::ksDynamicArrayPtr dynArr2(global::kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr1(kompas->GetDynamicArray(2));
+	kapi::ksDynamicArrayPtr dynArr2(kompas->GetDynamicArray(2));
 	int res1 = math2d->ksIntersectCurvCurv(arc->Reference, info.line1->Reference, dynArr1);
 	int res2 = math2d->ksIntersectCurvCurv(arc->Reference, info.line2->Reference, dynArr2);
 
@@ -631,7 +631,7 @@ void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
 		if (dynArr1->ksGetArrayCount() != 0) { dynArr = dynArr1; } else { dynArr = dynArr2; }
 
 		if (dynArr->ksGetArrayCount() == 1) { // всего одно пересечение с одной из осей
-			kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point);
+			kapi::ksMathPointParamPtr point = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point);
 
 			kapi::IArcPtr newArc(arcs->Add());
 			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
@@ -650,8 +650,8 @@ void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
 				info.points2.push_back(MergePointInfo{point->x, point->y, newArc, 2});
 			}
 		} else { // два пересечения с одной осью
-			kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point1);
-			kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(1, point2);
+			kapi::ksMathPointParamPtr point1 = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(0, point1);
+			kapi::ksMathPointParamPtr point2 = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr->ksGetArrayItem(1, point2);
 
 			double distance1 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point1->x, point1->y);
 			double distance2 = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point2->x, point2->y);
@@ -723,8 +723,8 @@ void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
 		}
 	} else { // пересечения с обеими осями
 		if ((dynArr1->ksGetArrayCount() == 1) && (dynArr2->ksGetArrayCount() == 1)) { // одно пересечение с каждой осью
-			kapi::ksMathPointParamPtr point1 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(0, point1);
-			kapi::ksMathPointParamPtr point2 = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(0, point2);
+			kapi::ksMathPointParamPtr point1 = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(0, point1);
+			kapi::ksMathPointParamPtr point2 = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(0, point2);
 
 			kapi::IArcPtr newArc(arcs->Add());
 			newArc->Xc = arc->Xc; newArc->Yc = arc->Yc; newArc->Radius = arc->Radius; newArc->Direction = arc->Direction;
@@ -758,12 +758,12 @@ void processArc(Sketch1NotCircleInfo info, kapi::IArcPtr arc) {
 		{
 			std::vector<std::pair<double, kapi::ksMathPointParamPtr>> points;
 			for (int i = 0; i < dynArr1->ksGetArrayCount(); i++) {
-				kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(i, point);
+				kapi::ksMathPointParamPtr point = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr1->ksGetArrayItem(i, point);
 				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
 				points.push_back(std::make_pair(distance, point));
 			}
 			for (int i = 0; i < dynArr2->ksGetArrayCount(); i++) {
-				kapi::ksMathPointParamPtr point = global::kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(i, point);
+				kapi::ksMathPointParamPtr point = kompas->GetParamStruct(kapi::ko_MathPointParam); dynArr2->ksGetArrayItem(i, point);
 				double distance = math2d->ksDistancePntPntOnCurve(arc->Reference, arc->X1, arc->Y1, point->x, point->y);
 				points.push_back(std::make_pair(distance, point));
 			}
@@ -881,14 +881,14 @@ void bridgeHoleBuildNotCircleDrawSketch1(kapi::KompasObjectPtr kompas, Sketch sk
 	int nLineSegments = lineSegments->Count;
 	for (int iLineSegment = 0; iLineSegment < nLineSegments; iLineSegment++) {
 		kapi::ILineSegmentPtr lineSegment(lineSegments->GetLineSegment(iLineSegment));
-		processLineSegment(info, lineSegment);
+		processLineSegment(kompas, info, lineSegment);
 	}
 
 	kapi::IArcsPtr arcs(sketch.drawingContainer->Arcs);
 	int nArcs = arcs->Count;
 	for (int iArc = 0; iArc < nArcs; iArc++) {
 		kapi::IArcPtr arc(arcs->GetArc(iArc));
-		processArc(info, arc);
+		processArc(kompas, info, arc);
 	}
 
     closeContour(lineSegments, points1);
