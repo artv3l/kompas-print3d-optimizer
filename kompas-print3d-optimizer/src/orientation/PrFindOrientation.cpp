@@ -510,7 +510,7 @@ void PrFindOrientation::updateHeatmap()
 		const glm::vec3 normal = glm::normalize(mesh->normals[m_orientationsInGrid[m_currentGridRow - 1]]);
 		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
-		auto line = std::make_shared<geometry::Polyline3D>();
+		auto line = std::make_shared<Polyline3D>();
 		line->m_points = { point, point2 };
 		hm->addObject(line, Visualizer::polyline);
 	}
@@ -527,7 +527,7 @@ void PrFindOrientation::updateScene()
 
 		BottomContour contour = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<geometry::Polyline3D>();
+			auto polyline = std::make_shared<Polyline3D>();
 			polyline->m_points = contour;
 
 			hm->addObject(polyline, Visualizer::polyline);

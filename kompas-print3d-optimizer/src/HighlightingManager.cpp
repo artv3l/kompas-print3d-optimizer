@@ -39,7 +39,7 @@ std::unordered_map<Visualizer, ShaderProgram> HighlightingManager::m_shaders;
 bool HighlightingManager::s_isGladInited = false;
 short HighlightingManager::s_framesCount = 0;
 
-DrawableMesh::DrawableMesh(std::shared_ptr<geometry::IObject> object) :
+DrawableMesh::DrawableMesh(std::shared_ptr<IObject> object) :
     m_vao()
 {
     if (Mesh* mesh = dynamic_cast<Mesh*>(object.get())) {
@@ -55,7 +55,7 @@ DrawableMesh::DrawableMesh(std::shared_ptr<geometry::IObject> object) :
             vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
             m_vao.addVertexBuffer(vb);
         }
-    } else if (geometry::Polyline3D* polyline = dynamic_cast<geometry::Polyline3D*>(object.get())) {
+    } else if (Polyline3D* polyline = dynamic_cast<Polyline3D*>(object.get())) {
         VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
             polyline->m_points.data(),
             static_cast<GLsizeiptr>(polyline->m_points.size() * sizeof(glm::vec3))
@@ -110,7 +110,7 @@ void HighlightingManager::refreshWindow() const {
     m_documentFrame->RefreshWindow();
 }
 
-void HighlightingManager::addObject(std::shared_ptr<geometry::IObject> object, Visualizer visualizer)
+void HighlightingManager::addObject(std::shared_ptr<IObject> object, Visualizer visualizer)
 {
     m_objects[visualizer].emplace_back(object);
 }

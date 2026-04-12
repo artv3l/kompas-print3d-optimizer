@@ -22,7 +22,7 @@ enum class Visualizer : uint8_t
 class DrawableMesh
 {
 public:
-    DrawableMesh(std::shared_ptr<geometry::IObject> object);
+    DrawableMesh(std::shared_ptr<IObject> object);
     virtual ~DrawableMesh() = default;
     void draw() const;
 protected:
@@ -45,7 +45,7 @@ public:
     void toggleMode(Mode mode);
     void refreshWindow() const;
 
-    void addObject(std::shared_ptr<geometry::IObject> object, Visualizer visualizer);
+    void addObject(std::shared_ptr<IObject> object, Visualizer visualizer);
     void cleanObjects();
 
 private:
