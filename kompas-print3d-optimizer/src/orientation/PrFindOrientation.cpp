@@ -155,7 +155,7 @@ std::vector<OrientationInfo> calcOrientationsEstimation(const Mesh& mesh, std::s
 
 // Преобразовать абсолюные значения в относительные [0, 1]
 template <std::ranges::range R>
-std::vector<double> toRelative(R absoluteValues, bool invert)
+std::vector<double> toRelative(R absoluteValues)
 {
 	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
 
@@ -166,21 +166,42 @@ std::vector<double> toRelative(R absoluteValues, bool invert)
 	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
 	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
 
-	if (invert)
-		std::ranges::transform(relativeValues, relativeValues.begin(), [](auto value) {return 1.0 - value;});
-
 	return relativeValues;
 }
 
 // Рассчитать все составные критерии
 OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
 {
-	OrientationComplexInfos result;
+	size_t size = infos.size();
 
-	// TODO
-	result[enums::toUnderlying(OrientationComplexCriteria::overhangs)] = toRelative(infos | std::views::transform(&OrientationInfo::overhangArea), false);
-	result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)] = toRelative(infos | std::views::transform(&OrientationInfo::bottomArea), true);
-	result[enums::toUnderlying(OrientationComplexCriteria::common)] = std::vector<double>(infos.size(), 0.0);
+	OrientationComplexInfos result;
+	std::ranges::for_each(result, [size](auto& vector) { vector.resize(size); });
+
+	auto& overhangs = result[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
+	{
+		auto relOverhangAreas = toRelative(infos | std::views::transform(&OrientationInfo::overhangArea));
+		auto relOverhangVolumes = toRelative(infos | std::views::transform(&OrientationInfo::overhangVolume));
+		for (size_t i = 0; i < size; ++i) {
+			overhangs[i] = (0.6 * relOverhangVolumes[i]) + (0.4 * relOverhangAreas[i]);
+		}
+	}
+
+	auto& bottomQuality = result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
+	{
+		auto relBottomAreas = toRelative(infos | std::views::transform(&OrientationInfo::bottomArea));
+		auto relBottomConvexHullAreas = toRelative(infos | std::views::transform(&OrientationInfo::bottomConvexHullArea));
+		for (size_t i = 0; i < size; ++i) {
+			bottomQuality[i] = (0.6 * (1.0 - relBottomAreas[i])) + (0.4 * (1.0 - relBottomConvexHullAreas[i]));
+		}
+	}
+
+	{
+		auto relModelHeight = toRelative(infos | std::views::transform(&OrientationInfo::modelHeight));
+		auto& common = result[enums::toUnderlying(OrientationComplexCriteria::common)];
+		for (size_t i = 0; i < size; ++i) {
+			common[i] = (0.4 * overhangs[i]) + (0.4 * bottomQuality[i]) + (0.2 * relModelHeight[i]);
+		}
+	}
 
 	return result;
 }
@@ -470,16 +491,8 @@ void PrFindOrientation::updateHeatmap()
 		color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
 		return glm::vec3(rgb.red, rgb.green, rgb.blue);
 	};
-
-	if (m_criteria == OrientationComplexCriteria::overhangs) {
-		auto overhangs = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
-		std::ranges::transform(overhangs, colors.begin(), toColor);
-	} else if (m_criteria == OrientationComplexCriteria::bottomQuality) {
-		auto bottomAreas = m_stat->complexInfos[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
-		std::ranges::transform(bottomAreas, colors.begin(), toColor);
-	} else if (m_criteria == OrientationComplexCriteria::common) {
-
-	}
+	const auto & complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_criteria)];
+	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
 
 	auto mesh = std::make_shared<ColoredMesh>();
 	mesh->positions = m_stat->evalMesh.positions;
