@@ -2,7 +2,7 @@
 
 #include <functional>
 
-class ActionLock final {
+class [[nodiscard]] ActionLock final {
 public:
 	ActionLock();
 	ActionLock(std::function<void()>&& func);

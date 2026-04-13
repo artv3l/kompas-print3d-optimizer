@@ -166,60 +166,55 @@ bool HighlightingManager::beginPaintGL(kapi::ksGLObject* glObject, long drawMode
     glGetFloatv(GL_PROJECTION_MATRIX, matrix4);
     glm::mat4 projection(glm::make_mat4(matrix4));
 
-    if (!m_objects.empty()) {
-        for (const auto& [visualizer, objects] : m_objects) {
-            auto& shaderProgram = m_shaders.at(visualizer);
+    for (const auto& [visualizer, objects] : m_objects) {
+        auto& shaderProgram = m_shaders.at(visualizer);
 
-            shaderProgram.use();
-            shaderProgram.setUniform("u_modelview", modelview);
-            shaderProgram.setUniform("u_projection", projection);
+        auto lock = shaderProgram.use();
+        shaderProgram.setUniform("u_modelview", modelview);
+        shaderProgram.setUniform("u_projection", projection);
 
-            if (visualizer == Visualizer::meshHighlight3dp) {
-                if (!m_settings->isPrintSurfaceSelected())
-                    continue;
+        if (visualizer == Visualizer::meshHighlight3dp) {
+            if (!m_settings->isPrintSurfaceSelected())
+                continue;
 
-                /*
-                  В справке написано, что метод GetZoomScale работает только для графических документов, но для модели scale считается корректно.
-                  Поэтому его и будем использовать для расчета толщины линии в шейдере (какая область вокруг точной границы слоев будет отрисовываться).
-                  Чем ближе моделька, тем меньше толщина рисуемой линии.
+            /*
+                В справке написано, что метод GetZoomScale работает только для графических документов, но для модели scale считается корректно.
+                Поэтому его и будем использовать для расчета толщины линии в шейдере (какая область вокруг точной границы слоев будет отрисовываться).
+                Чем ближе моделька, тем меньше толщина рисуемой линии.
 
-                  (scale, lineWidth): (410.2, 0.001), (137.4, 0.003), (31.9, 0.0085), (8.9, 0.025), (4.3, 0.033)
-                  аппроксимируем степенной функцией: lineWidth = 0.1192 * scale^(-0.7731)
+                (scale, lineWidth): (410.2, 0.001), (137.4, 0.003), (31.9, 0.0085), (8.9, 0.025), (4.3, 0.033)
+                аппроксимируем степенной функцией: lineWidth = 0.1192 * scale^(-0.7731)
 
-                  Также рассчитаем радиус окружности, в пределах которой будут отрисовываться слои в режиме отрисовки у курсора
+                Также рассчитаем радиус окружности, в пределах которой будут отрисовываться слои в режиме отрисовки у курсора
 
-                  (scale, mouseRadius): (341.8, 450), (137.4, 220), (46.6, 110), (26.6, 90), (15.4, 60), (10.7, 70), (5.2, 40), (3.0, 20)
-                  аппроксимируем степенной функцией: mouseRadius = 12.8668 * scale^(0.5943)
-                */
-                double unused, scale; m_documentFrame->GetZoomScale(&unused, &unused, &scale);
-                float lineWidth = static_cast<float>(0.1192 * std::pow(scale, -0.7731));
-                int mouseRadius = static_cast<int>(12.8668 * std::pow(scale, 0.5943));
+                (scale, mouseRadius): (341.8, 450), (137.4, 220), (46.6, 110), (26.6, 90), (15.4, 60), (10.7, 70), (5.2, 40), (3.0, 20)
+                аппроксимируем степенной функцией: mouseRadius = 12.8668 * scale^(0.5943)
+            */
+            double unused, scale; m_documentFrame->GetZoomScale(&unused, &unused, &scale);
+            float lineWidth = static_cast<float>(0.1192 * std::pow(scale, -0.7731));
+            int mouseRadius = static_cast<int>(12.8668 * std::pow(scale, 0.5943));
 
-                PrintSurface printSurface = *m_settings->getPrintSurface();
-                glm::vec3 printSurfaceNormal(printSurface.eq.a, printSurface.eq.b, printSurface.eq.c);
-                const double overhangThreshold = m_settings->getDoubleSetting(si::overhangThreshold.name)->getValue();
+            PrintSurface printSurface = *m_settings->getPrintSurface();
+            glm::vec3 printSurfaceNormal(printSurface.eq.a, printSurface.eq.b, printSurface.eq.c);
+            const double overhangThreshold = m_settings->getDoubleSetting(si::overhangThreshold.name)->getValue();
 
-                kapi::ksPartPtr part = m_document3d->GetPart(kapi::Part_Type::pTop_Part);
+            kapi::ksPartPtr part = m_document3d->GetPart(kapi::Part_Type::pTop_Part);
 
-                shaderProgram.setUniform("u_printSurfaceNormal", printSurfaceNormal);
-                shaderProgram.setUniform("u_printSurfaceD", static_cast<float>(printSurface.eq.d));
-                shaderProgram.setUniform("u_layerHeight", static_cast<float>(m_settings->getDoubleSetting(si::layerHeight.name)->getValue()));
-                shaderProgram.setUniform("u_lineWidth", lineWidth);
-                shaderProgram.setUniform("u_mode", m_mode);
-                shaderProgram.setUniform("u_overhangThreshold", static_cast<float>(degreeToRadian(overhangThreshold)));
-                shaderProgram.setUniform("u_mouseCoord", m_mouseCoord);
-                shaderProgram.setUniform("u_mouseRadius", mouseRadius);
-            }
-            
-            for (auto& obj : objects) {
-                obj.draw();
-            }
+            shaderProgram.setUniform("u_printSurfaceNormal", printSurfaceNormal);
+            shaderProgram.setUniform("u_printSurfaceD", static_cast<float>(printSurface.eq.d));
+            shaderProgram.setUniform("u_layerHeight", static_cast<float>(m_settings->getDoubleSetting(si::layerHeight.name)->getValue()));
+            shaderProgram.setUniform("u_lineWidth", lineWidth);
+            shaderProgram.setUniform("u_mode", m_mode);
+            shaderProgram.setUniform("u_overhangThreshold", static_cast<float>(degreeToRadian(overhangThreshold)));
+            shaderProgram.setUniform("u_mouseCoord", m_mouseCoord);
+            shaderProgram.setUniform("u_mouseRadius", mouseRadius);
         }
-        glUseProgram(0);
-    } else {
-        return true;
+            
+        for (auto& obj : objects) {
+            obj.draw();
+        }
     }
-
+    
     return false;
 }
 

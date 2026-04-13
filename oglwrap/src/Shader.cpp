@@ -73,8 +73,11 @@ ShaderProgram::~ShaderProgram() {
     glDeleteProgram(m_id);
 }
 
-void ShaderProgram::use() const {
+ActionLock ShaderProgram::use() const {
+    GLint prev = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &prev);
     glUseProgram(m_id);
+    return ActionLock([prev]() { glUseProgram(prev); });
 }
 
 void ShaderProgram::setUniform(const std::string& name, float value) const {
