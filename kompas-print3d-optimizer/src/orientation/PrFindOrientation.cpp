@@ -4,6 +4,7 @@
 #include <format>
 #include <ranges>
 #include <numeric>
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,6 +16,7 @@
 #include "settings/SettingsManager.hpp"
 #include "global.hpp"
 #include "windows.hpp"
+#include "generic/perfomance.hpp"
 
 namespace
 {
@@ -145,6 +147,12 @@ std::vector<OrientationInfo> calcOrientationsEstimation(const Mesh& mesh, std::s
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
+	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
+		std::cout << "Simple criteria calc: "
+			      << std::chrono::duration_cast<std::chrono::milliseconds>(time)
+			      << "\n";
+	});
+
 	std::vector<OrientationInfo> result;
 	result.resize(directions.size());
 	for (size_t i = 0; i < directions.size(); ++i) {
@@ -172,6 +180,12 @@ std::vector<double> toRelative(R absoluteValues)
 // Рассчитать все составные критерии
 OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
 {
+	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
+		std::cout << "Composite criteria calc: "
+			      << std::chrono::duration_cast<std::chrono::milliseconds>(time)
+			      << "\n";
+	});
+
 	size_t size = infos.size();
 
 	OrientationComplexInfos result;

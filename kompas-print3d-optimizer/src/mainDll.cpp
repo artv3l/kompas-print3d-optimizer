@@ -21,6 +21,7 @@ extern "C" int APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
         new CDynLinkLibrary(dll);
 
         global::init();
+        //createDebugConsole();
 
     } else if (dwReason == DLL_PROCESS_DETACH) {
         global::settingsManager->hide();
