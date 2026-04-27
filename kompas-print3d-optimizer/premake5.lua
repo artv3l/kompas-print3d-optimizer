@@ -48,6 +48,7 @@ project "kompas-print3d-optimizer"
 
         links {
             "%{vcpkg.lib.debug}/glad.lib",
+
             "%{vcpkg.lib.debug}/CorradeMain-d.lib",
             "%{vcpkg.lib.debug}/Magnum-d.lib",
             "%{vcpkg.lib.debug}/MagnumPrimitives-d.lib",
@@ -67,5 +68,16 @@ project "kompas-print3d-optimizer"
         runtime "Release"
 
         links {
-            "%{vcpkg.lib.release}/glad.lib"
+            "%{vcpkg.lib.release}/glad.lib",
+
+            "%{vcpkg.lib.release}/CorradeMain.lib",
+            "%{vcpkg.lib.release}/Magnum.lib",
+            "%{vcpkg.lib.release}/MagnumPrimitives.lib",
+            "%{vcpkg.lib.release}/MagnumTrade.lib",
+        }
+
+        postbuildcommands {
+            "{COPYFILE} %{prj.location}/%{prj.name}.xml %{cfg.buildtarget.directory}",
+            "{COPYDIR} %{vcpkg.bin.release} %{cfg.buildtarget.directory}",
+            "%{paths.KompasDevutil}/add-lib.exe %{cfg.buildtarget.directory}/%{cfg.buildtarget.name}",
         }
