@@ -442,6 +442,7 @@ void PrFindOrientation::updateControls()
 	m_ctrls.overhangThreshold->Value = m_overhangThreshold;
 	m_ctrls.bottomThreshold->Value = m_bottomThreshold;
 	m_ctrls.accuracy->SetCurrentByIndex(enums::toUnderlying(m_accuracy));
+	m_ctrls.resultCount->Value = m_resultCount;
 
 	if (m_stat) {
 		m_metricsList->Visible = true;
@@ -451,7 +452,6 @@ void PrFindOrientation::updateControls()
 
 		m_metricsList->SetCurrentByIndex(enums::toUnderlying(m_criteria));
 		m_visualizeCheckBox->Value = m_isShowHeatmap;
-		m_ctrls.resultCount->Value = m_resultCount;
 		m_orientationsInGrid = m_stat->findBest(m_criteria, m_resultCount);
 		refillGrid(m_orientationsInGrid);
 		updateHeatmap();
