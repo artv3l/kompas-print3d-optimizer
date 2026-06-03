@@ -21,7 +21,15 @@
 #include "global.hpp"
 
 
-void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings) {
+void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings)
+{
+    auto splitFileNameAndRemoveExtension = [](std::string fileName) -> std::pair<std::string, std::string>
+    {
+        size_t lastSlashIndex = fileName.find_last_of('\\');
+        size_t lastDotIndex = fileName.find_last_of('.');
+        return std::make_pair(fileName.substr(0, lastSlashIndex), fileName.substr(lastSlashIndex + 1, lastDotIndex - lastSlashIndex - 1));
+    };
+
     kapi::ksAdditionFormatParamPtr param = document3d->AdditionFormatParam();
     param->Init();
     param->format = kapi::D3FormatConvType::format_STL;

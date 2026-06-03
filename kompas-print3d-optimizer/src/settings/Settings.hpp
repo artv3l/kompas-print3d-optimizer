@@ -8,7 +8,6 @@
 
 #include "settings/PrintSurface.hpp"
 #include "settings/Setting.hpp"
-#include "Optional.hpp"
 
 class Settings {
 public:

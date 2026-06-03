@@ -122,8 +122,6 @@ geometry::Polygon convexHull(std::span<glm::vec2> points)
 
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
 {
-    checkPtr(tessellation);
-
     tessellation->refresh();
 
     _variant_t pointsVariant, indexesVariant, normalsVariant;
@@ -150,13 +148,13 @@ Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
 
 Mesh copyToMesh(kapi::ksBodyPtr body)
 {
-    auto faces = checkCast<kapi::ksFaceCollectionPtr>(checkPtr(body)->FaceCollection());
+    kapi::ksFaceCollectionPtr faces = body->FaceCollection();
 
     Mesh mesh;
 
     for (long iFace = 0, nFaces = faces->GetCount(); iFace < nFaces; ++iFace) {
-        kapi::ksFaceDefinitionPtr face = checkPtr(faces->GetByIndex(iFace));
-        kapi::ksTessellationPtr tessellation = checkPtr(face->GetTessellation());
+        kapi::ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+        kapi::ksTessellationPtr tessellation = face->GetTessellation();
 
         if (iFace == 0) {
             mesh = copyToMesh(tessellation);

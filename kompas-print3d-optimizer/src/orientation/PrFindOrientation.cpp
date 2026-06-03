@@ -516,7 +516,7 @@ void PrFindOrientation::updateHeatmap()
 
 	// Масштабирование икосферы по габариту детали
 	kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-	kapi::ksBodyPtr body = checkPtr(part)->GetMainBody();
+	kapi::ksBodyPtr body = part->GetMainBody();
 	const geometry::Gabarit3D gabarit = getGabarit(body);
 	const geometry::Vector3D center = gabarit.center();
 	const double radius = std::max(std::max(gabarit.x.length(), gabarit.y.length()), gabarit.z.length()) / 2.0;

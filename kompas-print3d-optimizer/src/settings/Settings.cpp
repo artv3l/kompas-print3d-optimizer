@@ -8,7 +8,6 @@
 
 #include "settings/SettingInitializer.hpp"
 #include "settings/Setting.hpp"
-#include "Optional.hpp"
 #include "settings/PrintSurface.hpp"
 
 Settings::Settings() :

@@ -1,8 +1,8 @@
-#ifndef DOCUMENT_DATA_HPP
-#define DOCUMENT_DATA_HPP
+#pragma once
+
+#include <optional>
 
 #include "kapiwrap/Macro.hpp"
-#include "Optional.hpp"
 #include "settings/Settings.hpp"
 #include "HighlightingManager.hpp"
 
@@ -24,8 +24,6 @@ public:
 private:
     kapi::ksDocument3DPtr m_document3d;
     Settings m_settings;
-    Optional<Macro> m_rootMacro;
+    std::optional<Macro> m_rootMacro;
     HighlightingManager m_highlightingManager;
 };
-
-#endif /* DOCUMENT_DATA_HPP */

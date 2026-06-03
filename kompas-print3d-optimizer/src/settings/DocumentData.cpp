@@ -1,7 +1,6 @@
 #include "DocumentData.hpp"
 
 #include "kapiwrap/Macro.hpp"
-#include "Optional.hpp"
 #include "HighlightingManager.hpp"
 #include "settings/Settings.hpp"
 
