@@ -2,8 +2,6 @@
 
 #include <stdexcept>
 
-#include "utils.hpp"
-
 PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
 	if (!face->IsPlanar()) {
 		throw std::runtime_error("The face is not planar");
@@ -21,15 +19,15 @@ PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
 
 bool PlaneEq::operator==(const PlaneEq& other) const {
 	double scale = 0.0;
-	if (!doubleEqual(other.a, 0.0)) {
+	if (!math::equal(other.a, 0.0)) {
 		scale = a / other.a;
-	} else if (!doubleEqual(other.b, 0.0)) {
+	} else if (!math::equal(other.b, 0.0)) {
 		scale = b / other.b;
-	} else if (!doubleEqual(other.c, 0.0)) {
+	} else if (!math::equal(other.c, 0.0)) {
 		scale = c / other.c;
 	}
-	return doubleEqual(a, other.a * scale) && doubleEqual(b, other.b * scale) &&
-		doubleEqual(c, other.c * scale) && doubleEqual(d, other.d * scale);
+	return math::equal(a, other.a * scale) && math::equal(b, other.b * scale) &&
+		math::equal(c, other.c * scale) && math::equal(d, other.d * scale);
 }
 
 bool PlaneEq::operator!=(const PlaneEq& other) const {
@@ -55,7 +53,7 @@ std::pair<int, int> countPointsOnEachSide(kapi::ksPartPtr part, const PlaneEq& p
 		double x, y, z;
 		vertex->GetPoint(&x, &y, &z);
 		double planeValue = (x * planeEq.a) + (y * planeEq.b) + (z * planeEq.c) + planeEq.d;
-		if (doubleEqual(planeValue, 0.0)) {
+		if (math::equal(planeValue, 0.0)) {
 			continue;
 		}
 		if (planeValue > 0.0) {

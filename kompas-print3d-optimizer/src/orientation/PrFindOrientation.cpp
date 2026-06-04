@@ -12,7 +12,6 @@
 #include "kapiwrap/3d/body.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "generic/color.hpp"
-#include "utils.hpp"
 #include "settings/SettingsManager.hpp"
 #include "global.hpp"
 #include "windows.hpp"
@@ -79,7 +78,7 @@ OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction
 {
 	OrientationInfo info;
 
-	const double overhangThresholdRad = degreeToRadian(overhangThreshold);
+	const double overhangThresholdRad = math::toRadians(overhangThreshold);
 	const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
 
 	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(

@@ -11,7 +11,6 @@
 #include "kapiwrap/ConstraintsCreator.hpp"
 #include "kapiwrap/Sketch.hpp"
 
-#include "utils.hpp"
 #include "concaveAngle.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
@@ -43,7 +42,7 @@ bool checkFaceWithHole(kapi::ksFaceDefinitionPtr face, kapi::ksFaceDefinitionPtr
 	measurer->SetObject2(face);
 	measurer->Calc();
 	double angle = measurer->angle;
-	if (!(doubleEqual(angle, 0.0) || doubleEqual(angle, 180))) {
+	if (!(math::equal(angle, 0.0) || math::equal(angle, 180))) {
 		return false;
 	}
 	return true;
@@ -71,7 +70,7 @@ bool isHoleDirect(kapi::ksFaceDefinitionPtr face, kapi::ksLoopPtr loop, kapi::ks
 		measurer->SetObject2(holeFace);
 		measurer->Calc();
 		double angle = measurer->angle;
-		if (!(doubleEqual(angle, 90.0) || doubleEqual(angle, 270.0))) {
+		if (!(math::equal(angle, 90.0) || math::equal(angle, 270.0))) {
 			return false;
 		}
 	}
@@ -115,7 +114,7 @@ bool checkHoleLoop(kapi::ksDocument3DPtr document3d, kapi::ksFaceDefinitionPtr f
 			measurer->Calc();
 			if (edge2->IsStraight()) {
 				double angle = measurer->angle;
-				if (doubleEqual(angle, 90.0) || doubleEqual(angle, 270.0)) {
+				if (math::equal(angle, 90.0) || math::equal(angle, 270.0)) {
 					continue;
 				}
 			}
@@ -415,7 +414,7 @@ void closeContour(kapi::ILineSegmentsPtr lineSegments, std::list<MergePointInfo>
 		return;
 	}
 	points.sort([](const MergePointInfo& lhs, const MergePointInfo& rhs) {
-		if (doubleEqual(lhs.y, rhs.y)) {
+		if (math::equal(lhs.y, rhs.y)) {
 			return lhs.x < rhs.x;
 		}
 		return lhs.y < rhs.y;
@@ -504,7 +503,7 @@ bool pointInsideInterval(kapi::ksMathematic2DPtr math2d, double x, double y, kap
 	double distance1 = math2d->ksDistancePntLineForPoint(x, y, line1->X1, line1->Y1, line1->X2, line1->Y2);
 	double distance2 = math2d->ksDistancePntLineForPoint(x, y, line2->X1, line2->Y1, line2->X2, line2->Y2);
 	double intervalLength = math2d->ksDistancePntLineForPoint(line1->X1, line1->Y1, line2->X1, line2->Y1, line2->X2, line2->Y2);
-	return doubleEqual(distance1 + distance2, intervalLength);
+	return math::equal(distance1 + distance2, intervalLength);
 }
 
 void processLineSegment(kapi::KompasObjectPtr kompas, Sketch1NotCircleInfo info, kapi::ILineSegmentPtr lineSegment) {

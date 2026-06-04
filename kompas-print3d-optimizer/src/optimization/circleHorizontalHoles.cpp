@@ -8,7 +8,6 @@
 #include "kapiwrap/Macro.hpp"
 #include "kapiwrap/Sketch.hpp"
 #include "kapiwrap/ConstraintsCreator.hpp"
-#include "utils.hpp"
 #include "LinAlg.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
@@ -130,7 +129,7 @@ void drawTriangle(Sketch sketch, kapi::ICirclePtr baseCircle, kapi::ILinePtr ver
     // Считаем координаты треугольников в системе координат, где начало - центр baseCircle, ось y - verticalLine
     double dx = radius * RADIUS_RATIO;
     double y1 = std::sin(std::acos(dx / radius)) * radius;
-    double y2 = y1 + (std::tan(degreeToRadian(overhangThreshold->getValue())) * dx);
+    double y2 = y1 + (std::tan(math::toRadians(overhangThreshold->getValue())) * dx);
     Vec2d l1(-dx, y1), r1(dx, y1), lr2(0, y2);
 
     // Через матрицу трансформации преобразуем эти координаты к координатам эскиза
@@ -278,7 +277,7 @@ std::list<kapi::ksFaceDefinitionPtr> getCircleHorizontalHoleTargets(kapi::Kompas
         measurer->SetObject2(face);
         measurer->Calc();
         double angle = measurer->angle;
-        if (!(doubleEqual(angle, 0.0) || doubleEqual(angle, 180.0))) {
+        if (!(math::equal(angle, 0.0) || math::equal(angle, 180.0))) {
             continue;
         }
 

@@ -17,7 +17,6 @@
 #include "shaders.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "global.hpp"
-#include "utils.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 #include "mesh.hpp"
@@ -217,7 +216,7 @@ bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode
                 shaderProgram.setUniform("u_layerHeight", static_cast<float>(m_settings->getDoubleSetting(si::layerHeight.name)->getValue()));
                 shaderProgram.setUniform("u_lineWidth", lineWidth);
                 shaderProgram.setUniform("u_mode", m_mode);
-                shaderProgram.setUniform("u_overhangThreshold", static_cast<float>(degreeToRadian(overhangThreshold)));
+                shaderProgram.setUniform("u_overhangThreshold", static_cast<float>(math::toRadians(overhangThreshold)));
                 shaderProgram.setUniform("u_mouseCoord", m_mouseCoord);
                 shaderProgram.setUniform("u_mouseRadius", mouseRadius);
             }

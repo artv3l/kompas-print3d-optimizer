@@ -11,7 +11,6 @@
 #include <Magnum/Math/Vector3.h>
 
 #include "windows.hpp"
-#include "utils.hpp"
 
 Mesh generateIcosphere(uint8_t subdivisionsCount)
 {

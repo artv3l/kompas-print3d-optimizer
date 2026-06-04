@@ -2,7 +2,6 @@
 
 #include <list>
 
-#include "utils.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"

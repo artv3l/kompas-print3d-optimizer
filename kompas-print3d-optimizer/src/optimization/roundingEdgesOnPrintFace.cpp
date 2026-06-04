@@ -14,7 +14,6 @@
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "LinAlg.hpp"
-#include "utils.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";
@@ -67,7 +66,7 @@ bool faceNeedRework(kapi::ksFaceDefinitionPtr roundingFace) {
                 kapi::ksEdgeDefinitionPtr edge(edges->GetByIndex(i));
                 double length = edge->GetLength(kapi::ksLengthUnitsEnum::ksLUnMM);
                 // Также проверяем на полюсные ребра, их длина == 0
-                if (!edge->IsArc() && !doubleEqual(length, 0.0)) {
+                if (!edge->IsArc() && !math::equal(length, 0.0)) {
                     return true;
                 }
             }
@@ -133,7 +132,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(kapi
                     if (target.trajectory.empty()) {
                         radius = getCylinderOrTorusRadius(roundingFace);
                         target.roundingFace = roundingFace;
-                    } else if (!doubleEqual(radius, getCylinderOrTorusRadius(roundingFace))) {
+                    } else if (!math::equal(radius, getCylinderOrTorusRadius(roundingFace))) {
                         targets.push_back(target);
                         target = RoundingEdgeOnPrintFaceTarget();
 
@@ -160,7 +159,7 @@ std::list<RoundingEdgeOnPrintFaceTarget> getRoundingEdgesOnPrintFaceTargets(kapi
             }
 
             if (!target.trajectory.empty()) {
-                if (firstEdgeInTarget && firstTargetInLoopCompleted && doubleEqual(firstEdgeRadius, radius)) {
+                if (firstEdgeInTarget && firstTargetInLoopCompleted && math::equal(firstEdgeRadius, radius)) {
                     RoundingEdgeOnPrintFaceTarget firstTarget = *(targetWithFirstEdge);
                     targets.erase(targetWithFirstEdge);
                     target.trajectory.insert(target.trajectory.cbegin(), firstTarget.trajectory.cbegin(), firstTarget.trajectory.cend());
@@ -217,11 +216,11 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, DoubleSetti
     bool startPointIs1 = false;
     for (int i = 0; i < arcs->GetCount(); i++) {
         kapi::IArcPtr arc(arcs->GetArc(i));
-        if (!roundingArc && ((doubleEqual(startPoint->X, arc->X1) && doubleEqual(startPoint->Y, arc->Y1)) ||
-                             (doubleEqual(startPoint->X, arc->X2) && doubleEqual(startPoint->Y, arc->Y2))
+        if (!roundingArc && ((math::equal(startPoint->X, arc->X1) && math::equal(startPoint->Y, arc->Y1)) ||
+                             (math::equal(startPoint->X, arc->X2) && math::equal(startPoint->Y, arc->Y2))
                             )) {
             roundingArc = arc;
-            if (doubleEqual(startPoint->X, arc->X1) && doubleEqual(startPoint->Y, arc->Y1)) {
+            if (math::equal(startPoint->X, arc->X1) && math::equal(startPoint->Y, arc->Y1)) {
                 startPointIs1 = true;
             }
         }
@@ -238,14 +237,14 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, DoubleSetti
 
     TransformationMatrix2d matrix(angle, startPoint->X, startPoint->Y);
     // Смещение по X точки, где соединятся 2 отрезка - mergePoint
-    double xOffset = roundingArc->Radius * std::tan(degreeToRadian(90.0 - (dimAngle / 2.0)));
+    double xOffset = roundingArc->Radius * std::tan(math::toRadians(90.0 - (dimAngle / 2.0)));
     Vec2d mergePoint = matrix * Vec2d((testPoint.x > 0) ? xOffset : -xOffset, 0.0);
     
     // Рассчитываем координаты точки для второго отрезка. Эта точка булет находиться на дуге
-    double xOffset2 = std::cos(degreeToRadian(dimAngle - 90.0)) * roundingArc->Radius;
+    double xOffset2 = std::cos(math::toRadians(dimAngle - 90.0)) * roundingArc->Radius;
     Vec2d pointOnArc = matrix * Vec2d(
         (testPoint.x > 0) ? xOffset2 : -xOffset2,
-        roundingArc->Radius - (std::sin(degreeToRadian(dimAngle - 90.0)) * roundingArc->Radius));
+        roundingArc->Radius - (std::sin(math::toRadians(dimAngle - 90.0)) * roundingArc->Radius));
 
     kapi::ILineSegmentsPtr lineSegments(sketch.drawingContainer->LineSegments);
 

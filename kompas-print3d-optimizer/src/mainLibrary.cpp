@@ -17,7 +17,6 @@
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
 #include "orientation/PrFindOrientation.hpp"
-#include "utils.hpp"
 #include "global.hpp"
 
 
