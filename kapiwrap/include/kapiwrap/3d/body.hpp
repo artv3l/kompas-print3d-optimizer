@@ -2,4 +2,4 @@
 
 #include "generic/geometry3d.hpp"
 
-geometry::Gabarit3D getGabarit(kapi::ksBodyPtr body);
+geom3d::Gabarit getGabarit(kapi::ksBodyPtr body);

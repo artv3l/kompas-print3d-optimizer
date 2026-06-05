@@ -17,6 +17,8 @@ project "kapiwrap"
         "include/kapiwrap",
         "%{wks.location}/generic/include",
 
+        "%{vcpkg.include}",
+
         "%{localDependencies.KompasAPI.include}",
         "%{localDependencies.KompasAPI.lib}",
     }

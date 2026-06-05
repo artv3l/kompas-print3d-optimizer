@@ -1,19 +1,25 @@
 #include "geometry3d.hpp"
 
-namespace geometry
+namespace geom3d
 {
-double ValueRange::center() const
+Gabarit::Gabarit(Eigen::Vector3d begin, Eigen::Vector3d end) :
+	m_begin(begin),
+	m_end(end)
 {
-	return (begin + end) / 2.0;
 }
 
-double ValueRange::length() const
+Eigen::Vector3d Gabarit::center() const
 {
-	return end - begin;
+	return (m_begin + m_end) / 2.0;
 }
 
-Vector3D Gabarit3D::center() const
+Eigen::Vector3d Gabarit::getBegin() const
 {
-	return Vector3D(x.center(), y.center(), z.center());
+	return m_begin;
+}
+
+Eigen::Vector3d Gabarit::getEnd() const
+{
+	return m_end;
 }
 }

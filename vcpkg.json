@@ -4,6 +4,7 @@
         "glm",
         {"name": "glad", "features": ["gl-api-33"]},
         {"name": "magnum", "features": ["primitives"]},
-        "gtest"
+        "gtest",
+        "eigen3"
     ]
 }

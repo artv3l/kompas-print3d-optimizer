@@ -1,30 +1,21 @@
 #pragma once
 
-namespace geometry
-{
-struct Vector3D final
-{
-	double x;
-	double y;
-	double z;
-};
+#include <eigen3/Eigen/Dense>
 
-// begin <= end
-struct ValueRange final
+namespace geom3d
 {
-	double begin;
-	double end;
-
-	double center() const;
-	double length() const;
-};
-
-struct Gabarit3D final
+// Axis-Aligned Bounding Box
+class Gabarit final
 {
-	ValueRange x;
-	ValueRange y;
-	ValueRange z;
+public:
+	Gabarit(Eigen::Vector3d begin, Eigen::Vector3d end);
 
-	Vector3D center() const;
+	Eigen::Vector3d center() const;
+	Eigen::Vector3d getBegin() const;
+	Eigen::Vector3d getEnd() const;
+
+private:
+	Eigen::Vector3d m_begin;
+	Eigen::Vector3d m_end;
 };
 }
