@@ -87,7 +87,7 @@ OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction
 	const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
 	const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
 
-	std::vector<glm::vec2> convexHullPoints;
+	std::vector<Eigen::Vector2d> convexHullPoints;
 	convexHullPoints.reserve(mesh.positions.size());
 
 	info.triangleProperties.resize(mesh.indexes.size() / 3);
@@ -125,16 +125,17 @@ OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction
 	info.modelHeight = height;
 
 	if (convexHullPoints.size() >= 3) {
-		geometry::Polygon hullPolygon = convexHull(convexHullPoints);
-		info.bottomConvexHullArea = hullPolygon.area();
+		std::vector<Eigen::Vector2d> hullPolygon = convexHull(convexHullPoints);
+		info.bottomConvexHullArea = (hullPolygon.size() >= 3) ? math::polygonArea(hullPolygon) : 0.0;
 
-		for (auto&& pnt : hullPolygon.m_points) {
-			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+		for (size_t i = 0; i < hullPolygon.size(); ++i) {
+			const auto& point = hullPolygon[i];
+			info.bottomContour.push_back(toWorld * glm::vec4(point.x(), point.y(), 0.0f, 1.0f));
 		}
 	}
 	else {
 		for (auto&& pnt : convexHullPoints) {
-			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x, pnt.y, 0.0f, 1.0f));
+			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x(), pnt.y(), 0.0f, 1.0f));
 		}
 	}
 

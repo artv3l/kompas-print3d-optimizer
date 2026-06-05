@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <span>
 
 #include <glm/glm.hpp>
+#include <eigen3/Eigen/Dense>
 
 namespace math
 {
@@ -62,6 +64,7 @@ double toAcuteAngle(double angleInRadians);
 double convertRanges(double baseValue, double baseBegin, double baseLength, double resultBegin, double resultLength);
 // Получить матрицу перехода из мировых координат в локальные координаты placement
 glm::mat4 worldToLocal(const math::Placement& placement);
+double polygonArea(std::span<Eigen::Vector2d> points);
 }
 
 // Угол между векторами в радианах

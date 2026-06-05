@@ -23,7 +23,6 @@
 #include "windows.hpp"
 #include "generic/math.hpp"
 #include "oglwrap/VertexArray.hpp"
-#include "generic/geometry2d.hpp"
 
 void* GetAnyGLFuncAddress(const char* name) {
     void* p = (void*)wglGetProcAddress(name);

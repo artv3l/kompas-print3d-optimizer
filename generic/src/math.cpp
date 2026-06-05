@@ -129,6 +129,23 @@ glm::mat4 worldToLocal(const math::Placement& placement)
 {
 	return glm::inverse(placement.matrixToWorld());
 }
+
+double polygonArea(std::span<Eigen::Vector2d> points)
+{
+	if (points.size() < 3) {
+		assert(false);
+		return 0.0;
+	}
+
+	double sum = 0.0;
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		const auto& a = points[i];
+		const auto& b = (i != points.size() - 1) ? points[i + 1] : points[0];
+		sum += a.x() * b.y() - b.x() * a.y();
+	}
+	return std::abs(sum) / 2.0;
+}
 }
 
 bool isOnPrintPlane(const math::Triangle& triangle, const math::Plane& printPlane, double offsetThreshold)

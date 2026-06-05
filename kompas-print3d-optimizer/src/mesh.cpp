@@ -43,27 +43,15 @@ Mesh generateIcosphere(uint8_t subdivisionsCount)
 
 namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
 {
-// Structure to represent a point in 2D space
-struct Point
-{
-    double x, y;
-
-    // Operator overloading to compare two points lexicographically
-    bool operator<(Point p)
-    {
-        return x < p.x || (x == p.x && y < p.y);
-    }
-};
-
 // Function to calculate the cross product of vectors OA and OB
 // Returns positive for a counterclockwise turn and negative for a clockwise turn
-double cross_product(Point O, Point A, Point B)
+double cross_product(Eigen::Vector2d O, Eigen::Vector2d A, Eigen::Vector2d B)
 {
-    return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+    return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
 }
 
 // Function to return a list of points on the convex hull in counterclockwise order
-std::vector<Point> convex_hull(std::vector<Point> A)
+std::vector<Eigen::Vector2d> convex_hull(std::vector<Eigen::Vector2d> A)
 {
     int n = static_cast<int>(A.size()), k = 0;
 
@@ -72,10 +60,14 @@ std::vector<Point> convex_hull(std::vector<Point> A)
         return A;
 
     // Initialize a vector to store the convex hull points
-    std::vector<Point> ans(2 * n);
+    std::vector<Eigen::Vector2d> ans(2 * n);
 
     // Sort the points lexicographically
-    sort(A.begin(), A.end());
+    std::sort(A.begin(), A.end(), [](const Eigen::Vector2d & a, const Eigen::Vector2d & b)
+        {
+            return a.x() < b.x() || (a.x() == b.x() && a.y() < b.y());
+        }
+    );
 
     // Build the lower hull
     for (int i = 0; i < n; ++i)
@@ -104,19 +96,9 @@ std::vector<Point> convex_hull(std::vector<Point> A)
 }
 }
 
-geometry::Polygon convexHull(std::span<glm::vec2> points)
+std::vector<Eigen::Vector2d> convexHull(std::span<Eigen::Vector2d> points)
 {
-    std::vector<Point> pts(points.size(), Point(0, 0));
-    for (size_t i = 0; i < points.size(); ++i) {
-        pts[i] = Point(points[i].x, points[i].y);
-    }
-
-    std::vector<Point> result = convex_hull(pts);
-    geometry::Polygon polygon(result.size(), geometry::Vector2D(0, 0));
-    for (size_t i = 0; i < result.size(); ++i) {
-        polygon.setPoint(i, geometry::Vector2D(result[i].x, result[i].y));
-    }
-    return polygon;
+    return convex_hull(std::vector<Eigen::Vector2d>(points.begin(), points.end()));
 }
 
 Mesh copyToMesh(kapi::ksTessellationPtr tessellation)
