@@ -1,16 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <span>
+#include "generic/geometry3d.hpp"
 
-#include <eigen3/Eigen/Dense>
-
-#include "oglwrap/Mesh.hpp"
-
-Mesh generateIcosphere(uint8_t subdivisionsCount);
-
-// РџРѕСЃС‚СЂРѕРµРЅРёРµ РІС‹РїСѓРєР»РѕР№ РѕР±РѕР»РѕС‡РєРё РІ 2D. РњРѕР¶РµС‚ РІРµСЂРЅСѓС‚СЊ РїСѓСЃС‚РѕР№ РјР°СЃСЃРёРІ, РѕРґРЅСѓ РёР»Рё РґРІРµ С‚РѕС‡РєРё, РµСЃР»Рё Р±С‹Р»Рё РїРµСЂРµРґР°РЅС‹ С‚Р°РєРёРµ РІС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
-std::vector<Eigen::Vector2d> convexHull(std::span<Eigen::Vector2d> points);
-
-Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
-Mesh copyToMesh(kapi::ksBodyPtr body);
+geom3d::Mesh copyToMesh(kapi::ksTessellationPtr tessellation);
+geom3d::Mesh copyToMesh(kapi::ksBodyPtr body);

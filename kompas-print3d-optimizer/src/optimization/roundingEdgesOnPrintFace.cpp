@@ -14,6 +14,7 @@
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
 #include "LinAlg.hpp"
+#include "generic/math.hpp"
 
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE = "Скругленные ребра на плоскости печати";
 const char* MACRO_NAME_ROUNDING_EDGES_ON_PRINT_FACE_ELEMENT = "Контур";

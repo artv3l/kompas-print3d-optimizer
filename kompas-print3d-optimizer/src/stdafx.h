@@ -1,6 +1,8 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#define NOMINMAX
+
 #define VC_EXTRALEAN        // Exclude rarely-used stuff from Windows headers
 
 // Modify the following defines if you have to target a platform prior to the ones specified below.

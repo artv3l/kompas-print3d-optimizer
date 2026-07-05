@@ -15,6 +15,7 @@
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
+#include "generic/math.hpp"
 
 const char* MACRO_NAME_BRIDGE_HOLE_FILL = "Закрытие нависающих отвертий диафрагмой";
 const char* MACRO_NAME_BRIDGE_HOLE_FILL_ELEMENT = "Отверстие";

@@ -5,13 +5,6 @@
 #include <span>
 #include <memory>
 
-#include <glm/vec3.hpp>
-
-#include "oglwrap/Mesh.hpp"
-#include "generic/math.hpp"
-#include "generic/enums.hpp"
-
-
 struct PlaneEq {
 	double a, b, c, d;
 

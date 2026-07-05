@@ -1,10 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <span>
 
 #include <glm/glm.hpp>
 
-using Index = unsigned int;
+#include <generic/geometry3d.hpp>
+#include <generic/color.hpp>
 
 // РћР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ РјРѕР¶РЅРѕ СЂРёСЃРѕРІР°С‚СЊ. Р’СЃРµ РґР°РЅРЅС‹Рµ СѓР¶Рµ РІРѕ float Рё РІ СѓРґРѕР±РЅРѕРј РґР»СЏ Р·Р°РіСЂСѓР·РєРё РЅР° РІРёРґРµРѕРєР°СЂС‚Сѓ С„РѕСЂРјР°С‚Рµ
 class IObject
@@ -16,6 +18,9 @@ public:
 class Mesh : public IObject
 {
 public:
+    using Index = unsigned int;
+
+    Mesh(const geom3d::Mesh& mesh);
     ~Mesh() override = default;
 
     std::vector<glm::vec3> positions;
@@ -26,6 +31,7 @@ public:
 class ColoredMesh : public Mesh
 {
 public:
+    ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color);
     ~ColoredMesh() override = default;
 
     std::vector<glm::vec3> colors;
@@ -34,6 +40,7 @@ public:
 class Polyline3D : public IObject
 {
 public:
+    Polyline3D(std::span<const geom3d::Vec3> points);
     ~Polyline3D() override = default;
 
     std::vector<glm::vec3> m_points;

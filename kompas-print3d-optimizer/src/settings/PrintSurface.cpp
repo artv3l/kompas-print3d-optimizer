@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "generic/math.hpp"
+
 PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
 	if (!face->IsPlanar()) {
 		throw std::runtime_error("The face is not planar");

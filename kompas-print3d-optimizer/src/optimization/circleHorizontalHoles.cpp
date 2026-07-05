@@ -11,6 +11,7 @@
 #include "LinAlg.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
+#include "generic/math.hpp"
 
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES = "Горизонтальные круглые отверстия";
 const char* MACRO_NAME_CIRCLE_HORIZONTAL_HOLES_ELEMENT = "Объекты построения";

@@ -19,6 +19,7 @@ project "kompas-print3d-optimizer"
         "%{wks.location}/oglwrap/include",
         "%{wks.location}/kapiwrap/include",
         "%{wks.location}/generic/include",
+        "%{wks.location}/core/include",
 
         "%{localDependencies.KompasAPI.include}",
         "%{localDependencies.KompasAPI.lib}",
@@ -30,6 +31,7 @@ project "kompas-print3d-optimizer"
         "oglwrap",
         "kapiwrap",
         "generic",
+        "core",
 
         "%{localDependencies.KompasAPI.lib64}/kApi2D5.lib",
         "%{localDependencies.KompasAPI.lib64}/kAPI3D5.lib",
@@ -48,11 +50,6 @@ project "kompas-print3d-optimizer"
 
         links {
             "%{vcpkg.lib.debug}/glad.lib",
-
-            "%{vcpkg.lib.debug}/CorradeMain-d.lib",
-            "%{vcpkg.lib.debug}/Magnum-d.lib",
-            "%{vcpkg.lib.debug}/MagnumPrimitives-d.lib",
-            "%{vcpkg.lib.debug}/MagnumTrade-d.lib",
         }
 
         postbuildcommands {
@@ -69,11 +66,6 @@ project "kompas-print3d-optimizer"
 
         links {
             "%{vcpkg.lib.release}/glad.lib",
-
-            "%{vcpkg.lib.release}/CorradeMain.lib",
-            "%{vcpkg.lib.release}/Magnum.lib",
-            "%{vcpkg.lib.release}/MagnumPrimitives.lib",
-            "%{vcpkg.lib.release}/MagnumTrade.lib",
         }
 
         postbuildcommands {

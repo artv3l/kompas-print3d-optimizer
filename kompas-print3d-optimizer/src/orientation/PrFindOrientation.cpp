@@ -16,6 +16,8 @@
 #include "global.hpp"
 #include "windows.hpp"
 #include "generic/perfomance.hpp"
+#include "mesh.hpp"
+#include "generic/math.hpp"
 
 namespace
 {
@@ -36,206 +38,27 @@ const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metric
 	{OrientationComplexCriteria::common, L"Общий"}
 };
 
-void createLocalCS(kapi::ksPartPtr part, const math::Plane & plane)
+void createLocalCS(kapi::ksPartPtr part, const geom3d::Plane & plane)
 {
 	kapi::IPart7Ptr part7 = global::kompas->TransferInterface(part, kapi::ksAPITypeEnum::ksAPI7Dual, 0);
 	kapi::IAuxiliaryGeomContainerPtr auxGeomCont(part7);
 	kapi::ILocalCoordinateSystemsPtr localCSs(auxGeomCont->LocalCoordinateSystems);
 
-	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
-		math::project(glm::vec3(0, 0, 0), plane), plane.getNormal());
-	const glm::mat4 matrix = printPlanePlacement.matrixToWorld();
+	const geom3d::Placement planePlacement = geom3d::Placement::createByAxisZ(
+		plane.projection(geom3d::Vec3(0.0, 0.0, 0.0)), plane.normal());
+
+	const Eigen::Matrix4d matrix = planePlacement.matrixToWorld().matrix();
 
 	std::vector<double> matrixVector;
 	for (uint8_t row = 0; row < 4; ++row) {
 		for (uint8_t col = 0; col < 4; ++col) {
-			matrixVector.push_back(static_cast<double>(matrix[row][col]));
+			matrixVector.push_back(static_cast<double>(matrix(row, col)));
 		}
 	}
 
 	kapi::ILocalCoordinateSystemPtr localCS(localCSs->Add());
 	localCS->InitByMatrix3D(toVariant(matrixVector));
 	localCS->Update();
-}
-
-// Найти плоскость печати и высоту модели
-std::pair<math::Plane, double> calcPrintPlaneAndHeight(const Mesh& mesh, const glm::vec3& direction)
-{
-	auto toShift = [normDir = glm::normalize(direction)](const glm::vec3& vec)
-		{
-			return -glm::dot(vec, normDir);
-		};
-
-	const auto [min, max] = std::ranges::minmax_element(mesh.positions, {}, toShift);
-	if (min == mesh.positions.end() || max == mesh.positions.end())
-		throw std::logic_error(""); // TODO
-
-	const math::Plane printPlane(direction, *min);
-	return std::make_pair(printPlane, math::distance(*max, printPlane));
-}
-
-OrientationInfo calcOrientationInfo(const Mesh& mesh, const glm::vec3& direction, double overhangThreshold, double offsetThreshold)
-{
-	OrientationInfo info;
-
-	const double overhangThresholdRad = math::toRadians(overhangThreshold);
-	const auto [printPlane, height] = calcPrintPlaneAndHeight(mesh, direction);
-
-	const math::Placement printPlanePlacement = math::Placement::createByAxisZ(
-		math::project(glm::vec3(0, 0, 0), printPlane), printPlane.getNormal()
-	);
-	const glm::mat4 toWorld = printPlanePlacement.matrixToWorld();
-	const glm::mat4 toPrintPlanePlacement = math::worldToLocal(printPlanePlacement);
-
-	std::vector<Eigen::Vector2d> convexHullPoints;
-	convexHullPoints.reserve(mesh.positions.size());
-
-	info.triangleProperties.resize(mesh.indexes.size() / 3);
-
-	for (int iIndex = 0; (iIndex + 2) < mesh.indexes.size(); iIndex += 3) {
-		const size_t i1 = mesh.indexes[iIndex];
-		const size_t i2 = mesh.indexes[iIndex + 1];
-		const size_t i3 = mesh.indexes[iIndex + 2];
-		const math::Triangle triangle(mesh.positions[i1], mesh.positions[i2], mesh.positions[i3]);
-
-		// Для всех трех точек будут одинаковые нормали, поэтому берем любую (первую)
-		const glm::vec3 normal = mesh.normals[i1];
-		const double angleRad = calcAngleBetween(normal, printPlane.getNormal());
-		const double triangleArea = triangle.area();
-
-		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
-			info.bottomArea += triangleArea;
-			info.triangleProperties[iIndex / 3] = TriangleProperties::bottom;
-		}
-		else if (angleRad < overhangThresholdRad) {
-			// Площадь под мостами тоже считаем за площадь нависаний
-			info.overhangArea += triangleArea;
-			info.overhangVolume += volumeUnderOverhang(printPlane, triangle);
-			info.triangleProperties[iIndex / 3] = TriangleProperties::overhang;
-		}
-
-		for (auto&& pnt : triangle.points) {
-			const glm::vec4 pntLocal = toPrintPlanePlacement * glm::vec4(pnt, 1.0f);
-			if (std::abs(pntLocal.z) < offsetThreshold) {
-				convexHullPoints.emplace_back(pntLocal.x, pntLocal.y);
-			}
-		}
-	}
-
-	info.modelHeight = height;
-
-	if (convexHullPoints.size() >= 3) {
-		std::vector<Eigen::Vector2d> hullPolygon = convexHull(convexHullPoints);
-		info.bottomConvexHullArea = (hullPolygon.size() >= 3) ? math::polygonArea(hullPolygon) : 0.0;
-
-		for (size_t i = 0; i < hullPolygon.size(); ++i) {
-			const auto& point = hullPolygon[i];
-			info.bottomContour.push_back(toWorld * glm::vec4(point.x(), point.y(), 0.0f, 1.0f));
-		}
-	}
-	else {
-		for (auto&& pnt : convexHullPoints) {
-			info.bottomContour.push_back(toWorld * glm::vec4(pnt.x(), pnt.y(), 0.0f, 1.0f));
-		}
-	}
-
-	return info;
-}
-
-// Рассчитать все критерии для нескольких вариантов ориентации
-std::vector<OrientationInfo> calcOrientationsEstimation(const Mesh& mesh, std::span<const glm::vec3> directions, double overhangThreshold, double offsetThreshold)
-{
-	assert(mesh.indexes.size() % 3 == 0);
-
-	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
-		std::cout << "Simple criteria calc: "
-			      << std::chrono::duration_cast<std::chrono::milliseconds>(time)
-			      << "\n";
-	});
-
-	std::vector<OrientationInfo> result;
-	result.resize(directions.size());
-	for (size_t i = 0; i < directions.size(); ++i) {
-		result[i] = calcOrientationInfo(mesh, directions[i], overhangThreshold, offsetThreshold);
-	}
-	return result;
-}
-
-// Преобразовать абсолюные значения в относительные [0, 1]
-template <std::ranges::range R>
-std::vector<double> toRelative(R absoluteValues)
-{
-	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
-
-	const auto [min, max] = std::ranges::minmax_element(absoluteValues);
-	if (min == absoluteValues.end() || max == absoluteValues.end())
-		throw std::logic_error(""); // TODO
-
-	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
-	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
-
-	return relativeValues;
-}
-
-// Рассчитать все составные критерии
-OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
-{
-	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
-		std::cout << "Composite criteria calc: "
-			      << std::chrono::duration_cast<std::chrono::milliseconds>(time)
-			      << "\n";
-	});
-
-	size_t size = infos.size();
-
-	OrientationComplexInfos result;
-	std::ranges::for_each(result, [size](auto& vector) { vector.resize(size); });
-
-	auto& overhangs = result[enums::toUnderlying(OrientationComplexCriteria::overhangs)];
-	{
-		auto relOverhangAreas = toRelative(infos | std::views::transform(&OrientationInfo::overhangArea));
-		auto relOverhangVolumes = toRelative(infos | std::views::transform(&OrientationInfo::overhangVolume));
-		for (size_t i = 0; i < size; ++i) {
-			overhangs[i] = (0.6 * relOverhangVolumes[i]) + (0.4 * relOverhangAreas[i]);
-		}
-	}
-
-	auto& bottomQuality = result[enums::toUnderlying(OrientationComplexCriteria::bottomQuality)];
-	{
-		auto relBottomAreas = toRelative(infos | std::views::transform(&OrientationInfo::bottomArea));
-		auto relBottomConvexHullAreas = toRelative(infos | std::views::transform(&OrientationInfo::bottomConvexHullArea));
-		for (size_t i = 0; i < size; ++i) {
-			bottomQuality[i] = (0.6 * (1.0 - relBottomAreas[i])) + (0.4 * (1.0 - relBottomConvexHullAreas[i]));
-		}
-	}
-
-	{
-		auto relModelHeight = toRelative(infos | std::views::transform(&OrientationInfo::modelHeight));
-		auto& common = result[enums::toUnderlying(OrientationComplexCriteria::common)];
-		for (size_t i = 0; i < size; ++i) {
-			common[i] = (0.4 * overhangs[i]) + (0.4 * bottomQuality[i]) + (0.2 * relModelHeight[i]);
-		}
-	}
-
-	return result;
-}
-
-OrientationStatByMesh calcOrientationStatByMesh(kapi::ksBodyPtr body, double overhangThreshold, double offsetThreshold, uint8_t subdivisionsCount)
-{
-	Mesh mesh = copyToMesh(body);
-
-	OrientationStatByMesh result;
-
-	result.model = std::make_shared<ColoredMesh>();
-	result.model->positions = std::move(mesh.positions);
-	result.model->normals = std::move(mesh.normals);
-	result.model->indexes = std::move(mesh.indexes);
-	result.model->colors = std::vector<glm::vec3>(result.model->positions.size(), glm::vec3(0.8f, 0.8f, 0.8f));
-
-	result.evalMesh = generateIcosphere(subdivisionsCount);
-	result.infos = calcOrientationsEstimation(*result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
-	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
-	return result;
 }
 }
 
@@ -257,24 +80,24 @@ std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria c
 void OrientationStatByMesh::updateMeshColors(size_t index)
 {
 	const auto& props = infos[index].triangleProperties;
-	assert(props.size() == (model->indexes.size() / 3));
+	assert(props.size() == (model.indexes.size() / 3));
 
 	for (size_t i = 0; i < props.size(); ++i) {
-		const size_t i1 = model->indexes[i * 3];
-		const size_t i2 = model->indexes[i * 3 + 1];
-		const size_t i3 = model->indexes[i * 3 + 2];
+		const size_t i1 = model.indexes[i * 3];
+		const size_t i2 = model.indexes[i * 3 + 1];
+		const size_t i3 = model.indexes[i * 3 + 2];
 
-		glm::vec3 color(0.8f, 0.8f, 0.8f);
+		color::RGB color = orientation::c_defaultColor;
 		if (props[i] == TriangleProperties::overhang) {
-			color = glm::vec3(1.0f, 0.0f, 0.0f);
+			color = orientation::c_overhangColor;
 		}
 		else if (props[i] == TriangleProperties::bottom) {
-			color = glm::vec3(0.0f, 0.0f, 1.0f);
+			color = orientation::c_bottomColor;
 		}
 
-		model->colors[i1] = color;
-		model->colors[i2] = color;
-		model->colors[i3] = color;
+		colors[i1] = color;
+		colors[i2] = color;
+		colors[i3] = color;
 	}
 }
 
@@ -308,9 +131,9 @@ bool PrFindOrientation::buttonClick(long buttonId)
 		// TODO Синхронизация максимального угла нависаний с переменными
 
 		// Создание ЛСК плоскости печати
-		const glm::vec3 normal = m_stat->evalMesh.normals[m_orientationsInGrid[m_currentGridRow - 1]];
-		const glm::vec3 point = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour[0];
-		const math::Plane plane(normal, point);
+		const geom3d::Vec3 normal = m_stat->evalMesh.normals[m_orientationsInGrid[m_currentGridRow - 1]];
+		const geom3d::Vec3 point = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour[0];
+		const geom3d::Plane plane(normal, point);
 		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
 		createLocalCS(part, plane);
 
@@ -356,7 +179,8 @@ bool PrFindOrientation::controlCommand(IDispatch* control, long buttonId)
 {
 	if (buttonId == m_recalcButton->Id) {
 		kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(part->GetMainBody(),
+		kapi::ksBodyPtr body = part->GetMainBody();
+		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(copyToMesh(body),
 			m_overhangThreshold, m_bottomThreshold, getSubdivisionsCount(m_accuracy)
 		));
 
@@ -425,13 +249,12 @@ void PrFindOrientation::initControls()
 
 		m_resultGrid = m_controls->Add(kapi::ControlTypeEnum::ksControlGrid);
 		m_resultGrid->Name = L"Результаты";
-		m_resultGrid->ColumnCount = 6;
+		m_resultGrid->ColumnCount = 5;
 		m_resultGrid->CellText[0][0] = L"№";
 		m_resultGrid->CellText[0][1] = L"S_o, мм2"; // Площадь нависаний
-		m_resultGrid->CellText[0][2] = L"V_o, мм3"; // Объем поддержек
-		m_resultGrid->CellText[0][3] = L"S_b, мм2"; // Площадь нижней поверхности
-		m_resultGrid->CellText[0][4] = L"S_ch, мм2"; // Площадь выпуклого многоугольника нижней поверхности
-		m_resultGrid->CellText[0][5] = L"H, мм"; // Высота модели
+		m_resultGrid->CellText[0][2] = L"S_b, мм2"; // Площадь нижней поверхности
+		m_resultGrid->CellText[0][3] = L"S_ch, мм2"; // Площадь выпуклого многоугольника нижней поверхности
+		m_resultGrid->CellText[0][4] = L"H, мм"; // Высота модели
 
 		m_controls->Add(kapi::ControlTypeEnum::ksControlGroupEnd); /*results*/
 	}
@@ -477,10 +300,9 @@ void PrFindOrientation::refillGrid(std::span<const size_t> indexes)
 	for (long i = 0; i < indexes.size(); ++i) {
 		m_resultGrid->CellText[i + 1][0] = toStr_i(i + 1);
 		m_resultGrid->CellText[i + 1][1] = toStr_d(m_stat->infos[indexes[i]].overhangArea);
-		m_resultGrid->CellText[i + 1][2] = toStr_d(m_stat->infos[indexes[i]].overhangVolume);
-		m_resultGrid->CellText[i + 1][3] = toStr_d(m_stat->infos[indexes[i]].bottomArea);
-		m_resultGrid->CellText[i + 1][4] = toStr_d(m_stat->infos[indexes[i]].bottomConvexHullArea);
-		m_resultGrid->CellText[i + 1][5] = toStr_d(m_stat->infos[indexes[i]].modelHeight);
+		m_resultGrid->CellText[i + 1][2] = toStr_d(m_stat->infos[indexes[i]].bottomArea);
+		m_resultGrid->CellText[i + 1][3] = toStr_d(m_stat->infos[indexes[i]].bottomConvexHullArea);
+		m_resultGrid->CellText[i + 1][4] = toStr_d(m_stat->infos[indexes[i]].modelHeight);
 	}
 
 	m_resultGrid->CurrentRow = static_cast<long>(m_currentGridRow);
@@ -508,10 +330,7 @@ void PrFindOrientation::updateHeatmap()
 	const auto & complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_criteria)];
 	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
 
-	auto mesh = std::make_shared<ColoredMesh>();
-	mesh->positions = m_stat->evalMesh.positions;
-	mesh->normals = m_stat->evalMesh.normals;
-	mesh->indexes = m_stat->evalMesh.indexes;
+	auto mesh = std::make_shared<ColoredMesh>(m_stat->evalMesh, orientation::c_defaultColor);
 	mesh->colors = colors;
 
 	// Масштабирование икосферы по габариту детали
@@ -537,8 +356,8 @@ void PrFindOrientation::updateHeatmap()
 		const glm::vec3 normal = glm::normalize(mesh->normals[m_orientationsInGrid[m_currentGridRow - 1]]);
 		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
-		auto line = std::make_shared<Polyline3D>();
-		line->m_points = { point, point2 };
+		auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
+		auto line = std::make_shared<Polyline3D>(points);
 		hm->addObject(line, Visualizer::polyline);
 	}
 }
@@ -550,13 +369,20 @@ void PrFindOrientation::updateScene()
 
 	if (m_currentGridRow != 0 && !m_isShowHeatmap) {
 		m_stat->updateMeshColors(m_orientationsInGrid[m_currentGridRow - 1]);
-		hm->addObject(m_stat->model, Visualizer::colorMesh);
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor);
+		
+		mesh->colors.reserve(m_stat->colors.size());
+		for (size_t i = 0; i < m_stat->colors.size(); ++i)
+		{
+			auto&& color = m_stat->colors[i];
+			mesh->colors[i] = (glm::vec3(color.red, color.green, color.blue));
+		}
+
+		hm->addObject(mesh, Visualizer::colorMesh);
 
 		BottomContour contour = m_stat->infos[m_orientationsInGrid[m_currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<Polyline3D>();
-			polyline->m_points = contour;
-
+			auto polyline = std::make_shared<Polyline3D>(contour);
 			hm->addObject(polyline, Visualizer::polyline);
 		}
 	}

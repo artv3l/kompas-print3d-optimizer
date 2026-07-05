@@ -1,7 +1,7 @@
 project "oglwrap"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 
     files { "**.hpp", "**.cpp" }
 
