@@ -19,6 +19,22 @@ PlaneEq::PlaneEq(kapi::ksFaceDefinitionPtr face) {
 	}
 }
 
+PlaneEq::PlaneEq(ksapi::IFacePtr face)
+{
+	if (!face->IsPlanar()) {
+		throw std::runtime_error("The face is not planar");
+	}
+	ksapi::IMathSurface3DPtr surface = face->GetMathSurface();
+	double x0 = 0.0, y0 = 0.0, z0 = 0.0;
+	surface->GetPoint(surface->GetParamUMax(), surface->GetParamVMax(), x0, y0, z0);
+	surface->GetNormal(surface->GetParamUMax(), surface->GetParamVMax(), a, b, c);
+	d = -((a * x0) + (b * y0) + (c * z0));
+
+	if (!face->GetNormalOrientation()) {
+		invert();
+	}
+}
+
 bool PlaneEq::operator==(const PlaneEq& other) const {
 	double scale = 0.0;
 	if (!math::equal(other.a, 0.0)) {

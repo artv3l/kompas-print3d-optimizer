@@ -17,7 +17,7 @@ project "oglwrap"
     }
 
     filter "configurations:Debug"
-        runtime "Debug"
+        runtime "Release"
         symbols "On"
 
     filter "configurations:Release"

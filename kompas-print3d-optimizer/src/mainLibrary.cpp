@@ -5,6 +5,9 @@
 
 #include <WinUser.h>
 
+#include <KsAPI.h>
+#include <KompasLibraryActions.h>
+
 #include "resource.h"
 #include "kapiwrap/connection.hpp"
 
@@ -46,12 +49,8 @@ void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings)
     document3d->SaveAsToAdditionFormat(result.c_str(), param);
 }
 
-unsigned int WINAPI LIBRARYID() {
-    return IDR_LIBID;
-}
-
-void WINAPI LIBRARYENTRY(unsigned int comm) {
-
+void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
+{
     kapi::ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
     if (!document3d) {
         global::kompas->ksMessage("Необходимо открыть документ-модель");
@@ -62,7 +61,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
     Settings* settings = documentData.getSettings();
     HighlightingManager* highlightingManager = documentData.getHighlightingManager();
 
-    switch (comm) { // Настройки
+    switch (commandId) { // Настройки
     case 1:
         global::settingsManager->show(settings);
         return;
@@ -71,21 +70,23 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             PrintSurface printSurface = getSelectedPrintSurface(document3d);
             settings->setPrintSurface(printSurface);
             global::kompas->ksMessage("Плоскость печати успешно выбрана!");
-        } catch (const std::runtime_error& e) {
+        }
+        catch (const std::runtime_error& e) {
             global::kompas->ksMessage(e.what());
         }
         return;
     }
 
-    switch (comm) { // Быстрый экспорт
+    switch (commandId) { // Быстрый экспорт
     case 5: {
         kapi::IApplicationPtr application = global::kompas->ksGetApplication7();
         fastExportStl(document3d, *settings);
         application->kApi7_MessageBoxEx("Сохранено в STL", "", MB_ICONINFORMATION);
         return;
-    }}
+    }
+    }
 
-    switch (comm) { // Определение плоскости печати
+    switch (commandId) { // Определение плоскости печати
     case 21: {
         global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
         global::prFindOrientation->show();
@@ -98,7 +99,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         return;
     }
 
-    if (comm >= 30) { // Подсветка элементов
+    if (commandId >= 30) { // Подсветка элементов
 
         // TODO Не работает отключение подсветок
 
@@ -108,7 +109,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         highlightingManager->cleanObjects();
         highlightingManager->addObject(mesh, Visualizer::meshHighlight3dp);
 
-        switch (comm) {
+        switch (commandId) {
         case 30:
             highlightingManager->toggleMode(HighlightingManager::Mode::layersEverywhere);
             break;
@@ -125,14 +126,19 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
 
     // Оптимизации
     kapi::ksPartPtr part = document3d->GetPart(kapi::pTop_Part);
+
+    ksapi::IKompasDocument3DPtr activeDocument = global::kompasApp->GetActiveDocument();
+    ksapi::IPartPtr topPart = activeDocument->GetTopPart();
+
     kapi::ksEntityPtr optimizationResult = nullptr;
+    ksapi::IModelObjectPtr optimizationResult2 = nullptr;
     size_t reworkCount = 0;
-    switch (comm) {
+    switch (commandId) {
     case 10:
         optimizationResult = optimizeRounding(part, *settings);
         break;
     case 11:
-        optimizationResult = optimizeElephantFoot(part, *settings);
+        optimizationResult2 = optimizeElephantFoot(topPart, *settings);
         break;
     case 12:
         optimizationResult = optimizeRoundingEdgesOnPrintFace(global::kompas, part, *settings, ReworkType::ALL, reworkCount);
@@ -154,7 +160,7 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
         optimizationResult = optimizeCircleHorizontalHoles(global::kompas, document3d, part, *settings);
         break;
     }
-    if (!optimizationResult) {
+    if (!optimizationResult && !optimizationResult2) {
         global::kompas->ksMessage("Не найдено геометрии для оптимизации");
     } else {
         Macro rootMacro = documentData.getOrCreateRootMacro();
@@ -166,4 +172,21 @@ void WINAPI LIBRARYENTRY(unsigned int comm) {
             global::kompas->ksMessage("Оптимизация модели была выполнена!");
         }
     }
+}
+
+APP_EXP_FUNC(bool) LoadKompasLibrary(ksapi::IApplication& app, ksapi::IKompasLibraryActions& libaryActions)
+{
+    libaryActions.AddRunCommandHandler(RunCommand);
+
+    global::kompasApp = &app;
+    global::init();
+
+    return true;
+}
+
+APP_EXP_FUNC(void) UnloadKompasLibrary()
+{
+    global::settingsManager->hide();
+    if (global::prFindOrientation)
+        global::prFindOrientation->hide();
 }

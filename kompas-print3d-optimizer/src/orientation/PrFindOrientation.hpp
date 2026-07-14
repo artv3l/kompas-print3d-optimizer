@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <memory>
+#include <vector>
 
 #include "kapiwrap/PropertyManagerObject.hpp"
 #include "settings/DocumentData.hpp"

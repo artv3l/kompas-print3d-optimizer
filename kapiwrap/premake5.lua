@@ -1,7 +1,7 @@
 project "kapiwrap"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 
     characterset ("Unicode")
     mfc "On"
@@ -21,20 +21,21 @@ project "kapiwrap"
 
         "%{localDependencies.KompasAPI.include}",
         "%{localDependencies.KompasAPI.lib}",
+        "%{localDependencies.ksapi.include}",
     }
 
     links {
         "generic",
     }
 
+    runtime "Release"
+
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
         optimize "Off"
-        runtime "Debug"
 
     filter "configurations:Release"
         defines { "NDEBUG" }
         symbols "Off"
         optimize "On"
-        runtime "Release"

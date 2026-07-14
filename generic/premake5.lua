@@ -10,12 +10,13 @@ project "generic"
         "%{vcpkg.include}",
     }
 
+    runtime "Release"
+
     filter "configurations:Debug"
-        runtime "Debug"
         symbols "On"
+        optimize "Off"
 
     filter "configurations:Release"
-        runtime "Release"
         symbols "Off"
         optimize "On"
 
@@ -33,27 +34,21 @@ project "generic-tests"
 
     links {
         "generic",
+
+        "%{vcpkg.lib.release}/gtest.lib",
+        "%{vcpkg.lib.release}/gmock.lib",
+    }
+
+    runtime "Release"
+
+    postbuildcommands {
+        "{COPYDIR} %{vcpkg.bin.release} %{cfg.buildtarget.directory}",
     }
 
     filter "configurations:Debug"
-        runtime "Debug"
         symbols "On"
+        optimize "Off"
 
-        links {
-            "%{vcpkg.lib.debug}/gtest.lib",
-            "%{vcpkg.lib.debug}/gmock.lib",
-        }
-
-        postbuildcommands {
-            "{COPYDIR} %{vcpkg.bin.debug} %{cfg.buildtarget.directory}",
-        }
-    
     filter "configurations:Release"
-        runtime "Release"
         symbols "Off"
         optimize "On"
-
-        links {
-            "%{vcpkg.lib.release}/gtest.lib",
-            "%{vcpkg.lib.release}/gmock.lib",
-        }

@@ -11,14 +11,15 @@ project "core"
         "%{vcpkg.include}",
     }
 
+    runtime "Release"
+
     filter "configurations:Debug"
-    runtime "Debug"
-    symbols "On"
+        symbols "On"
+        optimize "Off"
 
     filter "configurations:Release"
-    runtime "Release"
-    symbols "Off"
-    optimize "On"
+        symbols "Off"
+        optimize "On"
 
 project "core-tests"
     kind "ConsoleApp"
@@ -36,27 +37,21 @@ project "core-tests"
     links {
         "generic",
         "core",
-    }
 
-    filter "configurations:Debug"
-    runtime "Debug"
-    symbols "On"
-
-    links {
-        "%{vcpkg.lib.debug}/gtest.lib",
-        "%{vcpkg.lib.debug}/gmock.lib",
-    }
-
-    postbuildcommands {
-        "{COPYDIR} %{vcpkg.bin.debug} %{cfg.buildtarget.directory}",
-    }
-
-    filter "configurations:Release"
-    runtime "Release"
-    symbols "Off"
-    optimize "On"
-
-    links {
         "%{vcpkg.lib.release}/gtest.lib",
         "%{vcpkg.lib.release}/gmock.lib",
     }
+
+    runtime "Release"
+
+    postbuildcommands {
+        "{COPYDIR} %{vcpkg.bin.release} %{cfg.buildtarget.directory}",
+    }
+
+    filter "configurations:Debug"
+        symbols "On"
+        optimize "Off"
+
+    filter "configurations:Release"
+        symbols "Off"
+        optimize "On"

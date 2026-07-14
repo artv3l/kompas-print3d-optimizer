@@ -3,74 +3,83 @@
 #include <list>
 #include <sstream>
 
+#include <KsAPI.h>
+
 #include "kapiwrap/Macro.hpp"
+#include "kapiwrap/3d/part.hpp"
 
 #include "settings/PrintSurface.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
 
-const char* MACRO_NAME_ELEPHANT_FOOT = "Фаски слоновьей ноги";
+constexpr std::wstring_view c_macroNameElephantFoot = L"Фаски слоновьей ноги";
 
-std::list<kapi::ksLoopPtr> getElephantFootTargets(kapi::ksPartPtr part, PrintSurface printSurface) {
-	std::list<kapi::ksLoopPtr> elephantFootTargets;
+std::list<ksapi::ILoopPtr> getElephantFootTargets(ksapi::IPartPtr part, PrintSurface printSurface)
+{
+	std::list<ksapi::ILoopPtr> elephantFootTargets;
 
-	kapi::ksBodyPtr body = part->GetMainBody();
-	kapi::ksFaceCollectionPtr faces = body->FaceCollection();
-	int nFaces = faces->GetCount();
-	for (int iFace = 0; iFace < nFaces; iFace++) {
-		kapi::ksFaceDefinitionPtr face = faces->GetByIndex(iFace);
+	auto faces = getFaces(part);
+
+	for (ksapi::IFacePtr face : faces) {
 		if (!face->IsPlanar()) {
 			continue;
 		}
-		if ((face != printSurface.face) && (PlaneEq(face) != printSurface.eq)) {
+		if (PlaneEq(face) != printSurface.eq) {
 			continue;
 		}
-		kapi::ksLoopCollectionPtr loops(face->LoopCollection());
-		for (int iLoop = 0; iLoop < loops->GetCount(); iLoop++) {
-			elephantFootTargets.push_back(loops->GetByIndex(iLoop));
+
+		for (ksapi::ILoopPtr loop : face->GetLoops()) {
+			elephantFootTargets.push_back(loop);
 		}
 	}
 	return elephantFootTargets;
 }
 
-kapi::ksEntityPtr createElephantFootChamfers(kapi::ksPartPtr part, std::list<kapi::ksLoopPtr> elephantFootTargets, Settings& settings) {
-	Macro macro(part, MACRO_NAME_ELEPHANT_FOOT, true);
-	for (kapi::ksLoopPtr loopTarget : elephantFootTargets) {
-		kapi::ksEntityPtr chamferEntity(part->NewEntity(kapi::Obj3dType::o3d_chamfer));
-		kapi::ksChamferDefinitionPtr chamfer(chamferEntity->GetDefinition());
+ksapi::IModelObjectPtr createElephantFootChamfers(ksapi::IPartPtr part, std::list<ksapi::ILoopPtr> elephantFootTargets, Settings& settings)
+{
+	Macro macro(part, c_macroNameElephantFoot, true);
 
-		double width = settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getValue() * settings.getDoubleSetting(si::layerHeight.name)->getValue();
-		chamfer->SetChamferParam(true, width, width);
-		kapi::ksEntityCollectionPtr array(chamfer->array());
+	ksapi::IModelContainerPtr modelCont = part;
 
-		kapi::ksEdgeCollectionPtr edges(loopTarget->EdgeCollection());
-		int nEdges = edges->GetCount();
-		for (int iEdge = 0; iEdge < nEdges; iEdge++) {
-			array->Add(edges->GetByIndex(iEdge));
+	for (ksapi::ILoopPtr loopTarget : elephantFootTargets) {
+		const double width = settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getValue() * settings.getDoubleSetting(si::layerHeight.name)->getValue();
+
+		ksapi::IChamferPtr chamfer = modelCont->GetChamfers()->Add();
+		
+		chamfer->SetBuildingType(ksChamferBuildingTypeEnum::ksChamferTwoSides);
+		chamfer->SetDirection(true);
+		chamfer->SetDistance1(width);
+		chamfer->SetDistance2(width);
+
+		std::vector<ksapi::IModelObjectPtr> array;
+		for (auto edge : loopTarget->GetEdges()) {
+			array.push_back(edge);
 		}
+		chamfer->SetBaseObjects(array);
 
-		if (chamferEntity->Create()) {
-			{ // Привязываем размеры к переменным
-				kapi::ksFeaturePtr feature(chamferEntity->GetFeature());
-				kapi::ksVariableCollectionPtr variableCollection(feature->VariableCollection);
-				kapi::ksVariablePtr variable2(variableCollection->GetByIndex(2)); // Индекс=2 - "Длина 1"
-				kapi::ksVariablePtr variable3(variableCollection->GetByIndex(3)); // Индекс=3 - "Длина 2"
+		if (chamfer->Update()) {
+			// Привязываем размеры к переменным
+			ksapi::IFeaturePtr feature = chamfer;
+			ksapi::IVariablePtr variable2 = feature->GetVariable(false, true, 2); // Индекс=2 - "Длина 1"
+			ksapi::IVariablePtr variable3 = feature->GetVariable(false, true, 3); // Индекс=3 - "Длина 2"
 
-				std::ostringstream oss;
-				oss << settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getExpression() << " * " << settings.getDoubleSetting(si::layerHeight.name)->getExpression();
-				variable2->Expression = oss.str().c_str();
-				variable3->Expression = oss.str().c_str();
-			}
+			std::wostringstream oss;
+			oss << settings.getDoubleSetting(si::bridgeHoleFillLayersCount.name)->getExpression().c_str()
+				<< " * "
+				<< settings.getDoubleSetting(si::layerHeight.name)->getExpression().c_str();
+			variable2->SetExpression(oss.str().c_str());
+			variable3->SetExpression(oss.str().c_str());
 
-			macro.add(chamferEntity);
+			macro.add(chamfer);
 		}
 	}
-	return macro.getEntity();
+	return macro.getModelObject();
 }
 
-kapi::ksEntityPtr optimizeElephantFoot(kapi::ksPartPtr part, Settings& settings) {
-	std::list<kapi::ksLoopPtr> targets = getElephantFootTargets(part, *settings.getPrintSurface());
+ksapi::IModelObjectPtr optimizeElephantFoot(ksapi::IPartPtr part, Settings& settings)
+{
+	std::list<ksapi::ILoopPtr> targets = getElephantFootTargets(part, *settings.getPrintSurface());
 	if (targets.empty()) {
 		return nullptr;
 	}

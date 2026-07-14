@@ -5,10 +5,13 @@
 #include <span>
 #include <memory>
 
+#include <KsAPI.h>
+
 struct PlaneEq {
 	double a, b, c, d;
 
 	PlaneEq(kapi::ksFaceDefinitionPtr face);
+	PlaneEq(ksapi::IFacePtr face);
 
 	bool operator==(const PlaneEq& other) const;
 	bool operator!=(const PlaneEq& other) const;

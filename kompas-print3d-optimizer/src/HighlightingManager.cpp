@@ -231,7 +231,9 @@ bool HighlightingManager::closePaintGL(kapi::ksGLObject* glObject, long drawMode
 
 bool HighlightingManager::deactivate() {
     global::settingsManager->hide();
-    global::prFindOrientation->hide();
+    if (global::prFindOrientation) {
+        global::prFindOrientation->hide();
+    }
     return true;
 }
 

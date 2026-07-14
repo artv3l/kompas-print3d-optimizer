@@ -18,6 +18,10 @@ localDependencies = {
         lib = "%{paths.KompasSdk}/lib",
         lib64 = "%{paths.KompasSdk}/lib64",
     },
+    ksapi = {
+        include = "%{paths.KompasSdk}/KsAPI/Include",
+        lib = "%{paths.KompasSdk}/KsAPI/Lib64",
+    },
 }
 
 workspace "kompas-print3d-optimizer"
