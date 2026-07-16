@@ -12,7 +12,6 @@
 #include "kapiwrap/connection.hpp"
 
 #include "settings/PrintSurface.hpp"
-#include "optimization/rounding.hpp"
 #include "optimization/elephantFoot.hpp"
 #include "optimization/bridgeHole.hpp"
 #include "optimization/roundingEdgesOnPrintFace.hpp"
@@ -134,9 +133,6 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
     ksapi::IModelObjectPtr optimizationResult2 = nullptr;
     size_t reworkCount = 0;
     switch (commandId) {
-    case 10:
-        optimizationResult = optimizeRounding(part, *settings);
-        break;
     case 11:
         optimizationResult2 = optimizeElephantFoot(topPart, *settings);
         break;
