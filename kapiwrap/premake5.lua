@@ -14,7 +14,7 @@ project "kapiwrap"
     forceincludes  { "stdafx.h" }
 
     includedirs {
-        "include/kapiwrap",
+        "include",
         "%{wks.location}/generic/include",
 
         "%{vcpkg.include}",

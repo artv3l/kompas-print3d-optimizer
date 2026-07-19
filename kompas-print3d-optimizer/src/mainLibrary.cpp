@@ -12,9 +12,8 @@
 #include "kapiwrap/connection.hpp"
 
 #include "settings/PrintSurface.hpp"
-#include "optimization/elephantFoot.hpp"
+#include "optimization/optimizations.hpp"
 #include "optimization/bridgeHole.hpp"
-#include "optimization/roundingEdgesOnPrintFace.hpp"
 #include "optimization/circleHorizontalHoles.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
@@ -137,10 +136,10 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
         optimizationResult2 = optimizeElephantFoot(topPart, *settings);
         break;
     case 12:
-        optimizationResult = optimizeRoundingEdgesOnPrintFace(global::kompas, part, *settings, ReworkType::ALL, reworkCount);
+        optimizationResult2 = optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ALL, reworkCount);
         break;
     case 13:
-        optimizationResult = optimizeRoundingEdgesOnPrintFace(global::kompas, part, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
+        optimizationResult2 = optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
         break;
     case 14:
         optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);

@@ -57,6 +57,7 @@ public:
     double getValue() const;
     void setValue(double value);
     std::string getExpression() const;
+    std::wstring getExpressionW() const;
 
 private:
     double m_value;

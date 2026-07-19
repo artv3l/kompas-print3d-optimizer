@@ -1,4 +1,4 @@
-#include "AutomationBaseEvent.hpp"
+#include "kapiwrap/AutomationBaseEvent.hpp"
 
 #include <Unknwn.h>
 #include <guiddef.h>

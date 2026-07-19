@@ -1,4 +1,4 @@
-#include "connection.hpp"
+#include "kapiwrap/connection.hpp"
 
 #include <stdexcept>
 

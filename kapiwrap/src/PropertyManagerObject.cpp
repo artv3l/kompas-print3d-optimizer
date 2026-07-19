@@ -1,6 +1,6 @@
-#include "PropertyManagerObject.hpp"
+#include "kapiwrap/PropertyManagerObject.hpp"
 
-#include "PropertyManagerEvent.hpp"
+#include "kapiwrap/PropertyManagerEvent.hpp"
 
 PropertyManagerObject::PropertyManagerObject(kapi::KompasObjectPtr kompas) :
         m_kompas(kompas), m_application(kompas->ksGetApplication7()),

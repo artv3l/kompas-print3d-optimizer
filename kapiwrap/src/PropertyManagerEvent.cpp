@@ -1,9 +1,9 @@
-#include "PropertyManagerEvent.hpp"
+#include "kapiwrap/PropertyManagerEvent.hpp"
 
 #include <afxdisp.h>
 
-#include "AutomationBaseEvent.hpp"
-#include "PropertyManagerObject.hpp"
+#include "kapiwrap/AutomationBaseEvent.hpp"
+#include "kapiwrap/PropertyManagerObject.hpp"
 
 PropertyManagerEvent::PropertyManagerEvent(PropertyManagerObject *propertyManager) :
         AutomationBaseEvent(static_cast<IUnknown *>(propertyManager->getPropertyManager()), kapi::DIID_ksPropertyManagerNotify),

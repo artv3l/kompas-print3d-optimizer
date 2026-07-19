@@ -1,4 +1,4 @@
-#include "3d/part.hpp"
+#include "kapiwrap/3d/part.hpp"
 
 #include <vector>
 #include <stdexcept>
@@ -14,4 +14,14 @@ std::vector<ksapi::IFacePtr> getFaces(ksapi::IPartPtr part)
         faces.emplace_back(obj);
     }
     return faces;
+}
+
+std::vector<ksapi::IEdgePtr> getEdges(ksapi::IFacePtr face)
+{
+    std::vector<ksapi::IEdgePtr> edges;
+    for (ksapi::ILoopPtr loop : face->GetLoops()) {
+        std::vector<ksapi::IEdgePtr> loopEdges = loop->GetEdges();
+        edges.insert(edges.end(), loopEdges.cbegin(), loopEdges.cend());
+    }
+    return edges;
 }

@@ -1,4 +1,4 @@
-#include "elephantFoot.hpp"
+#include "optimizations.hpp"
 
 #include <list>
 #include <sstream>
@@ -8,13 +8,14 @@
 #include "kapiwrap/Macro.hpp"
 #include "kapiwrap/3d/part.hpp"
 
+#include "resources.hpp"
 #include "settings/PrintSurface.hpp"
 #include "settings/Settings.hpp"
 #include "settings/Setting.hpp"
 #include "settings/SettingInitializer.hpp"
 
-constexpr std::wstring_view c_macroNameElephantFoot = L"Фаски слоновьей ноги";
-
+namespace
+{
 std::list<ksapi::ILoopPtr> getElephantFootTargets(ksapi::IPartPtr part, PrintSurface printSurface)
 {
 	std::list<ksapi::ILoopPtr> elephantFootTargets;
@@ -38,7 +39,7 @@ std::list<ksapi::ILoopPtr> getElephantFootTargets(ksapi::IPartPtr part, PrintSur
 
 ksapi::IModelObjectPtr createElephantFootChamfers(ksapi::IPartPtr part, std::list<ksapi::ILoopPtr> elephantFootTargets, Settings& settings)
 {
-	Macro macro(part, c_macroNameElephantFoot, true);
+	Macro macro(part, resources::c_macroNameElephantFoot, true);
 
 	ksapi::IModelContainerPtr modelCont = part;
 
@@ -75,6 +76,7 @@ ksapi::IModelObjectPtr createElephantFootChamfers(ksapi::IPartPtr part, std::lis
 		}
 	}
 	return macro.getModelObject();
+}
 }
 
 ksapi::IModelObjectPtr optimizeElephantFoot(ksapi::IPartPtr part, Settings& settings)

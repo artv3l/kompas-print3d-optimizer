@@ -1,8 +1,8 @@
-#include "DocumentFrameEvent.hpp"
+#include "kapiwrap/DocumentFrameEvent.hpp"
 
 #include <afxdisp.h>
 
-#include "AutomationBaseEvent.hpp"
+#include "kapiwrap/AutomationBaseEvent.hpp"
 
 
 DocumentFrameEvent::DocumentFrameEvent(kapi::IDocumentFramePtr documentFrame) :

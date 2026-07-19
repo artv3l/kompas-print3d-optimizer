@@ -68,3 +68,9 @@ std::string DoubleSetting::getExpression() const {
     oss << m_value;
     return oss.str();
 }
+
+std::wstring DoubleSetting::getExpressionW() const {
+    std::wostringstream oss;
+    oss << m_value;
+    return oss.str();
+}

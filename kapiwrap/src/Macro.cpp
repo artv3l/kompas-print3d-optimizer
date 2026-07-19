@@ -1,4 +1,4 @@
-#include "Macro.hpp"
+#include "kapiwrap/Macro.hpp"
 
 Macro::Macro(kapi::ksPartPtr part, _bstr_t name, bool staffVisible):
         m_entity(part->NewEntity(kapi::o3d_MacroObject)),
@@ -35,7 +35,11 @@ bool Macro::add(IDispatchPtr obj) {
 }
 
 bool Macro::add(Macro macro) {
-    return m_definition->Add(macro.m_entity);
+    if (m_definition)
+        m_definition->Add(macro.m_entity);
+    else
+        add(macro.getModelObject());
+    return true;
 }
 
 void Macro::add(ksapi::IModelObjectPtr object)
