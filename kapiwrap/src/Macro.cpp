@@ -21,7 +21,8 @@ Macro::Macro(kapi::ksEntityPtr entity) :
 {}
 
 
-Macro::~Macro() {
+Macro::~Macro()
+{
     update();
 }
 
@@ -44,17 +45,19 @@ bool Macro::add(Macro macro) {
 
 void Macro::add(ksapi::IModelObjectPtr object)
 {
-    auto objects = m_macro3d->GetObjects();
-    objects.push_back(object);
-    m_macro3d->SetObjects(objects);
+    m_objects.push_back(object);
 }
 
-bool Macro::update() {
+bool Macro::update()
+{
+    bool result = false;
     if (m_entity)
-        m_entity->Update();
-    if (m_macro3d)
+        result = m_entity->Update();
+    if (m_macro3d) {
+        m_macro3d->SetObjects(m_objects);
         m_macro3d->Update();
-    return true;
+    }
+    return result;
 }
 
 bool Macro::isCreated() const {

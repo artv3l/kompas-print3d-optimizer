@@ -129,17 +129,16 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
     ksapi::IPartPtr topPart = activeDocument->GetTopPart();
 
     kapi::ksEntityPtr optimizationResult = nullptr;
-    ksapi::IModelObjectPtr optimizationResult2 = nullptr;
     size_t reworkCount = 0;
     switch (commandId) {
     case 11:
-        optimizationResult2 = optimizeElephantFoot(topPart, *settings);
+        optimizeElephantFoot(topPart, *settings);
         break;
     case 12:
-        optimizationResult2 = optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ALL, reworkCount);
+        optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ALL, reworkCount);
         break;
     case 13:
-        optimizationResult2 = optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
+        optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
         break;
     case 14:
         optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
@@ -155,7 +154,7 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
         optimizationResult = optimizeCircleHorizontalHoles(global::kompas, document3d, part, *settings);
         break;
     }
-    if (!optimizationResult && !optimizationResult2) {
+    if (!optimizationResult) {
         global::kompas->ksMessage("Не найдено геометрии для оптимизации");
     } else {
         Macro rootMacro = documentData.getOrCreateRootMacro();

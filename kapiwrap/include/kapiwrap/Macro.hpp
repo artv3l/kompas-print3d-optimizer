@@ -31,6 +31,7 @@ private:
     kapi::ksMacro3DDefinitionPtr m_definition;
 
     ksapi::IMacroObject3DPtr m_macro3d;
+    std::vector<ksapi::IModelObjectPtr> m_objects;
 };
 
 #endif /* MACRO_HPP */

@@ -284,10 +284,10 @@ void drawSketch(Sketch sketch, RoundingEdgeOnPrintFaceTarget target, DoubleSetti
     constrCreator.equalRadius(roundingArc);
 }
 
-ksapi::IModelObjectPtr optimizeRoundingEdgesOnPrintFace(ksapi::IPartPtr part, Settings& settings, ReworkType reworkType, size_t& reworkCount) {
+void optimizeRoundingEdgesOnPrintFace(ksapi::IPartPtr part, Settings& settings, ReworkType reworkType, size_t& reworkCount) {
     std::list<RoundingEdgeOnPrintFaceTarget> targets = getRoundingEdgesOnPrintFaceTargets(part, *settings.getPrintSurface(), reworkType);
     if (targets.empty()) {
-        return nullptr;
+        return;
     }
     Macro macro(part, resources::c_macroNameRoundingEdgesOnPrintFace, true);
 
@@ -312,11 +312,11 @@ ksapi::IModelObjectPtr optimizeRoundingEdgesOnPrintFace(ksapi::IPartPtr part, Se
         ksapi::IEvolutionPtr evolution = createEvolution(part, sketch, ksEvolutionShiftSketchTypeEnum::ksEvShiftKeepAngle, edges);
 
         macroElement.add(evolution);
+        macroElement.update();
         macro.add(macroElement);
 
         if (target.needRework) {
             reworkCount++;
         }
     }
-    return macro.getModelObject();
 }

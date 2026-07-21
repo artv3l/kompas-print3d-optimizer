@@ -37,7 +37,7 @@ std::list<ksapi::ILoopPtr> getElephantFootTargets(ksapi::IPartPtr part, PrintSur
 	return elephantFootTargets;
 }
 
-ksapi::IModelObjectPtr createElephantFootChamfers(ksapi::IPartPtr part, std::list<ksapi::ILoopPtr> elephantFootTargets, Settings& settings)
+void createElephantFootChamfers(ksapi::IPartPtr part, std::list<ksapi::ILoopPtr> elephantFootTargets, Settings& settings)
 {
 	Macro macro(part, resources::c_macroNameElephantFoot, true);
 
@@ -75,15 +75,13 @@ ksapi::IModelObjectPtr createElephantFootChamfers(ksapi::IPartPtr part, std::lis
 			macro.add(chamfer);
 		}
 	}
-	return macro.getModelObject();
 }
 }
 
-ksapi::IModelObjectPtr optimizeElephantFoot(ksapi::IPartPtr part, Settings& settings)
+void optimizeElephantFoot(ksapi::IPartPtr part, Settings& settings)
 {
 	std::list<ksapi::ILoopPtr> targets = getElephantFootTargets(part, *settings.getPrintSurface());
-	if (targets.empty()) {
-		return nullptr;
+	if (!targets.empty()) {
+		createElephantFootChamfers(part, targets, settings);
 	}
-	return createElephantFootChamfers(part, targets, settings);
 }
