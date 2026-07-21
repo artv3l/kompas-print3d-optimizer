@@ -8,8 +8,6 @@
 
 class DocumentData {
 public:
-    static const char* ROOT_MACRO_NAME;
-
     DocumentData(kapi::KompasObjectPtr kompas, kapi::ksDocument3DPtr document3d);
     DocumentData(const DocumentData& obj) = delete;
     DocumentData(DocumentData&& obj) noexcept = delete;
@@ -18,12 +16,10 @@ public:
 
     Settings* getSettings();
     HighlightingManager* getHighlightingManager();
-    Macro getOrCreateRootMacro();
     kapi::ksDocument3DPtr getDocument() const;
 
 private:
     kapi::ksDocument3DPtr m_document3d;
     Settings m_settings;
-    std::optional<Macro> m_rootMacro;
     HighlightingManager m_highlightingManager;
 };

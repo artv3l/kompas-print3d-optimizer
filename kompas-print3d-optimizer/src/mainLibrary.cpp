@@ -128,7 +128,6 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
     ksapi::IKompasDocument3DPtr activeDocument = global::kompasApp->GetActiveDocument();
     ksapi::IPartPtr topPart = activeDocument->GetTopPart();
 
-    kapi::ksEntityPtr optimizationResult = nullptr;
     size_t reworkCount = 0;
     switch (commandId) {
     case 11:
@@ -141,30 +140,18 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
         optimizeRoundingEdgesOnPrintFace(topPart, *settings, ReworkType::ONLY_WITHOUT_REWORK, reworkCount);
         break;
     case 14:
-        optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
-        optimizationResult = optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
+        optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::NOT_CIRCLE);
+        optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
         break;
     case 15:
-        optimizationResult = optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::ALL);
+        optimizeBridgeHoleFill(global::kompas, document3d, part, *settings, HoleType::ALL);
         break;
     case 16:
-        optimizationResult = optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
+        optimizeBridgeHoleBuild(global::kompas, document3d, part, *settings);
         break;
     case 17:
-        optimizationResult = optimizeCircleHorizontalHoles(global::kompas, document3d, part, *settings);
+        optimizeCircleHorizontalHoles(global::kompas, document3d, part, *settings);
         break;
-    }
-    if (!optimizationResult) {
-        global::kompas->ksMessage("Не найдено геометрии для оптимизации");
-    } else {
-        Macro rootMacro = documentData.getOrCreateRootMacro();
-        rootMacro.add(optimizationResult);
-        document3d->RebuildDocument();
-        if (reworkCount != 0) {
-            global::kompas->ksMessage("Необходимо доработать элементов: " + _bstr_t(reworkCount));
-        } else {
-            global::kompas->ksMessage("Оптимизация модели была выполнена!");
-        }
     }
 }
 
