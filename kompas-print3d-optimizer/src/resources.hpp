@@ -4,8 +4,8 @@
 
 namespace resources
 {
-inline constexpr std::wstring_view c_macroNameElephantFoot = L"Р¤Р°СЃРєРё СЃР»РѕРЅРѕРІСЊРµР№ РЅРѕРіРё";
-inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFace = L"РЎРєСЂСѓРіР»РµРЅРЅС‹Рµ СЂРµР±СЂР° РЅР° РїР»РѕСЃРєРѕСЃС‚Рё РїРµС‡Р°С‚Рё";
-inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFaceElement = L"РљРѕРЅС‚СѓСЂ";
-inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFaceElementWithRework = L"РљРѕРЅС‚СѓСЂ - Р”РћР РђР‘РћРўРљРђ";
+inline constexpr std::wstring_view c_macroNameElephantFoot = L"Фаски слоновьей ноги";
+inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFace = L"Скругленные ребра на плоскости печати";
+inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFaceElement = L"Контур";
+inline constexpr std::wstring_view c_macroNameRoundingEdgesOnPrintFaceElementWithRework = L"Контур - ДОРАБОТКА";
 }
