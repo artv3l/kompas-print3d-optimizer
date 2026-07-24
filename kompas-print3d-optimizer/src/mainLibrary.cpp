@@ -50,12 +50,14 @@ void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings)
 void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
 {
     kapi::ksDocument3DPtr document3d = global::kompas->ActiveDocument3D();
+    ksapi::IKompasDocument3DPtr activeDocument = global::kompasApp->GetActiveDocument();
+
     if (!document3d) {
         global::kompas->ksMessage("Необходимо открыть документ-модель");
         return;
     }
 
-    DocumentData& documentData = global::documentsManager->getOrCreateDocumentData(document3d);
+    DocumentData& documentData = global::documentsManager->getOrCreateDocumentData(activeDocument, document3d);
     Settings* settings = documentData.getSettings();
     HighlightingManager* highlightingManager = documentData.getHighlightingManager();
 
@@ -125,7 +127,6 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
     // Оптимизации
     kapi::ksPartPtr part = document3d->GetPart(kapi::pTop_Part);
 
-    ksapi::IKompasDocument3DPtr activeDocument = global::kompasApp->GetActiveDocument();
     ksapi::IPartPtr topPart = activeDocument->GetTopPart();
 
     size_t reworkCount = 0;

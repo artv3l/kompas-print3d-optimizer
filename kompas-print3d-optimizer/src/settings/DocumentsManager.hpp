@@ -1,26 +1,24 @@
-#ifndef DOCUMENTS_MANAGER_HPP
-#define DOCUMENTS_MANAGER_HPP
+#pragma once
 
 #include <unordered_map>
 
 #include "settings/DocumentData.hpp"
 
-struct Document3DPtrReferenceHash {
-    size_t operator()(kapi::ksDocument3DPtr document3d) const;
+struct IKompasDocumentPtrHash
+{
+    size_t operator()(ksapi::IKompasDocumentPtr document) const;
 };
 
-class DocumentsManager {
+class DocumentsManager
+{
 public:
     DocumentsManager(kapi::KompasObjectPtr kompas);
 
-    DocumentData& getOrCreateDocumentData(kapi::ksDocument3DPtr document3d);
-    bool remove(kapi::ksDocument3DPtr document3d);
+    DocumentData& getOrCreateDocumentData(ksapi::IKompasDocumentPtr document, kapi::ksDocument3DPtr document3d);
 
 private:
-    using DocumentDataMap = std::unordered_map<kapi::ksDocument3DPtr, DocumentData, Document3DPtrReferenceHash>;
+    using DocumentDataMap = std::unordered_map<ksapi::IKompasDocumentPtr, DocumentData, IKompasDocumentPtrHash>;
 
     kapi::KompasObjectPtr m_kompas;
     DocumentDataMap m_documentDataMap;
 };
-
-#endif /* DOCUMENTS_MANAGER_HPP */

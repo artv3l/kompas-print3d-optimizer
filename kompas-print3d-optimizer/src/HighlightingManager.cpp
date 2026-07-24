@@ -143,7 +143,6 @@ bool HighlightingManager::closeFrame() {
     if (s_framesCount == 0) {
         m_shaders.clear();
     }
-    global::documentsManager->remove(m_document3d);
     return true;
 }
 
