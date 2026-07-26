@@ -18,7 +18,6 @@
 #include "optimization/circleHorizontalHoles.hpp"
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
-#include "orientation/PrFindOrientation.hpp"
 #include "global.hpp"
 #include "resources.hpp"
 #include "process/OrientationSearch.hpp"
@@ -175,6 +174,4 @@ APP_EXP_FUNC(bool) LoadKompasLibrary(ksapi::IApplication& app, ksapi::IKompasLib
 APP_EXP_FUNC(void) UnloadKompasLibrary()
 {
     global::settingsManager->hide();
-    if (global::prFindOrientation)
-        global::prFindOrientation->hide();
 }

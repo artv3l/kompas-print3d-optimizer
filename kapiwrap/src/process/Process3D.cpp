@@ -1,6 +1,6 @@
 #include "kapiwrap/process/Process3D.hpp"
 
-Process3D::Process3D(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName):
+Process3D::Process3D(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName, std::wstring_view caption):
 	m_document(document),
 	m_eventsOwnerName(eventsOwnerName),
 	m_params(kompasApp.CreateProcessParam()),
@@ -11,6 +11,7 @@ Process3D::Process3D(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr
 	namespace stdph = std::placeholders;
 
 	m_process->SetProcessParam(m_params);
+	m_process->SetCaption(std::wstring(caption));
 
 	m_paramEvents->AddChangeControlValueHandler(m_eventsOwnerName, std::bind(&Process3D::changeControlValue, this, stdph::_1));
 	m_paramEvents->AddButtonClickHandler(m_eventsOwnerName, std::bind(&Process3D::buttonClick, this, stdph::_1));

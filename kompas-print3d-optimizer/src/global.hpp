@@ -7,7 +7,6 @@
 
 #include "settings/DocumentsManager.hpp"
 #include "settings/SettingsManager.hpp"
-#include "orientation/PrFindOrientation.hpp"
 
 class Global {
 public:
@@ -16,8 +15,6 @@ public:
 
     static std::unique_ptr<DocumentsManager> documentsManager;
     static std::unique_ptr<SettingsManager> settingsManager;
-
-    static std::unique_ptr<PrFindOrientation> prFindOrientation;
 
     static void init();
     static bool isInited();
