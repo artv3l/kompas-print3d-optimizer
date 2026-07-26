@@ -10,6 +10,7 @@
 
 #include "resource.h"
 #include "kapiwrap/connection.hpp"
+#include "kapiwrap/process/Process3D.hpp"
 
 #include "settings/PrintSurface.hpp"
 #include "optimization/optimizations.hpp"
@@ -19,7 +20,8 @@
 #include "settings/SettingsManager.hpp"
 #include "orientation/PrFindOrientation.hpp"
 #include "global.hpp"
-
+#include "resources.hpp"
+#include "process/OrientationSearch.hpp"
 
 void fastExportStl(kapi::ksDocument3DPtr document3d, Settings& settings)
 {
@@ -88,8 +90,12 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
 
     switch (commandId) { // Определение плоскости печати
     case 21: {
-        global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
-        global::prFindOrientation->show();
+        //global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
+        //global::prFindOrientation->show();
+        
+        OrientationSearch orientationSearch(*global::kompasApp, activeDocument, resources::c_libraryName);
+        orientationSearch.run();
+
         return;
     }
     }
