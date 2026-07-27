@@ -2,8 +2,13 @@
 
 #include <format>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "generic/enums.hpp"
+#include "generic/math.hpp"
 #include "core/orientation/orientation.hpp"
+#include "kapiwrap/3d/part.hpp"
 
 namespace
 {
@@ -18,10 +23,16 @@ const std::unordered_map<OrientationComplexCriteria, std::wstring_view> c_metric
 	{OrientationComplexCriteria::bottomQuality, L"Нижняя поверхность"},
 	{OrientationComplexCriteria::common, L"Общий"}
 };
+
+uint8_t getSubdivisionsCount(Accuracy accuracy)
+{
+	return enums::toUnderlying(accuracy) + 1;
+}
 }
 
-OrientationSearch::OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName):
-	Process3D(kompasApp, document, eventsOwnerName, L"Поиск плоскости печати")
+OrientationSearch::OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName, DocumentData& documentData):
+	Process3D(kompasApp, document, eventsOwnerName, L"Поиск плоскости печати"),
+	m_documentData(documentData)
 {
 	m_data.overhangThreshold = 45;
 	m_data.bottomThreshold = 0.2;
@@ -58,8 +69,8 @@ void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& con
 
 bool OrientationSearch::buttonClick(int32_t buttonId)
 {
-	/*auto hm = m_documentData.getHighlightingManager();
-	hm->cleanObjects();*/
+	DrawingManager& drawingManager = m_documentData.getDrawingManager();
+	drawingManager.cleanObjects();
 
 	switch (buttonId) {
 	case SpecPropertyButtonEnum::pbEnter:
@@ -94,11 +105,12 @@ void OrientationSearch::selectItem(const ksapi::IPropertyControlPtr& control, in
 void OrientationSearch::controlCommand(const ksapi::IPropertyControlPtr& control, int32_t buttonId)
 {
 	if (buttonId == m_ctrls.recalcButton->GetId()) {
-		/*kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		kapi::ksBodyPtr body = part->GetMainBody();
-		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(copyToMesh(body),
-			m_overhangThreshold, m_bottomThreshold, getSubdivisionsCount(m_accuracy)
-		));*/
+		ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
+		ksapi::IPartPtr part = doc3d->GetTopPart();
+		
+		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(copyToMesh(part),
+			m_data.overhangThreshold, m_data.bottomThreshold, getSubdivisionsCount(m_data.accuracy)
+		));
 
 		updateControls();
 	}
@@ -176,7 +188,7 @@ void OrientationSearch::updateControls()
 	m_ctrls.overhangThreshold->SetIntValue(m_data.overhangThreshold);
 	m_ctrls.bottomThreshold->SetDoubleValue(m_data.bottomThreshold);
 	m_ctrls.accuracy->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.accuracy)));
-	m_ctrls.resultCount->SetIntValue(m_data.resultCount);
+	m_ctrls.resultCount->SetIntValue(static_cast<int32_t>(m_data.resultCount));
 
 	if (m_stat) {
 		m_ctrls.metricsList->SetVisible(true);
@@ -224,8 +236,81 @@ void OrientationSearch::refillGrid(std::span<const size_t> indexes)
 
 void OrientationSearch::updateHeatmap()
 {
+	if (!m_data.isShowHeatmap || !m_stat)
+		return;
+
+	std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
+
+	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
+	const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
+	auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
+
+	// value [0, 1] -> HSV color
+	auto toColor = [&toHeatmap](double value) -> glm::vec3
+		{
+			color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
+			return glm::vec3(rgb.red, rgb.green, rgb.blue);
+		};
+	const auto& complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_data.criteria)];
+	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
+
+	auto mesh = std::make_shared<ColoredMesh>(m_stat->evalMesh, orientation::c_defaultColor);
+	mesh->colors = colors;
+
+	// Масштабирование икосферы по габариту детали
+	ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
+	ksapi::IPartPtr part = doc3d->GetTopPart();
+
+	const geom3d::Gabarit gabarit = getGabarit(part);
+	const Eigen::Vector3d center = gabarit.center();
+	const double radius = (gabarit.getEnd() - gabarit.getBegin()).norm() / 2.0;
+
+	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
+	matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
+	std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
+		{
+			glm::vec4 res = matrix * glm::vec4(pos, 1.0);
+			return glm::vec3(res.x, res.y, res.z);
+		});
+
+	DrawingManager& drawingManager = m_documentData.getDrawingManager();
+	drawingManager.addObject(mesh, Visualizer::colorMesh);
+
+	if (m_data.currentGridRow != 0) {
+		const glm::vec3 point = mesh->positions[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
+		const glm::vec3 normal = glm::normalize(mesh->normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]]);
+		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
+
+		auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
+		auto line = std::make_shared<Polyline3D>(points);
+		drawingManager.addObject(line, Visualizer::polyline);
+	}
 }
 
 void OrientationSearch::updateScene()
 {
+	DrawingManager& drawingManager = m_documentData.getDrawingManager();
+	drawingManager.cleanObjects();
+
+	if (m_data.currentGridRow != 0 && !m_data.isShowHeatmap) {
+		m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor);
+
+		mesh->colors.reserve(m_stat->colors.size());
+		for (size_t i = 0; i < m_stat->colors.size(); ++i)
+		{
+			auto&& color = m_stat->colors[i];
+			mesh->colors[i] = (glm::vec3(color.red, color.green, color.blue));
+		}
+
+		drawingManager.addObject(mesh, Visualizer::colorMesh);
+
+		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
+		if (contour.size() >= 3) {
+			auto polyline = std::make_shared<Polyline3D>(contour);
+			drawingManager.addObject(polyline, Visualizer::polyline);
+		}
+	}
+
+	updateHeatmap();
 }

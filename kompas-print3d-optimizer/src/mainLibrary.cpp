@@ -92,7 +92,7 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
         //global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
         //global::prFindOrientation->show();
         
-        OrientationSearch orientationSearch(*global::kompasApp, activeDocument, resources::c_libraryName);
+        OrientationSearch orientationSearch(*global::kompasApp, activeDocument, resources::c_libraryName, documentData);
         orientationSearch.run();
 
         return;

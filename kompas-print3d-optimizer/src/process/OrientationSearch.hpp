@@ -6,6 +6,7 @@
 
 #include "kapiwrap/process/Process3D.hpp"
 #include "core/orientation/orientation.hpp"
+#include "settings/DocumentData.hpp"
 
 enum class Accuracy : uint8_t
 {
@@ -18,7 +19,7 @@ enum class Accuracy : uint8_t
 class OrientationSearch final : public Process3D
 {
 public:
-	OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName);
+	OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr document, std::wstring_view eventsOwnerName, DocumentData& documentData);
 
 protected:
 	void changeControlValue(const ksapi::IPropertyControlPtr& control) override;
@@ -59,4 +60,6 @@ private:
 	} m_data;
 
 	std::unique_ptr<OrientationStatByMesh> m_stat;
+
+	DocumentData& m_documentData;
 };

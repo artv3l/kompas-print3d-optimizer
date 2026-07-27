@@ -62,45 +62,6 @@ void createLocalCS(kapi::ksPartPtr part, const geom3d::Plane & plane)
 }
 }
 
-std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const
-{
-	const auto& complexEstimation = complexInfos[enums::toUnderlying(criteria)];
-	std::vector<size_t> indexes(complexEstimation.size());
-	std::iota(indexes.begin(), indexes.end(), 0);
-
-	auto indexToElem = [&complexEstimation, criteria](size_t index)
-		{
-			return complexEstimation[index];
-		};
-	std::ranges::partial_sort(indexes, indexes.begin() + count, {}, indexToElem);
-
-	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
-}
-
-void OrientationStatByMesh::updateMeshColors(size_t index)
-{
-	const auto& props = infos[index].triangleProperties;
-	assert(props.size() == (model.indexes.size() / 3));
-
-	for (size_t i = 0; i < props.size(); ++i) {
-		const size_t i1 = model.indexes[i * 3];
-		const size_t i2 = model.indexes[i * 3 + 1];
-		const size_t i3 = model.indexes[i * 3 + 2];
-
-		color::RGB color = orientation::c_defaultColor;
-		if (props[i] == TriangleProperties::overhang) {
-			color = orientation::c_overhangColor;
-		}
-		else if (props[i] == TriangleProperties::bottom) {
-			color = orientation::c_bottomColor;
-		}
-
-		colors[i1] = color;
-		colors[i2] = color;
-		colors[i3] = color;
-	}
-}
-
 PrFindOrientation::PrFindOrientation(kapi::KompasObjectPtr kompas, DocumentData& documentData):
 	PropertyManagerObject(kompas),
 	m_documentData(documentData),
