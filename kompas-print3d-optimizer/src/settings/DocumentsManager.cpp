@@ -23,7 +23,7 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksapi::IKompasDocumentPt
     if (it == m_documentDataMap.end()) {
         it = m_documentDataMap.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(document),
-                                       std::forward_as_tuple(m_kompas, document3d, document)
+                                       std::forward_as_tuple(document3d, document)
                                       ).first;
 
         auto onClose = [this, document]()

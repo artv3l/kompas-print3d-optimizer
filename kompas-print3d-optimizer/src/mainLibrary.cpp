@@ -60,7 +60,6 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
 
     DocumentData& documentData = global::documentsManager->getOrCreateDocumentData(activeDocument, document3d);
     Settings* settings = documentData.getSettings();
-    HighlightingManager* highlightingManager = documentData.getHighlightingManager();
 
     switch (commandId) { // Настройки
     case 1:
@@ -89,9 +88,6 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
 
     switch (commandId) { // Определение плоскости печати
     case 21: {
-        //global::prFindOrientation = std::make_unique<PrFindOrientation>(global::kompas, documentData);
-        //global::prFindOrientation->show();
-        
         OrientationSearch orientationSearch(*global::kompasApp, activeDocument, resources::c_libraryName, documentData);
         orientationSearch.run();
 
@@ -108,7 +104,7 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
 
         // TODO Не работает отключение подсветок
 
-        kapi::ksPartPtr part = document3d->GetPart(kapi::Part_Type::pTop_Part);
+        /*kapi::ksPartPtr part = document3d->GetPart(kapi::Part_Type::pTop_Part);
         kapi::ksBodyPtr body = part->GetMainBody();
         auto mesh = std::make_shared<Mesh>(copyToMesh(body));
         highlightingManager->cleanObjects();
@@ -125,7 +121,7 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
             highlightingManager->toggleMode(HighlightingManager::Mode::overhangs);
             break;
         }
-        highlightingManager->refreshWindow();
+        highlightingManager->refreshWindow();*/
         return;
     }
 
