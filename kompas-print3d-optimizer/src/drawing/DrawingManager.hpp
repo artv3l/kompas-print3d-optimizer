@@ -36,6 +36,7 @@ public:
 
     void addObject(std::shared_ptr<IObject> object, Visualizer visualizer);
     void cleanObjects();
+    void redraw();
 
 private:
     void close();

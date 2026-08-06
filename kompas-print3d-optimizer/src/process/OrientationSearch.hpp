@@ -30,8 +30,7 @@ protected:
 private:
 	void initControls();
 	void updateControls();
-	void refillGrid(std::span<const size_t> indexes);
-	void updateHeatmap();
+	void refillGrid();
 	void updateScene();
 
 private:
@@ -51,11 +50,11 @@ private:
 	{
 		OrientationComplexCriteria criteria = OrientationComplexCriteria::common;
 		bool isShowHeatmap = false;
-		int overhangThreshold = 0;
-		double bottomThreshold = 0.0;
-		size_t currentGridRow = 0; // 0 - СЃС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
-		std::vector<size_t> orientationsInGrid;
-		size_t resultCount = 0; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ
+		int overhangThreshold = 45;
+		double bottomThreshold = 0.2;
+		size_t currentGridRow = 1; // РЎС‚СЂРѕРєР° РІСЃРµРіРґР° РІС‹Р±СЂР°РЅР°
+		std::vector<size_t> orientationsInGrid = {};
+		size_t resultCount = 5; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ
 		Accuracy accuracy = Accuracy::medium;
 	} m_data;
 

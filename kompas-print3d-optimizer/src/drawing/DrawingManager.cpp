@@ -106,6 +106,11 @@ void DrawingManager::cleanObjects()
     m_objects.clear();
 }
 
+void DrawingManager::redraw()
+{
+    m_frame->RefreshWindow();
+}
+
 void DrawingManager::close()
 {
     s_framesCount--;

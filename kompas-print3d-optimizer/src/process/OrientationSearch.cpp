@@ -12,6 +12,9 @@
 
 namespace
 {
+// Минимальное кол-во результатов (строк) в таблице
+constexpr size_t c_minResultCount = 1;
+
 const std::unordered_map<Accuracy, std::wstring_view> c_accuracyNames = {
 	{Accuracy::low, L"Низкая"},
 	{Accuracy::medium, L"Средняя"},
@@ -34,11 +37,6 @@ OrientationSearch::OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKom
 	Process3D(kompasApp, document, eventsOwnerName, L"Поиск плоскости печати"),
 	m_documentData(documentData)
 {
-	m_data.overhangThreshold = 45;
-	m_data.bottomThreshold = 0.2;
-	m_data.resultCount = 5;
-	m_data.accuracy = Accuracy::medium;
-
 	initControls();
 	updateControls();
 }
@@ -91,13 +89,7 @@ bool OrientationSearch::buttonClick(int32_t buttonId)
 
 void OrientationSearch::selectItem(const ksapi::IPropertyControlPtr& control, int32_t index, bool select)
 {
-	const int row = static_cast<int>(index & 0xFFFF);
-	const int column = static_cast<int>(index >> 16);
-
-	m_data.currentGridRow = m_ctrls.resultGrid->GetCurrentRow();
-
-	SpecPropertyToolBarEnum toolBar = (m_data.currentGridRow != 0) ? SpecPropertyToolBarEnum::pnEnterEscHelp : SpecPropertyToolBarEnum::pnEscHelp;
-	m_params->SetSpecToolbar(toolBar);
+	m_data.currentGridRow = std::clamp(static_cast<size_t>(m_ctrls.resultGrid->GetCurrentRow()), c_minResultCount, m_data.resultCount);
 
 	updateScene();
 }
@@ -185,6 +177,9 @@ void OrientationSearch::initControls()
 
 void OrientationSearch::updateControls()
 {
+	SpecPropertyToolBarEnum toolBar = m_stat ? SpecPropertyToolBarEnum::pnEnterEscHelp : SpecPropertyToolBarEnum::pnEscHelp;
+	m_params->SetSpecToolbar(toolBar);
+
 	m_ctrls.overhangThreshold->SetIntValue(m_data.overhangThreshold);
 	m_ctrls.bottomThreshold->SetDoubleValue(m_data.bottomThreshold);
 	m_ctrls.accuracy->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.accuracy)));
@@ -199,8 +194,8 @@ void OrientationSearch::updateControls()
 		m_ctrls.metricsList->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.criteria)));
 		m_ctrls.visualizeCheckBox->SetBoolValue(m_data.isShowHeatmap);
 		m_data.orientationsInGrid = m_stat->findBest(m_data.criteria, m_data.resultCount);
-		refillGrid(m_data.orientationsInGrid);
-		updateHeatmap();
+		refillGrid();
+		updateScene();
 	}
 	else {
 		m_ctrls.metricsList->SetVisible(false);
@@ -210,7 +205,7 @@ void OrientationSearch::updateControls()
 	}
 }
 
-void OrientationSearch::refillGrid(std::span<const size_t> indexes)
+void OrientationSearch::refillGrid()
 {
 	if (!m_stat) {
 		assert(false);
@@ -220,25 +215,47 @@ void OrientationSearch::refillGrid(std::span<const size_t> indexes)
 	auto toStr_d = [](double num) { return (std::format(L"{:.2f}", num)); };
 	auto toStr_i = [](long num) { return (std::format(L"{}", num)); };
 
-	m_ctrls.resultGrid->SetRowCount(static_cast<long>(indexes.size() + 1));
-	for (long i = 0; i < indexes.size(); ++i) {
+	m_ctrls.resultGrid->SetRowCount(static_cast<long>(m_data.orientationsInGrid.size() + 1));
+	for (long i = 0; i < m_data.orientationsInGrid.size(); ++i) {
 		m_ctrls.resultGrid->SetCellText(i + 1, 0, toStr_i(i + 1));
-		m_ctrls.resultGrid->SetCellText(i + 1, 1, toStr_d(m_stat->infos[indexes[i]].overhangArea));
-		m_ctrls.resultGrid->SetCellText(i + 1, 2, toStr_d(m_stat->infos[indexes[i]].bottomArea));
-		m_ctrls.resultGrid->SetCellText(i + 1, 3, toStr_d(m_stat->infos[indexes[i]].bottomConvexHullArea));
-		m_ctrls.resultGrid->SetCellText(i + 1, 4, toStr_d(m_stat->infos[indexes[i]].modelHeight));
+		m_ctrls.resultGrid->SetCellText(i + 1, 1, toStr_d(m_stat->infos[m_data.orientationsInGrid[i]].overhangArea));
+		m_ctrls.resultGrid->SetCellText(i + 1, 2, toStr_d(m_stat->infos[m_data.orientationsInGrid[i]].bottomArea));
+		m_ctrls.resultGrid->SetCellText(i + 1, 3, toStr_d(m_stat->infos[m_data.orientationsInGrid[i]].bottomConvexHullArea));
+		m_ctrls.resultGrid->SetCellText(i + 1, 4, toStr_d(m_stat->infos[m_data.orientationsInGrid[i]].modelHeight));
 	}
 
-	m_ctrls.resultGrid->SetCurrentRow(static_cast<long>(m_data.currentGridRow));
+	m_ctrls.resultGrid->SetCurrentRow(m_data.currentGridRow);
 
 	m_ctrls.resultGrid->UpdateParam();
 }
 
-void OrientationSearch::updateHeatmap()
+void OrientationSearch::updateScene()
 {
-	if (!m_data.isShowHeatmap || !m_stat)
+	if (!m_stat)
 		return;
 
+	DrawingManager& drawingManager = m_documentData.getDrawingManager();
+	drawingManager.cleanObjects();
+
+	if (!m_data.isShowHeatmap) {
+		m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor);
+
+		mesh->colors.reserve(m_stat->colors.size());
+		for (size_t i = 0; i < m_stat->colors.size(); ++i)
+		{
+			auto&& color = m_stat->colors[i];
+			mesh->colors[i] = (glm::vec3(color.red, color.green, color.blue));
+		}
+
+		drawingManager.addObject(mesh, Visualizer::colorMesh);
+
+		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
+		if (contour.size() >= 3) {
+			auto polyline = std::make_shared<Polyline3D>(contour);
+			drawingManager.addObject(polyline, Visualizer::polyline);
+		}
+	} else {
 	std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
 
 	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
@@ -273,7 +290,6 @@ void OrientationSearch::updateHeatmap()
 			return glm::vec3(res.x, res.y, res.z);
 		});
 
-	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.addObject(mesh, Visualizer::colorMesh);
 
 	if (m_data.currentGridRow != 0) {
@@ -287,30 +303,5 @@ void OrientationSearch::updateHeatmap()
 	}
 }
 
-void OrientationSearch::updateScene()
-{
-	DrawingManager& drawingManager = m_documentData.getDrawingManager();
-	drawingManager.cleanObjects();
-
-	if (m_data.currentGridRow != 0 && !m_data.isShowHeatmap) {
-		m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor);
-
-		mesh->colors.reserve(m_stat->colors.size());
-		for (size_t i = 0; i < m_stat->colors.size(); ++i)
-		{
-			auto&& color = m_stat->colors[i];
-			mesh->colors[i] = (glm::vec3(color.red, color.green, color.blue));
-		}
-
-		drawingManager.addObject(mesh, Visualizer::colorMesh);
-
-		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
-		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<Polyline3D>(contour);
-			drawingManager.addObject(polyline, Visualizer::polyline);
-		}
-	}
-
-	updateHeatmap();
+	drawingManager.redraw();
 }
