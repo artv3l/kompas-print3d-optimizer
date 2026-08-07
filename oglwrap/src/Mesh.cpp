@@ -41,7 +41,8 @@ ColoredMesh::ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color) :
 {
 }
 
-Polyline3D::Polyline3D(std::span<const geom3d::Vec3> points):
-	m_points(toGlm(points))
+Polyline3D::Polyline3D(std::span<const geom3d::Vec3> points, const color::RGB& color):
+	m_points(toGlm(points)),
+	m_color(color.red, color.green, color.blue)
 {
 }

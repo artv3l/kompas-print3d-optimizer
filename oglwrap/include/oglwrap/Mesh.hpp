@@ -40,8 +40,9 @@ public:
 class Polyline3D : public IObject
 {
 public:
-    Polyline3D(std::span<const geom3d::Vec3> points);
+    Polyline3D(std::span<const geom3d::Vec3> points, const color::RGB& color);
     ~Polyline3D() override = default;
 
     std::vector<glm::vec3> m_points;
+    glm::vec3 m_color;
 };

@@ -252,7 +252,7 @@ void OrientationSearch::updateScene()
 
 		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<Polyline3D>(contour);
+			auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
 			drawingManager.addObject(polyline, Visualizer::polyline);
 		}
 	} else {
@@ -298,7 +298,7 @@ void OrientationSearch::updateScene()
 		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
 		auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
-		auto line = std::make_shared<Polyline3D>(points);
+		auto line = std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::green>());
 		drawingManager.addObject(line, Visualizer::polyline);
 	}
 }
