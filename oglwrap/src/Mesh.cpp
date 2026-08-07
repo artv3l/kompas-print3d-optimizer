@@ -1,4 +1,4 @@
-#include "Mesh.hpp"
+#include "oglwrap/Mesh.hpp"
 
 namespace
 {

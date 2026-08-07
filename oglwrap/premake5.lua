@@ -6,7 +6,7 @@ project "oglwrap"
     files { "**.hpp", "**.cpp" }
 
     includedirs {
-        "include/oglwrap",
+        "include",
 
         "%{wks.location}/generic/include",
         "%{vcpkg.include}",

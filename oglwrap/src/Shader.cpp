@@ -1,4 +1,4 @@
-#include "Shader.hpp"
+#include "oglwrap/Shader.hpp"
 
 #include <fstream>
 #include <stdexcept>

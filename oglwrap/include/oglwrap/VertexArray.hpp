@@ -6,8 +6,8 @@
 #include <glad/glad.h>
 
 #include "generic/ActionLock.hpp"
-#include "VertexBuffer.hpp"
-#include "Mesh.hpp"
+#include "oglwrap/VertexBuffer.hpp"
+#include "oglwrap/Mesh.hpp"
 
 class VertexArray {
 public:

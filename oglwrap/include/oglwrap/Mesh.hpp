@@ -5,8 +5,8 @@
 
 #include <glm/glm.hpp>
 
-#include <generic/geometry3d.hpp>
-#include <generic/color.hpp>
+#include "generic/geometry3d.hpp"
+#include "generic/color.hpp"
 
 // РћР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ РјРѕР¶РЅРѕ СЂРёСЃРѕРІР°С‚СЊ. Р’СЃРµ РґР°РЅРЅС‹Рµ СѓР¶Рµ РІРѕ float Рё РІ СѓРґРѕР±РЅРѕРј РґР»СЏ Р·Р°РіСЂСѓР·РєРё РЅР° РІРёРґРµРѕРєР°СЂС‚Сѓ С„РѕСЂРјР°С‚Рµ
 class IObject

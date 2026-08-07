@@ -7,6 +7,7 @@
 #include "oglwrap/Mesh.hpp"
 #include "oglwrap/VertexArray.hpp"
 #include "oglwrap/Shader.hpp"
+#include "oglwrap/DrawableMesh.hpp"
 
 // Р РµР¶РёРј РІРёР·СѓР°Р»РёР·Р°С†РёРё РјРѕРґРµР»Рё. РџРѕ СЃСѓС‚Рё С€РµР№РґРµСЂРЅР°СЏ РїСЂРѕРіСЂР°РјРјР°
 enum class Visualizer : uint8_t
@@ -14,18 +15,6 @@ enum class Visualizer : uint8_t
     meshHighlight3dp, // РЎРµС‚РєР° СЃ РїРѕРґСЃРІРµС‚РєР°РјРё РґР»СЏ 3D РїРµС‡Р°С‚Рё
     colorMesh,        // Р¦РІРµС‚РЅР°СЏ СЃРµС‚РєР°
     polyline,         // РџРѕР»РёР»РёРЅРёСЏ
-};
-
-class DrawableMesh
-{
-public:
-    DrawableMesh(std::shared_ptr<IObject> object);
-    virtual ~DrawableMesh() = default;
-    void draw() const;
-protected:
-    VertexArray m_vao;
-    size_t m_count; // РљРѕР»-РІРѕ РёРЅРґРµРєСЃРѕРІ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё
-    int m_mode;
 };
 
 class DrawingManager final

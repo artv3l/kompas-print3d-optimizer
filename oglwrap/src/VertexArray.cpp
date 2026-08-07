@@ -1,4 +1,4 @@
-#include "VertexArray.hpp"
+#include "oglwrap/VertexArray.hpp"
 
 VertexArray::VertexArray()
 {

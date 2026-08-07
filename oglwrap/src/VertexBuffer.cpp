@@ -1,11 +1,11 @@
-#include "VertexBuffer.hpp"
+#include "oglwrap/VertexBuffer.hpp"
 
 #include <unordered_map>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include "Mesh.hpp"
+#include "oglwrap/Mesh.hpp"
 
 Buffer::~Buffer() {
     glDeleteBuffers(1, &m_id);

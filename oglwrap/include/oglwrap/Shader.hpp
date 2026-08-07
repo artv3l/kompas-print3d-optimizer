@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include <generic/ActionLock.hpp>
+#include "generic/ActionLock.hpp"
 
 class Shader {
 public:
