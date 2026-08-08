@@ -1,7 +1,8 @@
 #include "oglwrap/DrawableMesh.hpp"
 
-DrawableMesh::DrawableMesh(std::shared_ptr<IObject> object) :
-    m_vao()
+DrawableMesh::DrawableMesh(std::shared_ptr<IObject> object, Uniforms uniforms) :
+    m_vao(),
+    m_uniforms(uniforms)
 {
     if (Mesh* mesh = dynamic_cast<Mesh*>(object.get())) {
         m_vao = VertexArray(*mesh);
@@ -26,10 +27,12 @@ DrawableMesh::DrawableMesh(std::shared_ptr<IObject> object) :
         m_vao.addVertexBuffer(vb);
         m_count = polyline->m_points.size();
         m_mode = GL_LINE_LOOP;
+        m_uniforms.insert(std::make_pair("u_color", polyline->m_color));
     }
 }
 
-void DrawableMesh::draw() const
+void DrawableMesh::draw(const ShaderProgram& shaderProgram) const
 {
+    shaderProgram.setUniforms(m_uniforms);
     m_vao.draw(m_mode, m_count);
 }

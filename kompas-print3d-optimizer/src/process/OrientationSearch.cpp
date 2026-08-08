@@ -252,7 +252,7 @@ void OrientationSearch::updateScene()
 
 		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
 		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
+			auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::red>());
 			drawingManager.addObject(polyline, Visualizer::polyline);
 		}
 	} else {

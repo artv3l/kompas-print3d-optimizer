@@ -1,11 +1,16 @@
 #pragma once
 
 #include <string>
+#include <variant>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
 #include "generic/ActionLock.hpp"
+
+using UniformName = std::string;
+using UniformData = std::variant<int, glm::vec3>;
+using Uniforms = std::unordered_map<UniformName, UniformData>;
 
 class Shader {
 public:
@@ -45,6 +50,7 @@ public:
     void setUniform(const std::string& name, glm::vec2 vec2) const;
     void setUniform(const std::string& name, glm::vec3 vec3) const;
     void setUniform(const std::string& name, glm::vec4 vec4) const;
+    void setUniforms(const Uniforms& uniforms) const;
 
 private:
     GLuint m_id;

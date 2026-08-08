@@ -108,6 +108,27 @@ void ShaderProgram::setUniform(const std::string& name, glm::vec4 vec4) const {
     glUniform4fv(glGetUniformLocation(m_id, name.c_str()), 1, glm::value_ptr(vec4));
 }
 
+namespace
+{
+class UniformVisitor
+{
+public:
+UniformVisitor(const ShaderProgram& shaderProgram, const std::string& name): m_shaderProgram(shaderProgram), m_name(name) {}
+void operator()(const int& data) { m_shaderProgram.setUniform(m_name, data); }
+void operator()(const glm::vec3& data) { m_shaderProgram.setUniform(m_name, data); }
+private:
+const ShaderProgram& m_shaderProgram;
+std::string m_name;
+};
+}
+
+void ShaderProgram::setUniforms(const Uniforms& uniforms) const
+{
+    for (auto&& [name, data] : uniforms) {
+        std::visit(UniformVisitor(*this, name), data);
+    }
+}
+
 void ShaderProgram::checkStatus(GLuint id, GLenum parameter) {
     GLint isSuccess = 0; glGetProgramiv(id, parameter, &isSuccess);
     if (isSuccess == 0) {
