@@ -38,7 +38,7 @@ private:
     ksapi::IDocumentFrameEventsPtr m_frameEvents;
     const std::wstring m_eventsOwnerName;
 
-    std::unordered_map<Visualizer, std::vector<DrawableMesh>> m_objects;
+    std::unordered_map<Visualizer, std::vector<std::unique_ptr<IDrawableObject>>> m_objects;
 
 private: // deprecated?
     static std::unordered_map<Visualizer, ShaderProgram> m_shaders;

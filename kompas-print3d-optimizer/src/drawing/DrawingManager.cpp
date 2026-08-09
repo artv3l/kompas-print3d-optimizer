@@ -64,7 +64,7 @@ DrawingManager::~DrawingManager()
 
 void DrawingManager::addObject(std::shared_ptr<IObject> object, Visualizer visualizer)
 {
-    m_objects[visualizer].emplace_back(object, Uniforms{});
+    m_objects[visualizer].emplace_back(createDrawableMesh(object));
 }
 
 void DrawingManager::cleanObjects()
@@ -180,7 +180,7 @@ void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
 #endif
 
         for (auto& obj : objects) {
-            obj.draw(shaderProgram);
+            obj->draw(shaderProgram);
         }
     }
 }
