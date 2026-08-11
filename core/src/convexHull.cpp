@@ -14,10 +14,6 @@ namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
     {
         int n = static_cast<int>(A.size()), k = 0;
 
-        // If there are 3 or fewer points, return them as the convex hull
-        if (n <= 3)
-            return A;
-
         // Initialize a vector to store the convex hull points
         std::vector<Eigen::Vector2d> ans(2 * n);
 
@@ -51,11 +47,11 @@ namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
         // Resize the vector to remove any extra elements
         ans.resize(k - 1);
 
-        return ans;
+        return (ans.size() >= 3) ? ans : std::vector<Eigen::Vector2d>();
     }
 }
 
-std::vector<Eigen::Vector2d> convexHull(std::span<Eigen::Vector2d> points)
+std::vector<Eigen::Vector2d> convexHull(std::span<const Eigen::Vector2d> points)
 {
     return convex_hull(std::vector<Eigen::Vector2d>(points.begin(), points.end()));
 }
