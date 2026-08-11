@@ -6,7 +6,7 @@
 #include <glad/glad.h>
 
 #include "generic/ActionLock.hpp"
-#include "oglwrap/VertexBuffer.hpp"
+#include "oglwrap/buffer/VertexBuffer.hpp"
 #include "oglwrap/Mesh.hpp"
 
 class VertexArray {

@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include "oglwrap/buffer/Buffer.hpp"
+
 struct Layout {
     GLuint index;
     GLint size;
@@ -13,16 +15,6 @@ struct Layout {
     GLboolean normalized;
     GLsizei stride;
     const void* pointer;
-};
-
-class Buffer {
-public:
-    virtual ~Buffer();
-
-    static void unbind();
-    virtual void bind() const = 0;
-protected:
-    GLuint m_id;
 };
 
 class VertexBuffer : public Buffer {

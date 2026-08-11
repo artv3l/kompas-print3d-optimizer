@@ -1,4 +1,4 @@
-#include "oglwrap/VertexBuffer.hpp"
+#include "oglwrap/buffer/VertexBuffer.hpp"
 
 #include <unordered_map>
 
@@ -7,18 +7,9 @@
 
 #include "oglwrap/Mesh.hpp"
 
-Buffer::~Buffer() {
-    glDeleteBuffers(1, &m_id);
-}
-
-void Buffer::unbind() {
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 VertexBuffer::VertexBuffer(const void* data, GLsizeiptr size):
     m_layouts()
 {
-    glGenBuffers(1, &m_id);
     bind();
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     unbind();
@@ -37,7 +28,6 @@ const std::vector<Layout>& VertexBuffer::getLayouts() const {
 }
 
 ElementBuffer::ElementBuffer(const GLuint* indices, GLsizeiptr count) {
-    glGenBuffers(1, &m_id);
     m_count = count;
     bind();
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), indices, GL_STATIC_DRAW);
