@@ -1,8 +1,6 @@
 #include "DrawingManager.hpp"
 
-#include <Windows.h>
-#include <wingdi.h>
-
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -11,18 +9,6 @@
 std::unordered_map<Visualizer, ShaderProgram> DrawingManager::m_shaders;
 bool DrawingManager::s_isGladInited = false;
 short DrawingManager::s_framesCount = 0;
-
-namespace
-{
-void* GetAnyGLFuncAddress(const char* name) {
-    void* p = (void*)wglGetProcAddress(name);
-    if (p == 0 || (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) || (p == (void*)-1)) {
-        HMODULE module = LoadLibraryA("opengl32.dll");
-        p = (void*)GetProcAddress(module, name);
-    }
-    return p;
-}
-}
 
 DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view eventsOwnerName):
 	m_frame(frame),
@@ -39,7 +25,7 @@ DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view
     {
         // GLAD РЅСѓР¶РЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ РєРѕРіРґР° РѕС‚РєСЂС‹С‚ РґРѕРєСѓРјРµРЅС‚
         if (!s_isGladInited) {
-            if (!gladLoadGLLoader((GLADloadproc)GetAnyGLFuncAddress)) {
+            if (!gladLoadGL()) {
                 //global::kompas->ksMessage("РћС€РёР±РєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё GLAD");
             }
         }
