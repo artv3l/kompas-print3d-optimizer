@@ -3,15 +3,7 @@ project "kapiwrap"
     language "C++"
     cppdialect "C++20"
 
-    characterset ("Unicode")
-    mfc "On"
-
-    pchheader "stdafx.h"
-	pchsource "src/stdafx.cpp"
-
-    files { "**.hpp", "**.h", "**.cpp", }
-
-    forceincludes  { "stdafx.h" }
+    files { "**.hpp", "**.cpp", }
 
     includedirs {
         "include",
@@ -19,8 +11,6 @@ project "kapiwrap"
 
         "%{vcpkg.include}",
 
-        "%{localDependencies.KompasAPI.include}",
-        "%{localDependencies.KompasAPI.lib}",
         "%{localDependencies.ksapi.include}",
     }
 
@@ -31,11 +21,9 @@ project "kapiwrap"
     runtime "Release"
 
     filter "configurations:Debug"
-        defines { "DEBUG" }
         symbols "On"
         optimize "Off"
 
     filter "configurations:Release"
-        defines { "NDEBUG" }
         symbols "Off"
         optimize "On"

@@ -1,18 +1,5 @@
 #include "kapiwrap/Sketch.hpp"
 
-Sketch::Sketch(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, IDispatchPtr plane) :
-	entity(part->NewEntity(kapi::o3d_sketch)), definition(entity->GetDefinition()) {
-	definition->SetPlane(plane);
-	entity->Create();
-	document2d = definition->BeginEdit();
-	document2d_api7 = kompas->TransferInterface(document2d, kapi::ksAPI7Dual, 0);
-
-	kapi::IViewsAndLayersManagerPtr viewsAndLayersManager(document2d_api7->ViewsAndLayersManager);
-	kapi::IViewsPtr views(viewsAndLayersManager->Views);
-	view = kapi::IViewPtr(views->ActiveView);
-	drawingContainer = kapi::IDrawingContainerPtr(view);
-}
-
 Sketch::Sketch(ksapi::IPartPtr part, ksapi::IPlane3DPtr plane)
 {
 	ksapi::IModelContainerPtr modelCont = part;
@@ -29,9 +16,8 @@ SketchEditor Sketch::edit()
 	return SketchEditor(m_sketch);
 }
 
-void Sketch::endEdit() const {
-	if (definition)
-		definition->EndEdit();
+void Sketch::endEdit() const
+{
 	if (m_sketch) {
 		m_sketch->EndEdit();
 	}

@@ -1,9 +1,6 @@
 paths = {
     vcpkg = "%{wks.location}/vcpkg_installed/x64-windows",
-    KompasSdk = os.getenv("KOMPAS_SDK"),
-    KompasDevutil = os.getenv("KOMPAS_DEVUTIL"),
-    SmallFbx = os.getenv("SMALL_FBX"),
-    Kapiwrap = os.getenv("kapiwrap"),
+    kompasSdk = os.getenv("KOMPAS_SDK"),
 }
 
 vcpkg = {
@@ -13,14 +10,9 @@ vcpkg = {
 }
 
 localDependencies = {
-    KompasAPI = {
-        include = "%{paths.KompasSdk}/Include",
-        lib = "%{paths.KompasSdk}/lib",
-        lib64 = "%{paths.KompasSdk}/lib64",
-    },
     ksapi = {
-        include = "%{paths.KompasSdk}/KsAPI/Include",
-        lib = "%{paths.KompasSdk}/KsAPI/Lib64",
+        include = "%{paths.kompasSdk}/KsAPI/Include",
+        lib = "%{paths.kompasSdk}/KsAPI/Lib64",
     },
 }
 

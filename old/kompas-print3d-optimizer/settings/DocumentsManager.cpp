@@ -5,6 +5,7 @@
 #include <KsAPI.h>
 
 #include "settings/DocumentData.hpp"
+#include "settings/Settings.hpp"
 #include "resources.hpp"
 
 size_t IKompasDocumentPtrHash::operator()(ksapi::IKompasDocumentPtr document) const
@@ -12,13 +13,17 @@ size_t IKompasDocumentPtrHash::operator()(ksapi::IKompasDocumentPtr document) co
     return std::hash<ksapi::IKompasDocument *>()(document.Get());
 }
 
-DocumentData& DocumentsManager::getOrCreateDocumentData(ksapi::IKompasDocumentPtr document)
+DocumentsManager::DocumentsManager(kapi::KompasObjectPtr kompas):
+    m_kompas(kompas)
+{}
+
+DocumentData& DocumentsManager::getOrCreateDocumentData(ksapi::IKompasDocumentPtr document, kapi::ksDocument3DPtr document3d)
 {
     DocumentDataMap::iterator it = m_documentDataMap.find(document);
     if (it == m_documentDataMap.end()) {
         it = m_documentDataMap.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(document),
-                                       std::forward_as_tuple(document)
+                                       std::forward_as_tuple(document3d, document)
                                       ).first;
 
         auto onClose = [this, document]()
@@ -27,6 +32,8 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksapi::IKompasDocumentPt
             m_documentDataMap.erase(document);
         };
         document->Events()->AddCloseDocumentHandler(resources::c_libraryName.data(), onClose);
+    } else {
+        it->second.getSettings()->loadFromDocument(document3d);
     }
     return it->second;
 }

@@ -35,14 +35,6 @@ private:
 class Sketch final
 {
 public:
-    kapi::ksEntityPtr entity;
-    kapi::ksSketchDefinitionPtr definition;
-    kapi::ksDocument2DPtr document2d;
-    kapi::IKompasDocument2DPtr document2d_api7;
-    kapi::IViewPtr view;
-    kapi::IDrawingContainerPtr drawingContainer;
-
-    Sketch(kapi::KompasObjectPtr kompas, kapi::ksPartPtr part, IDispatchPtr plane);
     Sketch(ksapi::IPartPtr part, ksapi::IPlane3DPtr plane);
 
     SketchEditor edit();

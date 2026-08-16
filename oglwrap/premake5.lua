@@ -16,11 +16,12 @@ project "oglwrap"
         "generic"
     }
 
+    runtime "Release"
+
     filter "configurations:Debug"
-        runtime "Release"
         symbols "On"
+        optimize "Off"
 
     filter "configurations:Release"
-        runtime "Release"
         symbols "Off"
         optimize "On"

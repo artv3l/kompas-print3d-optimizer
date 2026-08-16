@@ -12,13 +12,10 @@ struct IKompasDocumentPtrHash
 class DocumentsManager
 {
 public:
-    DocumentsManager(kapi::KompasObjectPtr kompas);
-
-    DocumentData& getOrCreateDocumentData(ksapi::IKompasDocumentPtr document, kapi::ksDocument3DPtr document3d);
+    DocumentData& getOrCreateDocumentData(ksapi::IKompasDocumentPtr document);
 
 private:
     using DocumentDataMap = std::unordered_map<ksapi::IKompasDocumentPtr, DocumentData, IKompasDocumentPtrHash>;
 
-    kapi::KompasObjectPtr m_kompas;
     DocumentDataMap m_documentDataMap;
 };

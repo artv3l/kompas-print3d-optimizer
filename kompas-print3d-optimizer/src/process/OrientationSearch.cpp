@@ -78,9 +78,6 @@ bool OrientationSearch::buttonClick(int32_t buttonId)
 		const geom3d::Vec3 normal = m_stat->evalMesh.normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
 		const geom3d::Vec3 point = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour[0];
 		const geom3d::Plane plane(normal, point);
-		
-		//kapi::ksPartPtr part = m_documentData.getDocument()->GetPart(kapi::Part_Type::pTop_Part);
-		//createLocalCS(part, plane);
 
 		break;
 	}
