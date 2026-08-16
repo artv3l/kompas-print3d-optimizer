@@ -15,6 +15,8 @@ public:
 	void unbind() const override;
 	void bind() const override;
 
+	void uploadData(const void * data, size_t size) const;
+
 private:
 	GLuint m_bindingPoint;
 };

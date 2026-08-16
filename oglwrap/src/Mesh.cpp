@@ -37,7 +37,7 @@ Mesh::Mesh(const geom3d::Mesh& mesh):
 
 ColoredMesh::ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color) :
 	Mesh(mesh),
-	colors(mesh.positions.size(), glm::vec3(color.red, color.green, color.blue))
+	colors(mesh.indexes.size() / 3, glm::vec4(color.red, color.green, color.blue, 1.0f))
 {
 }
 

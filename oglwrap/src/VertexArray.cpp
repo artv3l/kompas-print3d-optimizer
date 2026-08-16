@@ -5,31 +5,6 @@ VertexArray::VertexArray()
     glGenVertexArrays(1, &m_id);
 }
 
-VertexArray::VertexArray(const Mesh& mesh) {
-    glGenVertexArrays(1, &m_id);
-
-    {
-        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
-            mesh.positions.data(),
-            static_cast<GLsizeiptr>(mesh.positions.size() * sizeof(glm::vec3))
-        );
-        vb->addLayout(Layout{0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0)});
-        addVertexBuffer(vb);
-    }
-    {
-        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
-            mesh.normals.data(),
-            static_cast<GLsizeiptr>(mesh.normals.size() * sizeof(glm::vec3))
-        );
-        vb->addLayout(Layout{1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
-        addVertexBuffer(vb);
-    }
-
-    auto lock = bind(); // До создания ElementBuffer и загрузки его данных
-    ElementBuffer::Ptr eb = std::make_shared<ElementBuffer>(mesh.indexes.data(), static_cast<GLsizeiptr>(mesh.indexes.size()));
-    setElementBuffer(eb);
-}
-
 ActionLock VertexArray::bind() const {
     GLint prev = 0;
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev);

@@ -15,7 +15,6 @@ public:
 
 public:
     VertexArray();
-    VertexArray(const Mesh& mesh);
 
     [[nodiscard]] ActionLock bind() const;
     void setElementBuffer(const ElementBuffer::Ptr& elementBuffer);
@@ -25,7 +24,7 @@ public:
     void draw(GLenum mode, size_t count) const;
 
 private:
-    GLuint m_id;
+    GLuint m_id = 0;
     std::vector<VertexBuffer::Ptr> m_vertexBuffers;
     ElementBuffer::Ptr m_elementBuffer;
 };

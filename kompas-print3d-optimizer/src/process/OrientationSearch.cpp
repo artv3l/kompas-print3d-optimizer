@@ -246,7 +246,7 @@ void OrientationSearch::updateScene()
 		for (size_t i = 0; i < m_stat->colors.size(); ++i)
 		{
 			auto&& color = m_stat->colors[i];
-			mesh->colors[i] = (glm::vec3(color.red, color.green, color.blue));
+			mesh->colors[i] = (glm::vec4(color.red, color.green, color.blue, 1.0f));
 		}
 
 		drawingManager.addObject(mesh, Visualizer::colorMesh);
@@ -257,17 +257,17 @@ void OrientationSearch::updateScene()
 			drawingManager.addObject(polyline, Visualizer::polyline);
 		}
 	} else {
-	std::vector<glm::vec3> colors(m_stat->evalMesh.normals.size(), glm::vec3());
+	std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
 
 	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
 	const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
 	auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
 
 	// value [0, 1] -> HSV color
-	auto toColor = [&toHeatmap](double value) -> glm::vec3
+	auto toColor = [&toHeatmap](double value) -> glm::vec4
 		{
 			color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
-			return glm::vec3(rgb.red, rgb.green, rgb.blue);
+			return glm::vec4(rgb.red, rgb.green, rgb.blue, 1.0f);
 		};
 	const auto& complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_data.criteria)];
 	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);

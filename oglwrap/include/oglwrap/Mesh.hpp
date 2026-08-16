@@ -36,7 +36,7 @@ public:
     ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color);
     ~ColoredMesh() override = default;
 
-    std::vector<glm::vec3> colors;
+    std::vector<glm::vec4> colors;
 };
 
 class Polyline3D : public IObject

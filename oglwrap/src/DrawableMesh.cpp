@@ -33,20 +33,40 @@ std::unique_ptr<IDrawableObject> createDrawableMesh(std::shared_ptr<IObject> obj
 
 DrawableColoredMesh::DrawableColoredMesh(const ColoredMesh& coloredMesh)
     : DrawableObject()
+    , m_ssboColors(0 /*bindingPoint*/)
 {
-    m_vao = VertexArray(coloredMesh);
     m_count = coloredMesh.indexes.size();
 
-    VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
-        coloredMesh.colors.data(),
-        static_cast<GLsizeiptr>(coloredMesh.colors.size() * sizeof(glm::vec3))
-    );
-    vb->addLayout(Layout{ 2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
-    m_vao.addVertexBuffer(vb);
+    {
+        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
+            coloredMesh.positions.data(),
+            static_cast<GLsizeiptr>(coloredMesh.positions.size() * sizeof(glm::vec3))
+        );
+        vb->addLayout(Layout{ 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
+        m_vao.addVertexBuffer(vb);
+    }
+    {
+        VertexBuffer::Ptr vb = std::make_shared<VertexBuffer>(
+            coloredMesh.normals.data(),
+            static_cast<GLsizeiptr>(coloredMesh.normals.size() * sizeof(glm::vec3))
+        );
+        vb->addLayout(Layout{ 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0) });
+        m_vao.addVertexBuffer(vb);
+    }
+    {
+        m_ssboColors.bind();
+        m_ssboColors.uploadData(coloredMesh.colors.data(), coloredMesh.colors.size() * sizeof(glm::vec4));
+    }
+    {
+        auto lock = m_vao.bind(); // Р”Рѕ СЃРѕР·РґР°РЅРёСЏ ElementBuffer Рё Р·Р°РіСЂСѓР·РєРё РµРіРѕ РґР°РЅРЅС‹С…
+        ElementBuffer::Ptr eb = std::make_shared<ElementBuffer>(coloredMesh.indexes.data(), static_cast<GLsizeiptr>(coloredMesh.indexes.size()));
+        m_vao.setElementBuffer(eb);
+    }
 }
 
 void DrawableColoredMesh::draw(const ShaderProgram& shaderProgram) const
 {
+    m_ssboColors.bind();
     shaderProgram.setUniforms(m_uniforms);
     m_vao.draw(GL_TRIANGLES, m_count);
 }
