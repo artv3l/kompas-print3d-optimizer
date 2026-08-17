@@ -33,10 +33,18 @@ public:
 class ColoredMesh : public Mesh
 {
 public:
-    ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color);
+    enum class ColorType
+    {
+        byTriangle,
+        byVertex,
+    };
+
+public:
+    ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color, ColorType colorType);
     ~ColoredMesh() override = default;
 
     std::vector<glm::vec4> colors;
+    ColorType m_colorType;
 };
 
 class Polyline3D : public IObject

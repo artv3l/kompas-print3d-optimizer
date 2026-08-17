@@ -132,6 +132,8 @@ void DrawingManager::initShaders()
         std::forward_as_tuple(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE));*/
     m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::colorMesh),
         std::forward_as_tuple(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION));
+    m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::smoothMesh),
+        std::forward_as_tuple(c_smoothMeshVert, c_smoothMeshFrag));
     m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::polyline),
         std::forward_as_tuple(POLYLINE_VERT_SHADER_CODE, POLYLINE_FRAG_SHADER_CODE));
 }

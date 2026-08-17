@@ -237,7 +237,7 @@ void OrientationSearch::updateScene()
 
 	if (!m_data.isShowHeatmap) {
 		m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor);
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
 
 		mesh->colors.reserve(m_stat->colors.size());
 		for (size_t i = 0; i < m_stat->colors.size(); ++i)
@@ -254,52 +254,52 @@ void OrientationSearch::updateScene()
 			drawingManager.addObject(polyline, Visualizer::polyline);
 		}
 	} else {
-	std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
+		std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
 
-	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
-	const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
-	auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
+		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
+		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
+		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
 
-	// value [0, 1] -> HSV color
-	auto toColor = [&toHeatmap](double value) -> glm::vec4
-		{
-			color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
-			return glm::vec4(rgb.red, rgb.green, rgb.blue, 1.0f);
-		};
-	const auto& complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_data.criteria)];
-	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
+		// value [0, 1] -> HSV color
+		auto toColor = [&toHeatmap](double value) -> glm::vec4
+			{
+				color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
+				return glm::vec4(rgb.red, rgb.green, rgb.blue, 1.0f);
+			};
+		const auto& complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_data.criteria)];
+		std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
 
-	auto mesh = std::make_shared<ColoredMesh>(m_stat->evalMesh, orientation::c_defaultColor);
-	mesh->colors = colors;
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->evalMesh, orientation::c_defaultColor, ColoredMesh::ColorType::byVertex);
+		mesh->colors = colors;
 
-	// Масштабирование икосферы по габариту детали
-	ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
-	ksapi::IPartPtr part = doc3d->GetTopPart();
+		// Масштабирование икосферы по габариту детали
+		ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
+		ksapi::IPartPtr part = doc3d->GetTopPart();
 
-	const geom3d::Gabarit gabarit = getGabarit(part);
-	const Eigen::Vector3d center = gabarit.center();
-	const double radius = (gabarit.getEnd() - gabarit.getBegin()).norm() / 2.0;
+		const geom3d::Gabarit gabarit = getGabarit(part);
+		const Eigen::Vector3d center = gabarit.center();
+		const double radius = (gabarit.getEnd() - gabarit.getBegin()).norm() / 2.0;
 
-	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
-	matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
-	std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
-		{
-			glm::vec4 res = matrix * glm::vec4(pos, 1.0);
-			return glm::vec3(res.x, res.y, res.z);
-		});
+		glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
+		matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
+		std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
+			{
+				glm::vec4 res = matrix * glm::vec4(pos, 1.0);
+				return glm::vec3(res.x, res.y, res.z);
+			});
 
-	drawingManager.addObject(mesh, Visualizer::colorMesh);
+		drawingManager.addObject(mesh, Visualizer::smoothMesh);
 
-	if (m_data.currentGridRow != 0) {
-		const glm::vec3 point = mesh->positions[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
-		const glm::vec3 normal = glm::normalize(mesh->normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]]);
-		const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
+		if (m_data.currentGridRow != 0) {
+			const glm::vec3 point = mesh->positions[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
+			const glm::vec3 normal = glm::normalize(mesh->normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]]);
+			const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
-		auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
-		auto line = std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
-		drawingManager.addObject(line, Visualizer::polyline);
+			auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
+			auto line = std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
+			drawingManager.addObject(line, Visualizer::polyline);
+		}
 	}
-}
 
 	drawingManager.redraw();
 }

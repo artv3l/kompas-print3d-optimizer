@@ -25,7 +25,17 @@ protected:
     Uniforms m_uniforms;
 };
 
-class DrawableColoredMesh : public DrawableObject
+class DrawableMesh : public DrawableObject
+{
+public:
+    DrawableMesh(const Mesh& mesh);
+    void draw(const ShaderProgram& shaderProgram) const override;
+};
+
+/*
+  РЎРµС‚РєР° СЃ С†РІРµС‚Р°РјРё РїРѕ С‚СЂРµСѓРіРѕР»СЊРЅРёРєР°Рј
+*/
+class DrawableColoredMesh : public DrawableMesh
 {
 public:
     DrawableColoredMesh(const ColoredMesh& coloredMesh);
@@ -33,6 +43,15 @@ public:
 
 private:
     ShaderStorageBuffer m_ssboColors;
+};
+
+/*
+  РЎРµС‚РєР° СЃ С†РІРµС‚Р°РјРё РїРѕ РІРµСЂС€РёРЅР°Рј
+*/
+class DrawableSmoothMesh : public DrawableMesh
+{
+public:
+    DrawableSmoothMesh(const ColoredMesh& coloredMesh);
 };
 
 class DrawablePolyline3D : public DrawableObject
