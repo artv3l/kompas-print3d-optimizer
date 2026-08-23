@@ -10,6 +10,7 @@ Process3D::Process3D(ksapi::IApplication& kompasApp, ksapi::IKompasDocument3DPtr
 {
 	namespace stdph = std::placeholders;
 
+	m_params->SetCaption(std::wstring(caption));
 	m_process->SetProcessParam(m_params);
 	m_process->SetCaption(std::wstring(caption));
 

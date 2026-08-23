@@ -32,6 +32,7 @@ private:
 	void updateControls();
 	void refillGrid();
 	void updateScene();
+	void updateToolbar();
 
 private:
 	struct
@@ -52,7 +53,7 @@ private:
 		bool isShowHeatmap = false;
 		int overhangThreshold = 45;
 		double bottomThreshold = 0.2;
-		size_t currentGridRow = 1; // РЎС‚СЂРѕРєР° РІСЃРµРіРґР° РІС‹Р±СЂР°РЅР°
+		size_t currentGridRow = 1; // 0 - РЎС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
 		std::vector<size_t> orientationsInGrid = {};
 		size_t resultCount = 5; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ
 		Accuracy accuracy = Accuracy::medium;

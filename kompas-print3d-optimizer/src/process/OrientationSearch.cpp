@@ -12,9 +12,6 @@
 
 namespace
 {
-// Минимальное кол-во результатов (строк) в таблице
-constexpr size_t c_minResultCount = 1;
-
 const std::unordered_map<Accuracy, std::wstring_view> c_accuracyNames = {
 	{Accuracy::low, L"Низкая"},
 	{Accuracy::medium, L"Средняя"},
@@ -61,6 +58,9 @@ void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& con
 	m_data.overhangThreshold = m_ctrls.overhangThreshold->GetIntValue();
 	m_data.bottomThreshold = m_ctrls.bottomThreshold->GetDoubleValue();
 	m_data.resultCount = m_ctrls.resultCount->GetIntValue();
+	if (m_data.currentGridRow > m_data.resultCount) {
+		m_data.currentGridRow = 1;
+	}
 
 	updateControls();
 }
@@ -87,9 +87,10 @@ bool OrientationSearch::buttonClick(int32_t buttonId)
 
 void OrientationSearch::selectItem(const ksapi::IPropertyControlPtr& control, int32_t index, bool select)
 {
-	m_data.currentGridRow = std::clamp(static_cast<size_t>(m_ctrls.resultGrid->GetCurrentRow()), c_minResultCount, m_data.resultCount);
+	m_data.currentGridRow = std::clamp(static_cast<size_t>(m_ctrls.resultGrid->GetCurrentRow()), static_cast<size_t>(0), m_data.resultCount);
 
 	updateScene();
+	updateToolbar();
 }
 
 void OrientationSearch::controlCommand(const ksapi::IPropertyControlPtr& control, int32_t buttonId)
@@ -108,8 +109,6 @@ void OrientationSearch::controlCommand(const ksapi::IPropertyControlPtr& control
 
 void OrientationSearch::initControls()
 {
-	m_params->SetSpecToolbar(SpecPropertyToolBarEnum::pnEscHelp);
-
 	ksapi::IPropertyControlsPtr controls = m_params->GetPropertyTabs()->Add(L"MainTab")->GetPropertyControls();
 
 	{
@@ -175,18 +174,18 @@ void OrientationSearch::initControls()
 
 void OrientationSearch::updateControls()
 {
-	SpecPropertyToolBarEnum toolBar = m_stat ? SpecPropertyToolBarEnum::pnEnterEscHelp : SpecPropertyToolBarEnum::pnEscHelp;
-	m_params->SetSpecToolbar(toolBar);
-
 	m_ctrls.overhangThreshold->SetIntValue(m_data.overhangThreshold);
 	m_ctrls.bottomThreshold->SetDoubleValue(m_data.bottomThreshold);
 	m_ctrls.accuracy->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.accuracy)));
-	m_ctrls.resultCount->SetIntValue(static_cast<int32_t>(m_data.resultCount));
 
 	if (m_stat) {
 		m_ctrls.metricsList->SetVisible(true);
 		m_ctrls.visualizeCheckBox->SetVisible(true);
+
 		m_ctrls.resultCount->SetVisible(true);
+		m_ctrls.resultCount->SetIntValue(static_cast<int32_t>(m_data.resultCount));
+		m_ctrls.resultCount->SetValueRange(1, m_stat->evalMesh.normals.size());
+
 		m_ctrls.resultGrid->SetVisible(true);
 
 		m_ctrls.metricsList->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.criteria)));
@@ -201,6 +200,8 @@ void OrientationSearch::updateControls()
 		m_ctrls.resultCount->SetVisible(false);
 		m_ctrls.resultGrid->SetVisible(false);
 	}
+
+	updateToolbar();
 }
 
 void OrientationSearch::refillGrid()
@@ -213,7 +214,8 @@ void OrientationSearch::refillGrid()
 	auto toStr_d = [](double num) { return (std::format(L"{:.2f}", num)); };
 	auto toStr_i = [](long num) { return (std::format(L"{}", num)); };
 
-	m_ctrls.resultGrid->SetRowCount(static_cast<long>(m_data.orientationsInGrid.size() + 1));
+	assert(m_data.resultCount == m_data.orientationsInGrid.size());
+	m_ctrls.resultGrid->SetRowCount(m_data.resultCount + 1);
 	for (long i = 0; i < m_data.orientationsInGrid.size(); ++i) {
 		m_ctrls.resultGrid->SetCellText(i + 1, 0, toStr_i(i + 1));
 		m_ctrls.resultGrid->SetCellText(i + 1, 1, toStr_d(m_stat->infos[m_data.orientationsInGrid[i]].overhangArea));
@@ -236,22 +238,24 @@ void OrientationSearch::updateScene()
 	drawingManager.cleanObjects();
 
 	if (!m_data.isShowHeatmap) {
-		m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
+		if (m_data.currentGridRow != 0) {
+			m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
+			auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
 
-		mesh->colors.reserve(m_stat->colors.size());
-		for (size_t i = 0; i < m_stat->colors.size(); ++i)
-		{
-			auto&& color = m_stat->colors[i];
-			mesh->colors[i] = (glm::vec4(color.red, color.green, color.blue, 1.0f));
-		}
+			mesh->colors.reserve(m_stat->colors.size());
+			for (size_t i = 0; i < m_stat->colors.size(); ++i)
+			{
+				auto&& color = m_stat->colors[i];
+				mesh->colors[i] = (glm::vec4(color.red, color.green, color.blue, 1.0f));
+			}
 
-		drawingManager.addObject(mesh, Visualizer::colorMesh);
+			drawingManager.addObject(mesh, Visualizer::colorMesh);
 
-		BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
-		if (contour.size() >= 3) {
-			auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
-			drawingManager.addObject(polyline, Visualizer::polyline);
+			BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
+			if (contour.size() >= 3) {
+				auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
+				drawingManager.addObject(polyline, Visualizer::polyline);
+			}
 		}
 	} else {
 		std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
@@ -302,4 +306,10 @@ void OrientationSearch::updateScene()
 	}
 
 	drawingManager.redraw();
+}
+
+void OrientationSearch::updateToolbar()
+{
+	SpecPropertyToolBarEnum toolBar = m_stat ? SpecPropertyToolBarEnum::pnEnterEscHelp : SpecPropertyToolBarEnum::pnEscHelp;
+	m_params->SetSpecToolbar(toolBar);
 }
