@@ -231,32 +231,31 @@ void OrientationSearch::refillGrid()
 
 namespace
 {
-// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера.
-std::shared_ptr<IObject> createBottomGabarit(const geom3d::Mesh & mesh, const geom3d::Placement & placement)
+// Создать объект-прямоугольник для визуализации габарита в определенной СК
+std::shared_ptr<IObject> createGabaritVisualizer(geom3d::Gabarit gabarit, const geom3d::Placement& placement)
 {
 	using Crnr = geom3d::Gabarit::CornerType;
 
 	// Коэффициент расширения габарита относительно самой длинной стороны основания
 	constexpr double c_enlargeCoef = 0.01;
 
-	geom3d::Gabarit gab = geom3d::calcGabarit(mesh, placement);
-	if (gab.isEmpty())
+	if (gabarit.isEmpty())
 		return nullptr;
 
 	const double maxSide = std::max(
-		(gab.corner(Crnr::BottomLeftCeil) - gab.corner(Crnr::BottomRightCeil)).norm(),
-		(gab.corner(Crnr::BottomRightCeil) - gab.corner(Crnr::TopRightCeil)).norm()
+		(gabarit.corner(Crnr::BottomLeftCeil) - gabarit.corner(Crnr::BottomRightCeil)).norm(),
+		(gabarit.corner(Crnr::BottomRightCeil) - gabarit.corner(Crnr::TopRightCeil)).norm()
 	);
-	gab.min() -= geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
-	gab.max() += geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
+	gabarit.min() -= geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
+	gabarit.max() += geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
 
 	const auto toWorld = placement.matrixToWorld();
 	auto points = {
-		toWorld * gab.corner(Crnr::BottomLeftCeil),
-		toWorld * gab.corner(Crnr::BottomRightCeil),
-		toWorld * gab.corner(Crnr::TopRightCeil),
-		toWorld * gab.corner(Crnr::TopLeftCeil),
-		toWorld * gab.corner(Crnr::BottomLeftCeil),
+		toWorld * gabarit.corner(Crnr::BottomLeftCeil),
+		toWorld * gabarit.corner(Crnr::BottomRightCeil),
+		toWorld * gabarit.corner(Crnr::TopRightCeil),
+		toWorld * gabarit.corner(Crnr::TopLeftCeil),
+		toWorld * gabarit.corner(Crnr::BottomLeftCeil),
 	};
 	return std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
 }
@@ -267,14 +266,19 @@ void OrientationSearch::updateScene()
 	if (!m_stat)
 		return;
 
-	const std::optional<size_t> currentOrientationIndex =
-		m_data.currentGridRow != 0 ? std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
+	const std::optional<size_t> currentOrientationIndex = m_data.currentGridRow != 0 ?
+		std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
+	const std::optional<geom3d::Placement> orientationPlacement = currentOrientationIndex ? 
+		std::make_optional(geom3d::Placement::createByAxisZ(
+			m_stat->evalMesh.positions[*currentOrientationIndex],
+			m_stat->evalMesh.normals[*currentOrientationIndex])
+		) : std::nullopt;
 
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 
 	if (!m_data.isShowHeatmap) {
-		if (currentOrientationIndex) {
+		if (currentOrientationIndex && orientationPlacement) {
 			m_stat->updateMeshColors(*currentOrientationIndex);
 			auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
 
@@ -293,14 +297,10 @@ void OrientationSearch::updateScene()
 				drawingManager.addObject(polyline, Visualizer::polyline);
 			}
 
-			auto bottomGabaritRect = createBottomGabarit(m_stat->model,
-				geom3d::Placement::createByAxisZ(
-					m_stat->evalMesh.positions[*currentOrientationIndex],
-					m_stat->evalMesh.normals[*currentOrientationIndex]
-				)
-			);
-			if (bottomGabaritRect)
-				drawingManager.addObject(bottomGabaritRect, Visualizer::polyline);
+			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
+			const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, *orientationPlacement);
+			if (auto gabaritVisualizer = createGabaritVisualizer(modelGabarit, *orientationPlacement))
+				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 		}
 	} else {
 		std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
@@ -339,7 +339,7 @@ void OrientationSearch::updateScene()
 
 		drawingManager.addObject(mesh, Visualizer::smoothMesh);
 
-		if (m_data.currentGridRow != 0) {
+		if (currentOrientationIndex && orientationPlacement) {
 			const glm::vec3 point = mesh->positions[*currentOrientationIndex];
 			const glm::vec3 normal = glm::normalize(mesh->normals[*currentOrientationIndex]);
 			const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
@@ -347,6 +347,11 @@ void OrientationSearch::updateScene()
 			auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
 			auto line = std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
 			drawingManager.addObject(line, Visualizer::polyline);
+
+			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
+			const geom3d::Gabarit sphereGabarit(-geom3d::Vec3::Constant(radius), geom3d::Vec3::Constant(radius));
+			if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
+				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 		}
 	}
 
