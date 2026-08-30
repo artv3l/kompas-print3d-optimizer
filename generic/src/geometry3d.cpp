@@ -20,27 +20,6 @@ double angleBetween(const Vec3& a, const Vec3& b)
 	return std::acos(std::clamp(dot / len, -1.0, 1.0));
 }
 
-Gabarit::Gabarit(Eigen::Vector3d begin, Eigen::Vector3d end) :
-	m_begin(begin),
-	m_end(end)
-{
-}
-
-Eigen::Vector3d Gabarit::center() const
-{
-	return (m_begin + m_end) / 2.0;
-}
-
-Eigen::Vector3d Gabarit::getBegin() const
-{
-	return m_begin;
-}
-
-Eigen::Vector3d Gabarit::getEnd() const
-{
-	return m_end;
-}
-
 Placement::Placement(const Vec3& origin, const Vec3& axisX, const Vec3& axisY, const Vec3& axisZ) :
 	m_origin(origin),
 	m_axisX(axisX),
@@ -51,12 +30,17 @@ Placement::Placement(const Vec3& origin, const Vec3& axisX, const Vec3& axisY, c
 
 Eigen::Affine3d Placement::matrixToWorld() const
 {
-	Eigen::Affine3d placementMat;
+	Eigen::Affine3d placementMat = Eigen::Affine3d::Identity();
 	placementMat.linear().col(0) = m_axisX;
 	placementMat.linear().col(1) = m_axisY;
 	placementMat.linear().col(2) = m_axisZ;
 	placementMat.translation() = m_origin;
 	return placementMat;
+}
+
+Eigen::Affine3d Placement::matrixToPlacement() const
+{
+	return matrixToWorld().inverse();
 }
 
 Placement Placement::createByAxisZ(const Vec3& origin, const Vec3& axisZ)
@@ -70,5 +54,15 @@ Placement Placement::createByAxisZ(const Vec3& origin, const Vec3& axisZ)
 	const Vec3 axisY = axisX.cross(axisZ);
 
 	return Placement(origin, axisX.normalized(), axisY.normalized(), axisZ.normalized());
+}
+
+Gabarit calcGabarit(const Mesh& mesh, const Placement& placement)
+{
+	auto toLocal = placement.matrixToPlacement();
+
+	Gabarit gabarit;
+	for (const auto& pos : mesh.positions)
+		gabarit.extend(toLocal * pos);
+	return gabarit;
 }
 }

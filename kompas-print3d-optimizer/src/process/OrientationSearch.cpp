@@ -229,17 +229,53 @@ void OrientationSearch::refillGrid()
 	m_ctrls.resultGrid->UpdateParam();
 }
 
+namespace
+{
+// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера.
+std::shared_ptr<IObject> createBottomGabarit(const geom3d::Mesh & mesh, const geom3d::Placement & placement)
+{
+	using Crnr = geom3d::Gabarit::CornerType;
+
+	// Коэффициент расширения габарита относительно самой длинной стороны основания
+	constexpr double c_enlargeCoef = 0.01;
+
+	geom3d::Gabarit gab = geom3d::calcGabarit(mesh, placement);
+	if (gab.isEmpty())
+		return nullptr;
+
+	const double maxSide = std::max(
+		(gab.corner(Crnr::BottomLeftCeil) - gab.corner(Crnr::BottomRightCeil)).norm(),
+		(gab.corner(Crnr::BottomRightCeil) - gab.corner(Crnr::TopRightCeil)).norm()
+	);
+	gab.min() -= geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
+	gab.max() += geom3d::Vec3::Constant(maxSide * c_enlargeCoef);
+
+	const auto toWorld = placement.matrixToWorld();
+	auto points = {
+		toWorld * gab.corner(Crnr::BottomLeftCeil),
+		toWorld * gab.corner(Crnr::BottomRightCeil),
+		toWorld * gab.corner(Crnr::TopRightCeil),
+		toWorld * gab.corner(Crnr::TopLeftCeil),
+		toWorld * gab.corner(Crnr::BottomLeftCeil),
+	};
+	return std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
+}
+}
+
 void OrientationSearch::updateScene()
 {
 	if (!m_stat)
 		return;
 
+	const std::optional<size_t> currentOrientationIndex =
+		m_data.currentGridRow != 0 ? std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
+
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 
 	if (!m_data.isShowHeatmap) {
-		if (m_data.currentGridRow != 0) {
-			m_stat->updateMeshColors(m_data.orientationsInGrid[m_data.currentGridRow - 1]);
+		if (currentOrientationIndex) {
+			m_stat->updateMeshColors(*currentOrientationIndex);
 			auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
 
 			mesh->colors.reserve(m_stat->colors.size());
@@ -251,11 +287,20 @@ void OrientationSearch::updateScene()
 
 			drawingManager.addObject(mesh, Visualizer::colorMesh);
 
-			BottomContour contour = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour;
+			BottomContour contour = m_stat->infos[*currentOrientationIndex].bottomContour;
 			if (contour.size() >= 3) {
 				auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
 				drawingManager.addObject(polyline, Visualizer::polyline);
 			}
+
+			auto bottomGabaritRect = createBottomGabarit(m_stat->model,
+				geom3d::Placement::createByAxisZ(
+					m_stat->evalMesh.positions[*currentOrientationIndex],
+					m_stat->evalMesh.normals[*currentOrientationIndex]
+				)
+			);
+			if (bottomGabaritRect)
+				drawingManager.addObject(bottomGabaritRect, Visualizer::polyline);
 		}
 	} else {
 		std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
@@ -282,7 +327,7 @@ void OrientationSearch::updateScene()
 
 		const geom3d::Gabarit gabarit = getGabarit(part);
 		const Eigen::Vector3d center = gabarit.center();
-		const double radius = (gabarit.getEnd() - gabarit.getBegin()).norm() / 2.0;
+		const double radius = (gabarit.max() - gabarit.min()).norm() / 2.0;
 
 		glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
 		matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
@@ -295,8 +340,8 @@ void OrientationSearch::updateScene()
 		drawingManager.addObject(mesh, Visualizer::smoothMesh);
 
 		if (m_data.currentGridRow != 0) {
-			const glm::vec3 point = mesh->positions[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
-			const glm::vec3 normal = glm::normalize(mesh->normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]]);
+			const glm::vec3 point = mesh->positions[*currentOrientationIndex];
+			const glm::vec3 normal = glm::normalize(mesh->normals[*currentOrientationIndex]);
 			const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
 
 			auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
