@@ -8,6 +8,7 @@
 #include "generic/enums.hpp"
 #include "generic/math.hpp"
 #include "core/orientation/orientation.hpp"
+#include "core/mesh.hpp"
 #include "kapiwrap/3d/part.hpp"
 
 namespace
@@ -263,6 +264,8 @@ std::shared_ptr<IObject> createGabaritVisualizer(geom3d::Gabarit gabarit, const 
 
 void OrientationSearch::updateScene()
 {
+	const color::RGB c_clr_bottomContour = color::getStandardColor<color::RGB, color::StandardColor::green>();
+
 	if (!m_stat)
 		return;
 
@@ -291,10 +294,22 @@ void OrientationSearch::updateScene()
 
 			drawingManager.addObject(mesh, Visualizer::colorMesh);
 
-			BottomContour contour = m_stat->infos[*currentOrientationIndex].bottomContour;
-			if (contour.size() >= 3) {
-				auto polyline = std::make_shared<Polyline3D>(contour, color::getStandardColor<color::RGB, color::StandardColor::green>());
-				drawingManager.addObject(polyline, Visualizer::polyline);
+			// Выпуклая оболочка нижней поверхности
+			BottomContour bottomContour = m_stat->infos[*currentOrientationIndex].bottomContour;
+			if (bottomContour.size() == 1) {
+				auto sphere = std::make_shared<ColoredMesh>(generateIcosphere(1), c_clr_bottomContour, ColoredMesh::ColorType::byVertex);
+				glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
+				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
+				matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
+				std::ranges::transform(sphere->positions, sphere->positions.begin(), [&matrix](const glm::vec3& pos)
+					{
+						glm::vec4 res = matrix * glm::vec4(pos, 1.0);
+						return glm::vec3(res.x, res.y, res.z);
+					});
+
+				drawingManager.addObject(sphere, Visualizer::smoothMesh);
+			} else if (bottomContour.size() >= 2) {
+				drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, c_clr_bottomContour), Visualizer::polyline);
 			}
 
 			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера

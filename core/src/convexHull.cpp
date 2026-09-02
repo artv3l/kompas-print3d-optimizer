@@ -12,10 +12,8 @@ namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
     // Function to return a list of points on the convex hull in counterclockwise order
     std::vector<Eigen::Vector2d> convex_hull(std::vector<Eigen::Vector2d> A)
     {
-        int n = static_cast<int>(A.size()), k = 0;
-
-        // Initialize a vector to store the convex hull points
-        std::vector<Eigen::Vector2d> ans(2 * n);
+        if (A.empty())
+            return {};
 
         // Sort the points lexicographically
         std::sort(A.begin(), A.end(), [](const Eigen::Vector2d& a, const Eigen::Vector2d& b)
@@ -23,6 +21,16 @@ namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
                 return a.x() < b.x() || (a.x() == b.x() && a.y() < b.y());
             }
         );
+
+        A.erase(std::unique(A.begin(), A.end()), A.end());
+
+        if (A.size() == 1)
+            return A;
+
+        int n = static_cast<int>(A.size()), k = 0;
+
+        // Initialize a vector to store the convex hull points
+        std::vector<Eigen::Vector2d> ans(2 * n);
 
         // Build the lower hull
         for (int i = 0; i < n; ++i)
@@ -47,7 +55,7 @@ namespace // https://www.geeksforgeeks.org/cpp/convex-hull-algorithm-in-cpp
         // Resize the vector to remove any extra elements
         ans.resize(k - 1);
 
-        return (ans.size() >= 3) ? ans : std::vector<Eigen::Vector2d>();
+        return ans;
     }
 }
 
