@@ -198,7 +198,7 @@ std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria c
 		{
 			return complexEstimation[index];
 		};
-	std::ranges::partial_sort(indexes, indexes.begin() + count, {}, indexToElem);
+	std::ranges::stable_sort(indexes, {}, indexToElem);
 
 	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
 }

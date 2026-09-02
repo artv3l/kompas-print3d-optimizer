@@ -273,7 +273,7 @@ void OrientationSearch::updateScene()
 		std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
 	const std::optional<geom3d::Placement> orientationPlacement = currentOrientationIndex ? 
 		std::make_optional(geom3d::Placement::createByAxisZ(
-			m_stat->evalMesh.positions[*currentOrientationIndex],
+			geom3d::Vec3::Zero(),
 			m_stat->evalMesh.normals[*currentOrientationIndex])
 		) : std::nullopt;
 
@@ -364,7 +364,9 @@ void OrientationSearch::updateScene()
 			drawingManager.addObject(line, Visualizer::polyline);
 
 			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
-			const geom3d::Gabarit sphereGabarit(-geom3d::Vec3::Constant(radius), geom3d::Vec3::Constant(radius));
+			const geom3d::Vec3 centerInOrientationPlacement = orientationPlacement->matrixToPlacement() * center;
+			const geom3d::Vec3 radiusVec = geom3d::Vec3::Constant(radius);
+ 			const geom3d::Gabarit sphereGabarit(centerInOrientationPlacement - radiusVec, centerInOrientationPlacement + radiusVec);
 			if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
 				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 		}
