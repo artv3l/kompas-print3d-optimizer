@@ -56,6 +56,11 @@ Placement Placement::createByAxisZ(const Vec3& origin, const Vec3& axisZ)
 	return Placement(origin, axisX.normalized(), axisY.normalized(), axisZ.normalized());
 }
 
+Placement Placement::createDefault()
+{
+	return Placement(Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(0, 1, 0), Vec3(0, 0, 1));
+}
+
 Gabarit calcGabarit(const Mesh& mesh, const Placement& placement)
 {
 	auto toLocal = placement.matrixToPlacement();

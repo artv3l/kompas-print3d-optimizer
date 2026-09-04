@@ -260,15 +260,47 @@ std::shared_ptr<IObject> createGabaritVisualizer(geom3d::Gabarit gabarit, const 
 	};
 	return std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
 }
+
+std::shared_ptr<ColoredMesh> createHeatmapIcosphere(const OrientationStatByMesh& stat,
+	OrientationComplexCriteria criteria, const geom3d::Vec3 & center, double radius)
+{
+	const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
+	const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
+	auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
+	auto toColor = [&toHeatmap](double value) -> glm::vec4
+	{
+		// value [0, 1] -> RGB color
+		color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
+		return glm::vec4(rgb.red, rgb.green, rgb.blue, 1.0f);
+	};
+	const auto& complexCriteriaValues = stat.complexInfos[enums::toUnderlying(criteria)];
+
+	std::vector<glm::vec4> colors(stat.evalMesh.normals.size(), glm::vec4());
+	std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
+
+	// Масштабирование икосферы по габариту детали
+	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
+	matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
+
+	auto mesh = std::make_shared<ColoredMesh>(stat.evalMesh, orientation::c_defaultColor, ColoredMesh::ColorType::byVertex);
+	mesh->colors = colors;
+	transform(mesh->positions, matrix);
+
+	return mesh;
+}
 }
 
 void OrientationSearch::updateScene()
 {
 	const color::RGB c_clr_bottomContour = color::getStandardColor<color::RGB, color::StandardColor::green>();
-
+	
 	if (!m_stat)
 		return;
 
+	// Сфера для визуализации точек
+	const geom3d::Mesh pointIcosphere = generateIcosphere(1);
+
+	// Индекс и плейсмент текущей выбранной ориентации
 	const std::optional<size_t> currentOrientationIndex = m_data.currentGridRow != 0 ?
 		std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
 	const std::optional<geom3d::Placement> orientationPlacement = currentOrientationIndex ? 
@@ -277,99 +309,70 @@ void OrientationSearch::updateScene()
 			m_stat->evalMesh.normals[*currentOrientationIndex])
 		) : std::nullopt;
 
+	// Габарит модели в глобальной СК
+	const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, geom3d::Placement::createDefault());
+
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 
-	if (!m_data.isShowHeatmap) {
-		if (currentOrientationIndex && orientationPlacement) {
-			m_stat->updateMeshColors(*currentOrientationIndex);
-			auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
+	if (m_data.isShowHeatmap) {
+		const geom3d::Vec3 center = modelGabarit.center();
+		const double radius = (modelGabarit.max() - modelGabarit.min()).norm() / 2.0;
 
-			mesh->colors.reserve(m_stat->colors.size());
+		// Сфера тепловой карты
+		std::shared_ptr<ColoredMesh> heatmapIcosphere = createHeatmapIcosphere(*m_stat, m_data.criteria, center, radius);
+		drawingManager.addObject(heatmapIcosphere, Visualizer::smoothMesh);
+
+		if (currentOrientationIndex && orientationPlacement) {
+			// Текущая выбранная ориентация на сфере тепловой карты
+			const glm::vec3 point = heatmapIcosphere->positions[*currentOrientationIndex];
+			auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color::getStandardColor<color::RGB, color::StandardColor::blue>(),
+				ColoredMesh::ColorType::byVertex);
+			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), point);
+			matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
+			transform(sphere->positions, matrix);
+			drawingManager.addObject(sphere, Visualizer::smoothMesh);
+
+			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
+			const geom3d::Vec3 centerInOrientationPlacement = orientationPlacement->matrixToPlacement() * modelGabarit.center();
+			const geom3d::Vec3 radiusVec = geom3d::Vec3::Constant(radius);
+			const geom3d::Gabarit sphereGabarit(centerInOrientationPlacement - radiusVec, centerInOrientationPlacement + radiusVec);
+			if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
+				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
+		}
+	} else {
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
+
+		if (currentOrientationIndex && orientationPlacement) {
+			// Обновление цветов модели по выбранной ориентации
+			m_stat->updateMeshColors(*currentOrientationIndex);
 			for (size_t i = 0; i < m_stat->colors.size(); ++i)
 			{
 				auto&& color = m_stat->colors[i];
 				mesh->colors[i] = (glm::vec4(color.red, color.green, color.blue, 1.0f));
 			}
 
-			drawingManager.addObject(mesh, Visualizer::colorMesh);
-
 			// Выпуклая оболочка нижней поверхности
 			BottomContour bottomContour = m_stat->infos[*currentOrientationIndex].bottomContour;
 			if (bottomContour.size() == 1) {
-				auto sphere = std::make_shared<ColoredMesh>(generateIcosphere(1), c_clr_bottomContour, ColoredMesh::ColorType::byVertex);
+				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, c_clr_bottomContour, ColoredMesh::ColorType::byVertex);
 				glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
 				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
 				matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
-				std::ranges::transform(sphere->positions, sphere->positions.begin(), [&matrix](const glm::vec3& pos)
-					{
-						glm::vec4 res = matrix * glm::vec4(pos, 1.0);
-						return glm::vec3(res.x, res.y, res.z);
-					});
-
+				transform(sphere->positions, matrix);
 				drawingManager.addObject(sphere, Visualizer::smoothMesh);
-			} else if (bottomContour.size() >= 2) {
+			}
+			else if (bottomContour.size() >= 2) {
 				drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, c_clr_bottomContour), Visualizer::polyline);
 			}
 
 			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
-			const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, *orientationPlacement);
-			if (auto gabaritVisualizer = createGabaritVisualizer(modelGabarit, *orientationPlacement))
+			const geom3d::Gabarit modelGabaritInOrientationPlacement = geom3d::calcGabarit(m_stat->model, *orientationPlacement);
+			if (auto gabaritVisualizer = createGabaritVisualizer(modelGabaritInOrientationPlacement, *orientationPlacement))
 				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 		}
-	} else {
-		std::vector<glm::vec4> colors(m_stat->evalMesh.normals.size(), glm::vec4());
 
-		const auto red = color::getStandardColor<color::HSV, color::StandardColor::red>();
-		const auto green = color::getStandardColor<color::HSV, color::StandardColor::green>();
-		auto toHeatmap = std::bind(math::convertRanges, std::placeholders::_1, 0.0, 1.0, red.hue, green.hue - red.hue);
-
-		// value [0, 1] -> HSV color
-		auto toColor = [&toHeatmap](double value) -> glm::vec4
-			{
-				color::RGB rgb = color::toRGB(color::HSV{ toHeatmap(1.0 - value), 1.0, 1.0 });
-				return glm::vec4(rgb.red, rgb.green, rgb.blue, 1.0f);
-			};
-		const auto& complexCriteriaValues = m_stat->complexInfos[enums::toUnderlying(m_data.criteria)];
-		std::ranges::transform(complexCriteriaValues, colors.begin(), toColor);
-
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->evalMesh, orientation::c_defaultColor, ColoredMesh::ColorType::byVertex);
-		mesh->colors = colors;
-
-		// Масштабирование икосферы по габариту детали
-		ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
-		ksapi::IPartPtr part = doc3d->GetTopPart();
-
-		const geom3d::Gabarit gabarit = getGabarit(part);
-		const Eigen::Vector3d center = gabarit.center();
-		const double radius = (gabarit.max() - gabarit.min()).norm() / 2.0;
-
-		glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
-		matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
-		std::ranges::transform(mesh->positions, mesh->positions.begin(), [&matrix](const glm::vec3& pos)
-			{
-				glm::vec4 res = matrix * glm::vec4(pos, 1.0);
-				return glm::vec3(res.x, res.y, res.z);
-			});
-
-		drawingManager.addObject(mesh, Visualizer::smoothMesh);
-
-		if (currentOrientationIndex && orientationPlacement) {
-			const glm::vec3 point = mesh->positions[*currentOrientationIndex];
-			const glm::vec3 normal = glm::normalize(mesh->normals[*currentOrientationIndex]);
-			const glm::vec3 point2 = point + (normal * static_cast<float>(radius * 0.2));
-
-			auto points = { geom3d::Vec3(point.x, point.y, point.z), geom3d::Vec3(point2.x, point2.y, point2.z) };
-			auto line = std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
-			drawingManager.addObject(line, Visualizer::polyline);
-
-			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
-			const geom3d::Vec3 centerInOrientationPlacement = orientationPlacement->matrixToPlacement() * center;
-			const geom3d::Vec3 radiusVec = geom3d::Vec3::Constant(radius);
- 			const geom3d::Gabarit sphereGabarit(centerInOrientationPlacement - radiusVec, centerInOrientationPlacement + radiusVec);
-			if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
-				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
-		}
+		drawingManager.addObject(mesh, Visualizer::colorMesh);
 	}
 
 	drawingManager.redraw();

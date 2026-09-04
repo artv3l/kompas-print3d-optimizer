@@ -25,6 +25,7 @@ public:
 	Eigen::Affine3d matrixToPlacement() const;
 
 	static Placement createByAxisZ(const Vec3& origin, const Vec3& axisZ);
+	static Placement createDefault();
 
 private:
 	Vec3 m_origin;

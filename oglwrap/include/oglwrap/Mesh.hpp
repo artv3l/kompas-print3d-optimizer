@@ -56,3 +56,5 @@ public:
     std::vector<glm::vec3> m_points;
     glm::vec3 m_color;
 };
+
+void transform(std::span<glm::vec3> data, glm::mat4 matrix);

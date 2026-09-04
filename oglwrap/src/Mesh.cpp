@@ -37,13 +37,30 @@ Mesh::Mesh(const geom3d::Mesh& mesh):
 
 ColoredMesh::ColoredMesh(const geom3d::Mesh& mesh, const color::RGB& color, ColorType colorType)
 	: Mesh(mesh)
-	, colors(mesh.indexes.size() / 3, glm::vec4(color.red, color.green, color.blue, 1.0f))
+	, colors()
 	, m_colorType(colorType)
 {
+	switch (colorType)
+	{
+	case ColorType::byTriangle:
+		colors = std::vector<glm::vec4>(mesh.indexes.size() / 3, glm::vec4(color.red, color.green, color.blue, 1.0f));
+		break;
+	case ColorType::byVertex:
+		colors = std::vector<glm::vec4>(mesh.positions.size(), glm::vec4(color.red, color.green, color.blue, 1.0f));
+		break;
+	}
 }
 
 Polyline3D::Polyline3D(std::span<const geom3d::Vec3> points, const color::RGB& color):
 	m_points(toGlm(points)),
 	m_color(color.red, color.green, color.blue)
 {
+}
+
+void transform(std::span<glm::vec3> data, glm::mat4 matrix)
+{
+	for (auto&& vec : data) {
+		glm::vec4 res = matrix * glm::vec4(vec, 1.0);
+		vec = glm::vec3(res.x, res.y, res.z);
+	}
 }
