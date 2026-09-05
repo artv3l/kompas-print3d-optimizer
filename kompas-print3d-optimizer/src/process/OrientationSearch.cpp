@@ -13,6 +13,7 @@
 
 namespace color_scheme
 {
+constexpr color::RGB background{ .red = 0.7, .green = 0.7, .blue = 0.7 };
 constexpr color::RGB model{ .red = 0.8, .green = 0.8, .blue = 0.8 };
 constexpr color::RGB overhang{ .red = 1.0, .green = 0.0, .blue = 0.0 };
 constexpr color::RGB bottom{ .red = 0.0, .green = 0.0, .blue = 1.0 };
@@ -45,6 +46,9 @@ OrientationSearch::OrientationSearch(ksapi::IApplication& kompasApp, ksapi::IKom
 {
 	initControls();
 	updateControls();
+
+	DrawingManager& drawingManager = m_documentData.getDrawingManager();
+	drawingManager.setBackgroundColor(color_scheme::background);
 }
 
 void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& control)

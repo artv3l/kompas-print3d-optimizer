@@ -13,7 +13,8 @@ short DrawingManager::s_framesCount = 0;
 DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view eventsOwnerName):
 	m_frame(frame),
 	m_frameEvents(m_frame->Events()),
-	m_eventsOwnerName(eventsOwnerName)
+	m_eventsOwnerName(eventsOwnerName),
+    m_backgroundColor(color::getStandardColor<color::RGB, color::StandardColor::white>())
 {
 	namespace stdph = std::placeholders;
 
@@ -66,6 +67,11 @@ void DrawingManager::redraw()
     m_frame->RefreshWindow();
 }
 
+void DrawingManager::setBackgroundColor(const color::RGB& backgroundColor)
+{
+    m_backgroundColor = backgroundColor;
+}
+
 void DrawingManager::close()
 {
     s_framesCount--;
@@ -94,11 +100,8 @@ void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
         return;
     }
 
-    glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+    glClearColor(m_backgroundColor.red, m_backgroundColor.green, m_backgroundColor.blue, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
 
     float matrix4[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, matrix4);

@@ -9,6 +9,7 @@ enum class StandardColor
     red,
     green,
     blue,
+    white,
 };
 
 struct RGB final

@@ -27,6 +27,7 @@ public:
     void addObject(std::shared_ptr<IObject> object, Visualizer visualizer);
     void cleanObjects();
     void redraw();
+    void setBackgroundColor(const color::RGB& backgroundColor);
 
 private:
     void close();
@@ -39,6 +40,7 @@ private:
     ksapi::IDocumentFrameEventsPtr m_frameEvents;
     const std::wstring m_eventsOwnerName;
 
+    color::RGB m_backgroundColor;
     std::unordered_map<Visualizer, std::vector<std::unique_ptr<IDrawableObject>>> m_objects;
 
 private: // deprecated?

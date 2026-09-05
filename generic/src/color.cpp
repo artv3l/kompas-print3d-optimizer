@@ -71,6 +71,7 @@ template<> HSV getStandardColor<HSV, StandardColor::green>() {
 template<> RGB getStandardColor<RGB, StandardColor::green>() {
     return RGB{ 0.0, 1.0, 0.0 }; }
 template<> RGB getStandardColor<RGB, StandardColor::blue>() {
-    return RGB{ 0.0, 0.0, 1.0 };
-}
+    return RGB{ 0.0, 0.0, 1.0 }; }
+template<> RGB getStandardColor<RGB, StandardColor::white>() {
+    return RGB{ 1.0, 1.0, 1.0 }; }
 }
