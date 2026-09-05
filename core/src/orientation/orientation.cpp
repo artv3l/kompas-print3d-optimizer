@@ -25,7 +25,7 @@ std::pair<geom3d::Plane, double> calcPrintPlaneAndHeight(const geom3d::Mesh& mes
 	return std::make_pair(printPlane, printPlane.absDistance(*max));
 }
 
-OrientationInfo calcOrientationInfo(const geom3d::Mesh& mesh, const geom3d::Vec3& direction, double overhangThreshold, double offsetThreshold)
+OrientationInfo calcOrientationInfo(const geom3d::Mesh& mesh, const geom3d::Vec3& direction, double overhangThreshold)
 {
 	OrientationInfo info;
 
@@ -54,7 +54,7 @@ OrientationInfo calcOrientationInfo(const geom3d::Mesh& mesh, const geom3d::Vec3
 		const double angleRad = geom3d::angleBetween(normal, geom3d::Vec3(printPlane.normal()));
 		const double triangleArea = geom3d::triangleArea(triangle);
 
-		if (isOnPrintPlane(triangle, printPlane, offsetThreshold)) {
+		if (isOnPrintPlane(triangle, printPlane)) {
 			info.bottomArea += triangleArea;
 			info.triangleProperties[iIndex / 3] = TriangleProperties::bottom;
 		}
@@ -66,7 +66,7 @@ OrientationInfo calcOrientationInfo(const geom3d::Mesh& mesh, const geom3d::Vec3
 
 		for (auto&& pnt : triangle) {
 			const geom3d::Vec3 pntLocal = toPrintPlanePlacement * pnt;
-			if (std::abs(pntLocal.z()) < offsetThreshold) {
+			if (math::equal(pntLocal.z(), 0.0)) {
 				convexHullPoints.emplace_back(pntLocal.x(), pntLocal.y());
 			}
 		}
@@ -111,11 +111,11 @@ std::vector<double> toRelative(R absoluteValues)
 // Р Р°СЃСЃС‡РёС‚Р°С‚СЊ РІСЃРµ СЃРѕСЃС‚Р°РІРЅС‹Рµ РєСЂРёС‚РµСЂРёРё
 OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
 {
-	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
+	/*auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
 		std::cout << "Composite criteria calc: "
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(time)
 			<< "\n";
-		});
+		});*/
 
 	size_t size = infos.size();
 
@@ -149,42 +149,43 @@ OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationI
 }
 
 // Р Р°СЃСЃС‡РёС‚Р°С‚СЊ РІСЃРµ РєСЂРёС‚РµСЂРёРё РґР»СЏ РЅРµСЃРєРѕР»СЊРєРёС… РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёРё
-std::vector<OrientationInfo> calcOrientationsEstimation(const geom3d::Mesh& mesh, std::span<const geom3d::Vec3> directions, double overhangThreshold, double offsetThreshold)
+std::vector<OrientationInfo> calcOrientationsEstimation(const geom3d::Mesh& mesh, std::span<const geom3d::Vec3> directions, double overhangThreshold)
 {
 	assert(mesh.indexes.size() % 3 == 0);
 
-	auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
+	/*auto perfLock = perfomance::measureTime([](std::chrono::nanoseconds time) {
 		std::cout << "Simple criteria calc: "
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(time)
 			<< "\n";
-		});
+		});*/
 
 	std::vector<OrientationInfo> result;
 	result.resize(directions.size());
 	for (size_t i = 0; i < directions.size(); ++i) {
-		result[i] = calcOrientationInfo(mesh, directions[i], overhangThreshold, offsetThreshold);
+		result[i] = calcOrientationInfo(mesh, directions[i], overhangThreshold);
 	}
 	return result;
 }
 
-OrientationStatByMesh calcOrientationStatByMesh(const geom3d::Mesh & mesh, double overhangThreshold, double offsetThreshold, uint8_t subdivisionsCount)
+OrientationStatByMesh calcOrientationStatByMesh(const geom3d::Mesh & mesh, double overhangThreshold, uint8_t subdivisionsCount)
 {
 	OrientationStatByMesh result;
 
 	result.model = mesh;
 
 	result.evalMesh = generateIcosphere(subdivisionsCount);
-	result.infos = calcOrientationsEstimation(result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
+	result.infos = calcOrientationsEstimation(result.model, result.evalMesh.normals, overhangThreshold);
 	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
 	return result;
 }
 
-bool isOnPrintPlane(const geom3d::Triangle& triangle, const geom3d::Plane& printPlane, double offsetThreshold)
+bool isOnPrintPlane(const geom3d::Triangle& triangle, const geom3d::Plane& printPlane)
 {
-	auto isDistLessThreshold = [&printPlane, offsetThreshold](const Eigen::Vector3d& point) {
-		return printPlane.absDistance(point) < offsetThreshold;
-		};
-	return std::ranges::all_of(triangle, isDistLessThreshold);
+	return std::ranges::all_of(triangle,
+		[&printPlane](const Eigen::Vector3d& point) {
+			return math::equal(printPlane.absDistance(point), 0.0);
+		}
+	);
 }
 
 std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria criteria, size_t count) const

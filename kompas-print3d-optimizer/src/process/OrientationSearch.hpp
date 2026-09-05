@@ -38,7 +38,6 @@ private:
 	struct
 	{
 		ksapi::IPropertyEditPtr overhangThreshold;
-		ksapi::IPropertyEditPtr bottomThreshold;
 		ksapi::IPropertyEditPtr resultCount;
 		ksapi::IPropertyListPtr accuracy;
 		ksapi::IPropertyTextButtonPtr recalcButton;
@@ -52,7 +51,6 @@ private:
 		OrientationComplexCriteria criteria = OrientationComplexCriteria::common;
 		bool isShowHeatmap = false;
 		int overhangThreshold = 45;
-		double bottomThreshold = 0.2;
 		size_t currentGridRow = 1; // 0 - РЎС‚СЂРѕРєР° РЅРµ РІС‹Р±СЂР°РЅР°
 		std::vector<size_t> orientationsInGrid = {};
 		size_t resultCount = 5; // РљРѕР»-РІРѕ РІР°СЂРёР°РЅС‚РѕРІ РѕСЂРёРµРЅС‚Р°С†РёР№ РґР»СЏ РІС‹РІРѕРґР° РІ С‚Р°Р±Р»РёС†Сѓ

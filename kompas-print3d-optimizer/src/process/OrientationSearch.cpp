@@ -65,7 +65,6 @@ void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& con
 	m_data.isShowHeatmap = m_ctrls.visualizeCheckBox->GetBoolValue();
 
 	m_data.overhangThreshold = m_ctrls.overhangThreshold->GetIntValue();
-	m_data.bottomThreshold = m_ctrls.bottomThreshold->GetDoubleValue();
 	m_data.resultCount = m_ctrls.resultCount->GetIntValue();
 	if (m_data.currentGridRow > m_data.resultCount) {
 		m_data.currentGridRow = 1;
@@ -109,7 +108,7 @@ void OrientationSearch::controlCommand(const ksapi::IPropertyControlPtr& control
 		ksapi::IPartPtr part = doc3d->GetTopPart();
 		
 		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(copyToMesh(part),
-			m_data.overhangThreshold, m_data.bottomThreshold, getSubdivisionsCount(m_data.accuracy)
+			m_data.overhangThreshold, getSubdivisionsCount(m_data.accuracy)
 		));
 
 		updateControls();
@@ -127,9 +126,6 @@ void OrientationSearch::initControls()
 
 		m_ctrls.overhangThreshold = controls->Add(ControlTypeEnum::ksControlEditInt);
 		m_ctrls.overhangThreshold->SetName(L"Максимальный угол нависаний");
-
-		m_ctrls.bottomThreshold = controls->Add(ControlTypeEnum::ksControlEditReal);
-		m_ctrls.bottomThreshold->SetName(L"Погрешность нижней повехрности");
 
 		m_ctrls.accuracy = controls->Add(ControlTypeEnum::ksControlListStr);
 		m_ctrls.accuracy->SetName(L"Точность");
@@ -184,7 +180,6 @@ void OrientationSearch::initControls()
 void OrientationSearch::updateControls()
 {
 	m_ctrls.overhangThreshold->SetIntValue(m_data.overhangThreshold);
-	m_ctrls.bottomThreshold->SetDoubleValue(m_data.bottomThreshold);
 	m_ctrls.accuracy->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.accuracy)));
 
 	if (m_stat) {
