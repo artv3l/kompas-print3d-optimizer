@@ -329,13 +329,16 @@ void OrientationSearch::updateScene()
 
 	// Габарит модели в глобальной СК
 	const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, geom3d::Placement::createDefault());
+	// Радиус сферы тепловой карты
+	const double radius = (modelGabarit.max() - modelGabarit.min()).norm() / 2.0;
+	// Радиус сферы для обозначения точки
+	const double pointRadius = radius * 0.008;
 
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 
 	if (m_data.isShowHeatmap) {
 		const geom3d::Vec3 center = modelGabarit.center();
-		const double radius = (modelGabarit.max() - modelGabarit.min()).norm() / 2.0;
 
 		// Сфера тепловой карты
 		std::shared_ptr<ColoredMesh> heatmapIcosphere = createHeatmapIcosphere(*m_stat, m_data.criteria, center, radius);
@@ -346,7 +349,7 @@ void OrientationSearch::updateScene()
 			const glm::vec3 point = heatmapIcosphere->positions[*currentOrientationIndex];
 			auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottom, ColoredMesh::ColorType::byVertex);
 			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), point);
-			matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
+			matrix = glm::scale(matrix, glm::vec3(pointRadius, pointRadius, pointRadius));
 			transform(sphere->positions, matrix);
 			drawingManager.addObject(sphere, Visualizer::smoothMesh);
 
@@ -370,7 +373,7 @@ void OrientationSearch::updateScene()
 				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottomContour, ColoredMesh::ColorType::byVertex);
 				glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
 				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
-				matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
+				matrix = glm::scale(matrix, glm::vec3(pointRadius, pointRadius, pointRadius));
 				transform(sphere->positions, matrix);
 				drawingManager.addObject(sphere, Visualizer::smoothMesh);
 			}
