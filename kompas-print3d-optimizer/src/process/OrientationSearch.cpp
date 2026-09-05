@@ -11,6 +11,14 @@
 #include "core/mesh.hpp"
 #include "kapiwrap/3d/part.hpp"
 
+namespace color_scheme
+{
+constexpr color::RGB model{ .red = 0.8, .green = 0.8, .blue = 0.8 };
+constexpr color::RGB overhang{ .red = 1.0, .green = 0.0, .blue = 0.0 };
+constexpr color::RGB bottom{ .red = 0.0, .green = 0.0, .blue = 1.0 };
+constexpr color::RGB bottomContour{ .red = 0.0, .green = 1.0, .blue = 0.0 };
+}
+
 namespace
 {
 const std::unordered_map<Accuracy, std::wstring_view> c_accuracyNames = {
@@ -258,7 +266,7 @@ std::shared_ptr<IObject> createGabaritVisualizer(geom3d::Gabarit gabarit, const 
 		toWorld * gabarit.corner(Crnr::TopLeftCeil),
 		toWorld * gabarit.corner(Crnr::BottomLeftCeil),
 	};
-	return std::make_shared<Polyline3D>(points, color::getStandardColor<color::RGB, color::StandardColor::blue>());
+	return std::make_shared<Polyline3D>(points, color_scheme::bottom);
 }
 
 std::shared_ptr<ColoredMesh> createHeatmapIcosphere(const OrientationStatByMesh& stat,
@@ -282,18 +290,33 @@ std::shared_ptr<ColoredMesh> createHeatmapIcosphere(const OrientationStatByMesh&
 	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(center.x(), center.y(), center.z()));
 	matrix = glm::scale(matrix, glm::vec3(radius, radius, radius));
 
-	auto mesh = std::make_shared<ColoredMesh>(stat.evalMesh, orientation::c_defaultColor, ColoredMesh::ColorType::byVertex);
+	auto mesh = std::make_shared<ColoredMesh>(stat.evalMesh, color_scheme::model, ColoredMesh::ColorType::byVertex);
 	mesh->colors = colors;
 	transform(mesh->positions, matrix);
 
 	return mesh;
 }
+
+void updateMeshColors(std::span<glm::vec4> colors, const OrientationStatByMesh& stat, size_t index)
+{
+	const auto& props = stat.infos[index].triangleProperties;
+	assert(props.size() == (stat.model.indexes.size() / 3));
+
+	for (size_t i = 0; i < props.size(); ++i) {
+		color::RGB color = color_scheme::model;
+		if (props[i] == TriangleProperties::overhang) {
+			color = color_scheme::overhang;
+		}
+		else if (props[i] == TriangleProperties::bottom) {
+			color = color_scheme::bottom;
+		}
+		colors[i] = glm::vec4(color.red, color.green, color.blue, 1.0f);
+	}
+}
 }
 
 void OrientationSearch::updateScene()
 {
-	const color::RGB c_clr_bottomContour = color::getStandardColor<color::RGB, color::StandardColor::green>();
-	
 	if (!m_stat)
 		return;
 
@@ -326,8 +349,7 @@ void OrientationSearch::updateScene()
 		if (currentOrientationIndex && orientationPlacement) {
 			// Текущая выбранная ориентация на сфере тепловой карты
 			const glm::vec3 point = heatmapIcosphere->positions[*currentOrientationIndex];
-			auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color::getStandardColor<color::RGB, color::StandardColor::blue>(),
-				ColoredMesh::ColorType::byVertex);
+			auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottom, ColoredMesh::ColorType::byVertex);
 			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), point);
 			matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
 			transform(sphere->positions, matrix);
@@ -341,21 +363,16 @@ void OrientationSearch::updateScene()
 				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 		}
 	} else {
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, orientation::c_defaultColor, ColoredMesh::ColorType::byTriangle);
+		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, color_scheme::model, ColoredMesh::ColorType::byTriangle);
 
 		if (currentOrientationIndex && orientationPlacement) {
 			// Обновление цветов модели по выбранной ориентации
-			m_stat->updateMeshColors(*currentOrientationIndex);
-			for (size_t i = 0; i < m_stat->colors.size(); ++i)
-			{
-				auto&& color = m_stat->colors[i];
-				mesh->colors[i] = (glm::vec4(color.red, color.green, color.blue, 1.0f));
-			}
+			updateMeshColors(mesh->colors, *m_stat, *currentOrientationIndex);
 
 			// Выпуклая оболочка нижней поверхности
 			BottomContour bottomContour = m_stat->infos[*currentOrientationIndex].bottomContour;
 			if (bottomContour.size() == 1) {
-				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, c_clr_bottomContour, ColoredMesh::ColorType::byVertex);
+				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottomContour, ColoredMesh::ColorType::byVertex);
 				glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
 				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
 				matrix = glm::scale(matrix, glm::vec3(1, 1, 1));
@@ -363,7 +380,7 @@ void OrientationSearch::updateScene()
 				drawingManager.addObject(sphere, Visualizer::smoothMesh);
 			}
 			else if (bottomContour.size() >= 2) {
-				drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, c_clr_bottomContour), Visualizer::polyline);
+				drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, color_scheme::bottomContour), Visualizer::polyline);
 			}
 
 			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера

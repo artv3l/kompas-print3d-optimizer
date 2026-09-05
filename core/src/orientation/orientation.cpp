@@ -172,7 +172,6 @@ OrientationStatByMesh calcOrientationStatByMesh(const geom3d::Mesh & mesh, doubl
 	OrientationStatByMesh result;
 
 	result.model = mesh;
-	result.colors = std::vector<color::RGB>(result.model.indexes.size() / 3, orientation::c_defaultColor);
 
 	result.evalMesh = generateIcosphere(subdivisionsCount);
 	result.infos = calcOrientationsEstimation(result.model, result.evalMesh.normals, overhangThreshold, offsetThreshold);
@@ -201,21 +200,4 @@ std::vector<size_t> OrientationStatByMesh::findBest(OrientationComplexCriteria c
 	std::ranges::stable_sort(indexes, {}, indexToElem);
 
 	return std::vector<size_t>(indexes.begin(), indexes.begin() + count);
-}
-
-void OrientationStatByMesh::updateMeshColors(size_t index)
-{
-	const auto& props = infos[index].triangleProperties;
-	assert(props.size() == (model.indexes.size() / 3));
-
-	for (size_t i = 0; i < props.size(); ++i) {
-		color::RGB color = orientation::c_defaultColor;
-		if (props[i] == TriangleProperties::overhang) {
-			color = orientation::c_overhangColor;
-		}
-		else if (props[i] == TriangleProperties::bottom) {
-			color = orientation::c_bottomColor;
-		}
-		colors[i] = color;
-	}
 }
