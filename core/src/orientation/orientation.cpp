@@ -92,22 +92,6 @@ OrientationInfo calcOrientationInfo(const geom3d::Mesh& mesh, const geom3d::Vec3
 	return info;
 }
 
-// РџСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ Р°Р±СЃРѕР»СЋРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РІ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Рµ [0, 1]
-template <std::ranges::range R>
-std::vector<double> toRelative(R absoluteValues)
-{
-	std::vector<double> relativeValues(absoluteValues.size(), 0.0);
-
-	const auto [min, max] = std::ranges::minmax_element(absoluteValues);
-	if (min == absoluteValues.end() || max == absoluteValues.end())
-		throw std::logic_error(""); // TODO
-
-	auto convert = std::bind(math::convertRanges, std::placeholders::_1, *min, *max, 0.0, 1.0);
-	std::ranges::transform(absoluteValues, relativeValues.begin(), convert);
-
-	return relativeValues;
-}
-
 // Р Р°СЃСЃС‡РёС‚Р°С‚СЊ РІСЃРµ СЃРѕСЃС‚Р°РІРЅС‹Рµ РєСЂРёС‚РµСЂРёРё
 OrientationComplexInfos calcOrientationsComplexEstimation(std::span<OrientationInfo> infos)
 {
