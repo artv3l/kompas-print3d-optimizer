@@ -11,6 +11,8 @@ public:
 	void run() const;
 
 protected:
+	void setPrompt(std::wstring_view prompt);
+
 	virtual void changeControlValue(const ksapi::IPropertyControlPtr& control) = 0;
 	virtual bool buttonClick(int32_t buttonId) = 0;
 	virtual void selectItem(const ksapi::IPropertyControlPtr& control, int32_t index, bool select) = 0;

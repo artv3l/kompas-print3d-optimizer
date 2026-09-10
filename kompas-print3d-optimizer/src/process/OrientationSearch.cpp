@@ -79,6 +79,10 @@ void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& con
 
 bool OrientationSearch::buttonClick(int32_t buttonId)
 {
+	if (!m_stat || m_data.currentGridRow == 0) {
+		return false;
+	}
+
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 	drawingManager.redraw();
@@ -94,6 +98,7 @@ bool OrientationSearch::buttonClick(int32_t buttonId)
 		break;
 	}
 	}
+
 	return true;
 }
 

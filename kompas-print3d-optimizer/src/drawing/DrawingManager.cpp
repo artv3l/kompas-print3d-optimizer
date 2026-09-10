@@ -21,15 +21,14 @@ DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view
 	m_frameEvents->AddBeginPaintGlHandler(m_eventsOwnerName, std::bind(&DrawingManager::beginPaintGL, this, stdph::_1, stdph::_2));
 	m_frameEvents->AddClosePaintGlHandler(m_eventsOwnerName, std::bind(&DrawingManager::closePaintGL, this, stdph::_1, stdph::_2));
 	m_frameEvents->AddCloseHandler(m_eventsOwnerName, std::bind(&DrawingManager::close, this));
-	m_frameEvents->AddMouseMoveHandler(m_eventsOwnerName, std::bind(&DrawingManager::mouseMove, this, stdph::_1, stdph::_2, stdph::_3));
+    m_frameEvents->AddMouseMoveHandler(m_eventsOwnerName, std::bind(&DrawingManager::mouseMove, this, stdph::_1, stdph::_2, stdph::_3));
 
     {
         // GLAD РЅСѓР¶РЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ РєРѕРіРґР° РѕС‚РєСЂС‹С‚ РґРѕРєСѓРјРµРЅС‚
         if (!s_isGladInited) {
-            if (!gladLoadGL()) {
-                //global::kompas->ksMessage("РћС€РёР±РєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё GLAD");
-            }
+            s_isGladInited = gladLoadGL() != 0;
         }
+
         /*
           РџРѕСЃР»Рµ Р·Р°РєСЂС‹С‚РёСЏ РІСЃРµС… РґРѕРєСѓРјРµРЅС‚РѕРІ СЃРѕСЃС‚РѕСЏРЅРёРµ OpenGL СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ.
           РџРѕСЌС‚РѕРјСѓ, РєРѕРіРґР° РїРѕСЃР»Рµ СЌС‚РѕРіРѕ РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ РЅРѕРІС‹Р№ РґРѕРєСѓРјРµРЅС‚, РЅСѓР¶РЅРѕ Р·Р°РЅРѕРІРѕ СЃРєРѕРјРїРёР»РёСЂРѕРІР°С‚СЊ С€РµР№РґРµСЂС‹
@@ -96,7 +95,7 @@ bool DrawingManager::beginPaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
 
 void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectPtr& glObject)
 {
-    if (m_objects.empty()) {
+    if (m_objects.empty() || !s_isGladInited) {
         return;
     }
 
@@ -124,15 +123,14 @@ void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
 
 bool DrawingManager::mouseMove(const ksapi::IPressedKeysPtr& pressedKeys, int32_t x, int32_t y)
 {
-    /*m_mouseCoord = glm::vec2(x, y);
-    m_documentFrame->RefreshWindow();*/
-	return false;
+    // РќСѓР¶РЅРѕ Р»Рё РІС‹РїРѕР»РЅСЏС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ РѕР±СЂР°Р±РѕС‚РєСѓ РїРµСЂРµРјРµС‰РµРЅРёСЏ РјС‹С€Рё
+    const bool isNeedDefaultHandle = !s_isGladInited || m_objects.empty();
+
+    return isNeedDefaultHandle;
 }
 
 void DrawingManager::initShaders()
 {
-    /*m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::meshHighlight3dp),
-        std::forward_as_tuple(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE));*/
     m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::colorMesh),
         std::forward_as_tuple(VERTEX_SHADER_CODE_ORIENTATION, FRAGMENT_SHADER_CODE_ORIENTATION));
     m_shaders.emplace(std::piecewise_construct, std::forward_as_tuple(Visualizer::smoothMesh),

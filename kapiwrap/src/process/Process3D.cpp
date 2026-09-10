@@ -29,3 +29,8 @@ void Process3D::run() const
 {
 	m_process->Run(true, true);
 }
+
+void Process3D::setPrompt(std::wstring_view prompt)
+{
+	m_process->SetPrompt(std::wstring(prompt));
+}

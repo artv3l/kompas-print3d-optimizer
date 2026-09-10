@@ -18,7 +18,8 @@ void RunCommand(unsigned int commandId, ksapi::ksRunCommandModeEnum mode)
     ksapi::IKompasDocument3DPtr activeDocument = global::kompasApp->GetActiveDocument();
 
     if (!activeDocument) {
-        //global::kompas->ksMessage("Необходимо открыть документ-модель");
+        global::kompasApp->ShowMessageBox(L"Необходимо открыть 3D документ", L"Ошибка", ksMessageTypeEnum::ksMessageError,
+            ksMessageButtonSetEnum::ksButtonSetOk, true /*showModal*/);
         return;
     }
 
