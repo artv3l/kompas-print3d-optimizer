@@ -19,7 +19,7 @@ std::pair<geom3d::Plane, double> calcPrintPlaneAndHeight(const geom3d::Mesh& mes
 
 	const auto [min, max] = std::ranges::minmax_element(mesh.positions, {}, toShift);
 	if (min == mesh.positions.end() || max == mesh.positions.end())
-		throw std::logic_error(""); // TODO
+		return std::make_pair(geom3d::Plane(), 0.0);
 
 	const geom3d::Plane printPlane = geom3d::Plane(direction, *min);
 	return std::make_pair(printPlane, printPlane.absDistance(*max));
@@ -151,15 +151,20 @@ std::vector<OrientationInfo> calcOrientationsEstimation(const geom3d::Mesh& mesh
 	return result;
 }
 
-OrientationStatByMesh calcOrientationStatByMesh(const geom3d::Mesh & mesh, double overhangThreshold, uint8_t subdivisionsCount)
+std::unique_ptr<OrientationStatByMesh> calcOrientationStatByMesh(const geom3d::Mesh & mesh, double overhangThreshold, uint8_t subdivisionsCount)
 {
-	OrientationStatByMesh result;
+	if (mesh.positions.empty() || mesh.normals.empty() || mesh.indexes.empty())
+		return nullptr;
+	if (mesh.positions.size() != mesh.normals.size() || mesh.indexes.size() % 3 != 0)
+		return nullptr;
 
-	result.model = mesh;
+	std::unique_ptr<OrientationStatByMesh> result = std::make_unique<OrientationStatByMesh>();
 
-	result.evalMesh = generateIcosphere(subdivisionsCount);
-	result.infos = calcOrientationsEstimation(result.model, result.evalMesh.normals, overhangThreshold);
-	result.complexInfos = calcOrientationsComplexEstimation(result.infos);
+	result->model = mesh;
+
+	result->evalMesh = generateIcosphere(subdivisionsCount);
+	result->infos = calcOrientationsEstimation(result->model, result->evalMesh.normals, overhangThreshold);
+	result->complexInfos = calcOrientationsComplexEstimation(result->infos);
 	return result;
 }
 

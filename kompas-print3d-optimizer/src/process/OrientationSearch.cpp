@@ -116,9 +116,7 @@ void OrientationSearch::controlCommand(const ksapi::IPropertyControlPtr& control
 		ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
 		ksapi::IPartPtr part = doc3d->GetTopPart();
 		
-		m_stat = std::make_unique<OrientationStatByMesh>(calcOrientationStatByMesh(copyToMesh(part),
-			m_data.overhangThreshold, getSubdivisionsCount(m_data.accuracy)
-		));
+		m_stat = calcOrientationStatByMesh(copyToMesh(part), m_data.overhangThreshold, getSubdivisionsCount(m_data.accuracy));
 
 		updateControls();
 	}
