@@ -91,3 +91,23 @@ geom3d::Gabarit getGabarit(ksapi::IPartPtr part)
     part->GetGabarit(false /*full*/, false /*unused*/, begin.x(), begin.y(), begin.z(), end.x(), end.y(), end.z());
     return geom3d::Gabarit(begin, end);
 }
+
+ksapi::ILocalCoordinateSystemPtr createLocalCoordinateSystem(ksapi::IPartPtr part, const geom3d::Placement& placement)
+{
+    ksapi::IAuxiliaryGeomContainerPtr geomCont = part;
+    ksapi::ILocalCoordinateSystemsPtr lcsCont = geomCont->GetLocalCoordinateSystems();
+
+    ksapi::ILocalCoordinateSystemPtr lcs = lcsCont->Add();
+
+    const Eigen::Matrix4d matrix = placement.matrixToWorld().matrix();
+    std::vector<double> matrixVector;
+    for (uint8_t row = 0; row < 4; ++row) {
+        for (uint8_t col = 0; col < 4; ++col) {
+            matrixVector.push_back(matrix(col, row));
+        }
+    }
+    lcs->InitByMatrix3D(matrixVector);
+
+    lcs->Update();
+    return lcs;
+}
