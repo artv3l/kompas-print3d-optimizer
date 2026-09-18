@@ -74,6 +74,13 @@ void OrientationSearch::changeControlValue(const ksapi::IPropertyControlPtr& con
 		m_data.currentGridRow = 1;
 	}
 
+	if (control == m_ctrls.accuracy || control == m_ctrls.overhangThreshold) {
+		m_stat = nullptr;
+		m_data.currentGridRow = 1;
+		m_data.orientationsInGrid.clear();
+		updateScene();
+	}
+
 	updateControls();
 }
 
@@ -186,6 +193,8 @@ void OrientationSearch::initControls()
 
 		controls->Add(ControlTypeEnum::ksControlGroupEnd);
 	}
+
+	updateControls();
 }
 
 void OrientationSearch::updateControls()
@@ -193,27 +202,24 @@ void OrientationSearch::updateControls()
 	m_ctrls.overhangThreshold->SetIntValue(m_data.overhangThreshold);
 	m_ctrls.accuracy->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.accuracy)));
 
+	const bool isCalculated = static_cast<bool>(m_stat);
+
+	m_ctrls.metricsList->SetVisible(isCalculated);
+	m_ctrls.metricsList->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.criteria)));
+
+	m_ctrls.visualizeCheckBox->SetVisible(isCalculated);
+	m_ctrls.visualizeCheckBox->SetBoolValue(m_data.isShowHeatmap);
+
+	m_ctrls.resultCount->SetVisible(isCalculated);
+	m_ctrls.resultCount->SetIntValue(static_cast<int32_t>(m_data.resultCount));
+
+	m_ctrls.resultGrid->SetVisible(isCalculated);
+
 	if (m_stat) {
-		m_ctrls.metricsList->SetVisible(true);
-		m_ctrls.visualizeCheckBox->SetVisible(true);
-
-		m_ctrls.resultCount->SetVisible(true);
-		m_ctrls.resultCount->SetIntValue(static_cast<int32_t>(m_data.resultCount));
 		m_ctrls.resultCount->SetValueRange(1, m_stat->evalMesh.normals.size());
-
-		m_ctrls.resultGrid->SetVisible(true);
-
-		m_ctrls.metricsList->SetCurrentByIndex(static_cast<int32_t>(enums::toUnderlying(m_data.criteria)));
-		m_ctrls.visualizeCheckBox->SetBoolValue(m_data.isShowHeatmap);
 		m_data.orientationsInGrid = m_stat->findBest(m_data.criteria, m_data.resultCount);
-		refillGrid();
 		updateScene();
-	}
-	else {
-		m_ctrls.metricsList->SetVisible(false);
-		m_ctrls.visualizeCheckBox->SetVisible(false);
-		m_ctrls.resultCount->SetVisible(false);
-		m_ctrls.resultGrid->SetVisible(false);
+		refillGrid();
 	}
 
 	updateToolbar();
@@ -323,82 +329,81 @@ void updateMeshColors(std::span<glm::vec4> colors, const OrientationStatByMesh& 
 
 void OrientationSearch::updateScene()
 {
-	if (!m_stat)
-		return;
-
-	// Сфера для визуализации точек
-	const geom3d::Mesh pointIcosphere = generateIcosphere(1);
-
-	// Индекс и плейсмент текущей выбранной ориентации
-	const std::optional<size_t> currentOrientationIndex = m_data.currentGridRow != 0 ?
-		std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
-	const std::optional<geom3d::Placement> orientationPlacement = currentOrientationIndex ? 
-		std::make_optional(geom3d::Placement::createByAxisZ(
-			geom3d::Vec3::Zero(),
-			m_stat->evalMesh.normals[*currentOrientationIndex])
-		) : std::nullopt;
-
-	// Габарит модели в глобальной СК
-	const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, geom3d::Placement::createDefault());
-	// Радиус сферы тепловой карты
-	const double radius = (modelGabarit.max() - modelGabarit.min()).norm() / 2.0;
-	// Радиус сферы для обозначения точки
-	const double pointRadius = radius * 0.008;
-
 	DrawingManager& drawingManager = m_documentData.getDrawingManager();
 	drawingManager.cleanObjects();
 
-	if (m_data.isShowHeatmap) {
-		const geom3d::Vec3 center = modelGabarit.center();
+	if (m_stat) {
+		// Сфера для визуализации точек
+		const geom3d::Mesh pointIcosphere = generateIcosphere(1);
 
-		// Сфера тепловой карты
-		std::shared_ptr<ColoredMesh> heatmapIcosphere = createHeatmapIcosphere(*m_stat, m_data.criteria, center, radius);
-		drawingManager.addObject(heatmapIcosphere, Visualizer::smoothMesh);
+		// Индекс и плейсмент текущей выбранной ориентации
+		const std::optional<size_t> currentOrientationIndex = m_data.currentGridRow != 0 ?
+			std::make_optional(m_data.orientationsInGrid[m_data.currentGridRow - 1]) : std::nullopt;
+		const std::optional<geom3d::Placement> orientationPlacement = currentOrientationIndex ?
+			std::make_optional(geom3d::Placement::createByAxisZ(
+				geom3d::Vec3::Zero(),
+				m_stat->evalMesh.normals[*currentOrientationIndex])
+			) : std::nullopt;
 
-		if (currentOrientationIndex && orientationPlacement) {
-			// Текущая выбранная ориентация на сфере тепловой карты
-			const glm::vec3 point = heatmapIcosphere->positions[*currentOrientationIndex];
-			auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottom, ColoredMesh::ColorType::byVertex);
-			glm::mat4 matrix = glm::translate(glm::mat4(1.0f), point);
-			matrix = glm::scale(matrix, glm::vec3(pointRadius, pointRadius, pointRadius));
-			transform(sphere->positions, matrix);
-			drawingManager.addObject(sphere, Visualizer::smoothMesh);
+		// Габарит модели в глобальной СК
+		const geom3d::Gabarit modelGabarit = geom3d::calcGabarit(m_stat->model, geom3d::Placement::createDefault());
+		// Радиус сферы тепловой карты
+		const double radius = (modelGabarit.max() - modelGabarit.min()).norm() / 2.0;
+		// Радиус сферы для обозначения точки
+		const double pointRadius = radius * 0.008;
 
-			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
-			const geom3d::Vec3 centerInOrientationPlacement = orientationPlacement->matrixToPlacement() * modelGabarit.center();
-			const geom3d::Vec3 radiusVec = geom3d::Vec3::Constant(radius);
-			const geom3d::Gabarit sphereGabarit(centerInOrientationPlacement - radiusVec, centerInOrientationPlacement + radiusVec);
-			if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
-				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
-		}
-	} else {
-		auto mesh = std::make_shared<ColoredMesh>(m_stat->model, color_scheme::model, ColoredMesh::ColorType::byTriangle);
+		if (m_data.isShowHeatmap) {
+			const geom3d::Vec3 center = modelGabarit.center();
 
-		if (currentOrientationIndex && orientationPlacement) {
-			// Обновление цветов модели по выбранной ориентации
-			updateMeshColors(mesh->colors, *m_stat, *currentOrientationIndex);
+			// Сфера тепловой карты
+			std::shared_ptr<ColoredMesh> heatmapIcosphere = createHeatmapIcosphere(*m_stat, m_data.criteria, center, radius);
+			drawingManager.addObject(heatmapIcosphere, Visualizer::smoothMesh);
 
-			// Выпуклая оболочка нижней поверхности
-			BottomContour bottomContour = m_stat->infos[*currentOrientationIndex].bottomContour;
-			if (bottomContour.size() == 1) {
-				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottomContour, ColoredMesh::ColorType::byVertex);
-				glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
-				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
+			if (currentOrientationIndex && orientationPlacement) {
+				// Текущая выбранная ориентация на сфере тепловой карты
+				const glm::vec3 point = heatmapIcosphere->positions[*currentOrientationIndex];
+				auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottom, ColoredMesh::ColorType::byVertex);
+				glm::mat4 matrix = glm::translate(glm::mat4(1.0f), point);
 				matrix = glm::scale(matrix, glm::vec3(pointRadius, pointRadius, pointRadius));
 				transform(sphere->positions, matrix);
 				drawingManager.addObject(sphere, Visualizer::smoothMesh);
+
+				// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
+				const geom3d::Vec3 centerInOrientationPlacement = orientationPlacement->matrixToPlacement() * modelGabarit.center();
+				const geom3d::Vec3 radiusVec = geom3d::Vec3::Constant(radius);
+				const geom3d::Gabarit sphereGabarit(centerInOrientationPlacement - radiusVec, centerInOrientationPlacement + radiusVec);
+				if (auto gabaritVisualizer = createGabaritVisualizer(sphereGabarit, *orientationPlacement))
+					drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 			}
-			else if (bottomContour.size() >= 2) {
-				drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, color_scheme::bottomContour), Visualizer::polyline);
+		} else {
+			auto mesh = std::make_shared<ColoredMesh>(m_stat->model, color_scheme::model, ColoredMesh::ColorType::byTriangle);
+
+			if (currentOrientationIndex && orientationPlacement) {
+				// Обновление цветов модели по выбранной ориентации
+				updateMeshColors(mesh->colors, *m_stat, *currentOrientationIndex);
+
+				// Выпуклая оболочка нижней поверхности
+				BottomContour bottomContour = m_stat->infos[*currentOrientationIndex].bottomContour;
+				if (bottomContour.size() == 1) {
+					auto sphere = std::make_shared<ColoredMesh>(pointIcosphere, color_scheme::bottomContour, ColoredMesh::ColorType::byVertex);
+					glm::vec3 center(bottomContour[0].x(), bottomContour[0].y(), bottomContour[0].z());
+					glm::mat4 matrix = glm::translate(glm::mat4(1.0f), center);
+					matrix = glm::scale(matrix, glm::vec3(pointRadius, pointRadius, pointRadius));
+					transform(sphere->positions, matrix);
+					drawingManager.addObject(sphere, Visualizer::smoothMesh);
+				}
+				else if (bottomContour.size() >= 2) {
+					drawingManager.addObject(std::make_shared<Polyline3D>(bottomContour, color_scheme::bottomContour), Visualizer::polyline);
+				}
+
+				// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
+				const geom3d::Gabarit modelGabaritInOrientationPlacement = geom3d::calcGabarit(m_stat->model, *orientationPlacement);
+				if (auto gabaritVisualizer = createGabaritVisualizer(modelGabaritInOrientationPlacement, *orientationPlacement))
+					drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
 			}
 
-			// Прямоугольник-габарит нижней поверхности детали. Обозначает стол 3D-принтера
-			const geom3d::Gabarit modelGabaritInOrientationPlacement = geom3d::calcGabarit(m_stat->model, *orientationPlacement);
-			if (auto gabaritVisualizer = createGabaritVisualizer(modelGabaritInOrientationPlacement, *orientationPlacement))
-				drawingManager.addObject(gabaritVisualizer, Visualizer::polyline);
+			drawingManager.addObject(mesh, Visualizer::colorMesh);
 		}
-
-		drawingManager.addObject(mesh, Visualizer::colorMesh);
 	}
 
 	drawingManager.redraw();
