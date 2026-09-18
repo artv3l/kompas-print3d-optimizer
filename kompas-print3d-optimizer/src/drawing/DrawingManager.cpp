@@ -7,7 +7,7 @@
 #include "shaders.hpp"
 
 std::unordered_map<Visualizer, ShaderProgram> DrawingManager::m_shaders;
-bool DrawingManager::s_isGladInited = false;
+bool DrawingManager::s_isInited = false;
 short DrawingManager::s_framesCount = 0;
 
 DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view eventsOwnerName):
@@ -25,21 +25,20 @@ DrawingManager::DrawingManager(ksapi::IDocumentFramePtr frame, std::wstring_view
 
     {
         // GLAD РЅСѓР¶РЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ РєРѕРіРґР° РѕС‚РєСЂС‹С‚ РґРѕРєСѓРјРµРЅС‚
-        if (!s_isGladInited) {
-            s_isGladInited = gladLoadGL() != 0;
+        if (!s_isInited) {
+            s_isInited = gladLoadGL() != 0;
         }
 
         /*
           РџРѕСЃР»Рµ Р·Р°РєСЂС‹С‚РёСЏ РІСЃРµС… РґРѕРєСѓРјРµРЅС‚РѕРІ СЃРѕСЃС‚РѕСЏРЅРёРµ OpenGL СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ.
           РџРѕСЌС‚РѕРјСѓ, РєРѕРіРґР° РїРѕСЃР»Рµ СЌС‚РѕРіРѕ РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ РЅРѕРІС‹Р№ РґРѕРєСѓРјРµРЅС‚, РЅСѓР¶РЅРѕ Р·Р°РЅРѕРІРѕ СЃРєРѕРјРїРёР»РёСЂРѕРІР°С‚СЊ С€РµР№РґРµСЂС‹
         */
-        if (s_framesCount == 0) {
+        if (s_framesCount == 0 && s_isInited) {
             try {
                 initShaders();
             }
-            catch (const std::runtime_error& e) {
-                //global::kompas->ksMessage("РћС€РёР±РєР° РєРѕРјРїРёР»СЏС†РёРё С€РµР№РґРµСЂРѕРІ");
-                //std::cerr << e.what() << "\n";
+            catch (const std::runtime_error&) {
+                s_isInited = false;
             }
         }
         s_framesCount++;
@@ -95,7 +94,7 @@ bool DrawingManager::beginPaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
 
 void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectPtr& glObject)
 {
-    if (m_objects.empty() || !s_isGladInited) {
+    if (m_objects.empty() || !s_isInited) {
         return;
     }
 
@@ -124,7 +123,7 @@ void DrawingManager::closePaintGL(uint32_t drawMode, const ksapi::IOpenGLObjectP
 bool DrawingManager::mouseMove(const ksapi::IPressedKeysPtr& pressedKeys, int32_t x, int32_t y)
 {
     // РќСѓР¶РЅРѕ Р»Рё РІС‹РїРѕР»РЅСЏС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ РѕР±СЂР°Р±РѕС‚РєСѓ РїРµСЂРµРјРµС‰РµРЅРёСЏ РјС‹С€Рё
-    const bool isNeedDefaultHandle = !s_isGladInited || m_objects.empty();
+    const bool isNeedDefaultHandle = !s_isInited || m_objects.empty();
 
     return isNeedDefaultHandle;
 }

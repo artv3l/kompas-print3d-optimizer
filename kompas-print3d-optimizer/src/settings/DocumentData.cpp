@@ -4,7 +4,7 @@
 
 DocumentData::DocumentData(ksapi::IKompasDocumentPtr document):
     m_document(document),
-    m_drawingManager(m_document->GetDocumentFrame(), resources::c_libraryName)
+    m_drawingManager(m_document->GetDocumentFrame(), resources::libraryName)
 {
 }
 

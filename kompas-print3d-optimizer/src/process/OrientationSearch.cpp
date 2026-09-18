@@ -93,7 +93,7 @@ bool OrientationSearch::buttonClick(int32_t buttonId)
 		// Создание ЛСК плоскости печати
 		const geom3d::Vec3 normal = m_stat->evalMesh.normals[m_data.orientationsInGrid[m_data.currentGridRow - 1]];
 		const geom3d::Vec3 point = m_stat->infos[m_data.orientationsInGrid[m_data.currentGridRow - 1]].bottomContour[0];
-		const geom3d::Placement placement = geom3d::Placement::createByAxisZ(point, normal);
+		const geom3d::Placement placement = geom3d::Placement::createByAxisZ(point, -normal);
 
 		ksapi::IKompasDocument3DPtr doc3d = m_documentData.getDoc();
 		ksapi::IPartPtr part = doc3d->GetTopPart();

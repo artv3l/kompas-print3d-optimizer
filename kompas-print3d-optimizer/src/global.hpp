@@ -1,5 +1,4 @@
-#ifndef GLOBAL_HPP
-#define GLOBAL_HPP
+#pragma once
 
 #include <memory>
 
@@ -16,7 +15,3 @@ public:
     static void init();
     static bool isInited();
 };
-
-using global = Global;
-
-#endif /* GLOBAL_HPP */

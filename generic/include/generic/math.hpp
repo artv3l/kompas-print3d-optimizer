@@ -11,7 +11,9 @@
 
 namespace math
 {
-bool equal(double a, double b, double epsilon = 0.00001);
+constexpr double c_epsilon = 0.00001;
+
+bool equal(double a, double b, double epsilon = c_epsilon);
 double toRadians(double angleInDegrees);
 // Получить острый угол от 0 до pi/2
 double toAcuteAngle(double angleInRadians);

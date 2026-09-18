@@ -24,6 +24,11 @@ public:
 	// РњР°С‚СЂРёС†Р° РїРµСЂРµС…РѕРґР° РёР· РіР»РѕР±Р°Р»СЊРЅРѕР№ (РјРёСЂРѕРІРѕР№) СЃРёСЃС‚РµРјС‹ РєРѕРѕСЂРґРёРЅР°С‚ РІ Р»РѕРєР°Р»СЊРЅСѓСЋ РЎРљ РїР»РµР№СЃРјРµРЅС‚Р°
 	Eigen::Affine3d matrixToPlacement() const;
 
+	Vec3 getOrigin() const;
+	Vec3 getAxisX() const;
+	Vec3 getAxisY() const;
+	Vec3 getAxisZ() const;
+
 	static Placement createByAxisZ(const Vec3& origin, const Vec3& axisZ);
 	static Placement createDefault();
 

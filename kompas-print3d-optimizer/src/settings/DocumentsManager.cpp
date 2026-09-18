@@ -23,10 +23,10 @@ DocumentData& DocumentsManager::getOrCreateDocumentData(ksapi::IKompasDocumentPt
 
         auto onClose = [this, document]()
         {
-            document->Events()->RemoveAllHandlers(resources::c_libraryName.data());
+            document->Events()->RemoveAllHandlers(resources::libraryName.data());
             m_documentDataMap.erase(document);
         };
-        document->Events()->AddCloseDocumentHandler(resources::c_libraryName.data(), onClose);
+        document->Events()->AddCloseDocumentHandler(resources::libraryName.data(), onClose);
     }
     return it->second;
 }

@@ -43,6 +43,26 @@ Eigen::Affine3d Placement::matrixToPlacement() const
 	return matrixToWorld().inverse();
 }
 
+Vec3 Placement::getOrigin() const
+{
+	return m_origin;
+}
+
+Vec3 Placement::getAxisX() const
+{
+	return m_axisX;
+}
+
+Vec3 Placement::getAxisY() const
+{
+	return m_axisY;
+}
+
+Vec3 Placement::getAxisZ() const
+{
+	return m_axisZ;
+}
+
 Placement Placement::createByAxisZ(const Vec3& origin, const Vec3& axisZ)
 {
 	const Vec3 c_axisX(1.0, 0.0, 0.0);
@@ -50,8 +70,8 @@ Placement Placement::createByAxisZ(const Vec3& origin, const Vec3& axisZ)
 
 	const bool isUseAxisX = math::toAcuteAngle(angleBetween(axisZ, c_axisX)) > math::toRadians(10);
 
-	const Vec3 axisX = isUseAxisX ? axisZ.cross(c_axisX) : axisZ.cross(c_axisY);
-	const Vec3 axisY = axisX.cross(axisZ);
+	const Vec3 axisY = isUseAxisX ? axisZ.cross(c_axisX) : axisZ.cross(c_axisY);
+	const Vec3 axisX = axisY.cross(axisZ);
 
 	return Placement(origin, axisX.normalized(), axisY.normalized(), axisZ.normalized());
 }

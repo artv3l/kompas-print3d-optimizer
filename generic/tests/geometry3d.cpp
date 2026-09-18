@@ -62,3 +62,71 @@ TEST(generic_geometry3d, angleBetween_1)
     EXPECT_TRUE(math::equal(geom3d::angleBetween(vec2, vec3), 0.768187));
     EXPECT_TRUE(math::equal(geom3d::angleBetween(vec3, vec4), 2.30309));
 }
+
+TEST(generic_geometry3d_Placement, createByAxisZ)
+{
+    const geom3d::Vec3 origin(28, 120, 62);
+    const geom3d::Vec3 axisZ(0.863221, 0.451531, 0.225765);
+    const geom3d::Placement placement2 = geom3d::Placement::createByAxisZ(origin, axisZ);
+    EXPECT_TRUE(
+        placement2.getOrigin().isApprox(origin, math::c_epsilon) &&
+        placement2.getAxisX().isApprox(geom3d::Vec3(0.504826, -0.772088, -0.386043), math::c_epsilon) &&
+        placement2.getAxisY().isApprox(geom3d::Vec3(0, 0.447212, -0.894427), math::c_epsilon) &&
+        placement2.getAxisZ().isApprox(axisZ, math::c_epsilon)
+    );
+}
+
+TEST(generic_geometry3d, calcGabarit_1)
+{
+    const geom3d::Mesh mesh {
+        .positions = {
+            geom3d::Vec3(191, 0, 26),
+            geom3d::Vec3(-8, 20, 41),
+            geom3d::Vec3(-36, 73, -7),
+            geom3d::Vec3(2, 211, -81),
+            geom3d::Vec3(-21, 42, -23),
+            geom3d::Vec3(41, -3, -14),
+        },
+        .normals = { // Р”Р»СЏ calcGabarit РЅРѕСЂРјР°Р»Рё РЅРµ РІР°Р¶РЅС‹
+            geom3d::Vec3(0, 0, 0),
+            geom3d::Vec3(0, 0, 0),
+            geom3d::Vec3(0, 0, 0),
+            geom3d::Vec3(0, 0, 0),
+            geom3d::Vec3(0, 0, 0),
+            geom3d::Vec3(0, 0, 0),
+        },
+        .indexes = {
+            0, 1, 5,
+            1, 4, 5,
+            1, 2, 4,
+            2, 3, 4,
+        }
+    };
+
+    {
+        const geom3d::Gabarit gab1_expected(
+            geom3d::Vec3(-36, -3, -81),
+            geom3d::Vec3(191, 211, 41)
+        );
+        const geom3d::Gabarit gab1_actual = geom3d::calcGabarit(mesh, geom3d::Placement::createDefault());
+        EXPECT_TRUE(
+            gab1_expected.min().isApprox(gab1_actual.min()) &&
+            gab1_expected.max().isApprox(gab1_actual.max())
+        );
+    }
+    {
+        const geom3d::Placement placement2 = geom3d::Placement::createByAxisZ(
+            geom3d::Vec3(28, 120, 62),
+            geom3d::Vec3(0.863221, 0.451531, 0.225765)
+        );
+        const geom3d::Gabarit gab2_expected(
+            geom3d::Vec3(-28.181340, -25.938301, -96.707244),
+            geom3d::Vec3(188.834918, 168.599510, 78.393740)
+        );
+        const geom3d::Gabarit gab2_actual = geom3d::calcGabarit(mesh, placement2);
+        EXPECT_TRUE(
+            gab2_expected.min().isApprox(gab2_actual.min(), math::c_epsilon) &&
+            gab2_expected.max().isApprox(gab2_actual.max(), math::c_epsilon)
+        );
+    }
+}

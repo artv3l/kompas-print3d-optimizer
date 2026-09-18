@@ -12,7 +12,6 @@
 // Р РµР¶РёРј РІРёР·СѓР°Р»РёР·Р°С†РёРё РјРѕРґРµР»Рё. РџРѕ СЃСѓС‚Рё С€РµР№РґРµСЂРЅР°СЏ РїСЂРѕРіСЂР°РјРјР°
 enum class Visualizer : uint8_t
 {
-    meshHighlight3dp, // РЎРµС‚РєР° СЃ РїРѕРґСЃРІРµС‚РєР°РјРё РґР»СЏ 3D РїРµС‡Р°С‚Рё
     colorMesh,        // Р¦РІРµС‚РЅР°СЏ СЃРµС‚РєР°
     smoothMesh,       // РЎРµС‚РєР° СЃ С†РІРµС‚Р°РјРё РїРѕ РІРµСЂС€РёРЅР°Рј
     polyline,         // РџРѕР»РёР»РёРЅРёСЏ
@@ -45,7 +44,7 @@ private:
 
 private: // deprecated?
     static std::unordered_map<Visualizer, ShaderProgram> m_shaders;
-    static bool s_isGladInited;
+    static bool s_isInited;
     static short s_framesCount;
 
     static void initShaders();
