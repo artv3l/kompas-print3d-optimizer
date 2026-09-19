@@ -1,9 +1,13 @@
 {
-    "name": "kompas-print3d-optimizer",
-    "dependencies": [
-        "glm",
-        {"name": "glad", "features": ["gl-api-43"]},
-        "gtest",
-        "eigen3"
-    ]
+  "dependencies": [
+    {
+      "name": "glad",
+      "features": [
+        "gl-api-43"
+      ]
+    },
+    "glm",
+    "gtest",
+    "eigen3"
+  ]
 }
