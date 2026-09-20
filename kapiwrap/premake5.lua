@@ -12,6 +12,7 @@ project "kapiwrap"
         "%{vcpkg.include}",
 
         "%{localDependencies.ksapi.include}",
+        "%{wks.location}/third_party/microstl-ec3868a14d8eff40f7945b39758edf623f609b6f/include",
     }
 
     links {
