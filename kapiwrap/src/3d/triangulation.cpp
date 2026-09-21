@@ -4,6 +4,7 @@
 
 #include "generic/filesystem.hpp"
 #include "kapiwrap/3d/part.hpp"
+#include "kapiwrap/3d/body.hpp"
 
 namespace
 {
@@ -93,35 +94,16 @@ geom3d::Mesh getMeshObjectsTriangulation(ksapi::IKompasDocument3DPtr document3d)
     return result;
 }
 
-geom3d::Mesh copyToMesh(ksapi::IPartPtr part)
+geom3d::Mesh getBodyTriangulation(ksapi::IBodyPtr body)
 {
-    std::vector<ksapi::IFacePtr> faces = getFaces(part);
+    geom3d::Mesh result;
 
-    geom3d::Mesh mesh;
-
-    for (long iFace = 0; iFace < faces.size(); ++iFace)
+    auto faces = getBodyFaces(body);
+    for (auto && face : faces)
     {
-        ksapi::IFacePtr face = faces[iFace];
         ksapi::ITessellationPtr tessellation = face->GetTessellation();
-
-        if (iFace == 0)
-        {
-            mesh = copyToMesh(tessellation);
-        }
-        else
-        {
-            geom3d::Mesh faceMesh = copyToMesh(tessellation);
-            const geom3d::Mesh::Index pointsCount = static_cast<geom3d::Mesh::Index>(mesh.positions.size());
-
-            mesh.positions.insert(mesh.positions.end(), faceMesh.positions.begin(), faceMesh.positions.end());
-            mesh.normals.insert(mesh.normals.end(), faceMesh.normals.begin(), faceMesh.normals.end());
-
-            assert(mesh.positions.size() == mesh.normals.size());
-            auto ShiftIndex = std::bind(std::plus(), pointsCount, std::placeholders::_1);
-            std::ranges::transform(faceMesh.indexes, faceMesh.indexes.begin(), ShiftIndex);
-            mesh.indexes.insert(mesh.indexes.end(), faceMesh.indexes.begin(), faceMesh.indexes.end());
-        }
+        geom3d::Mesh tessMesh = copyToMesh(tessellation);
+        geom3d::mergeMeshes(result, tessMesh);
     }
-
-    return mesh;
+    return result;
 }
